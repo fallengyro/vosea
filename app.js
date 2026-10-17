@@ -3277,8 +3277,39 @@
         return new Promise(function (ok) { setTimeout(ok, 1500); }).then(step);
       });
     }
+    // Copy: several pages at once (each page is independent, and what is
+    // already in Cloudflare is skipped), so a long copy takes a fraction of
+    // the time. Purge stays one page at a time: deleting shifts the list.
+    var COPY_LIMIT = 30, COPY_LANES = 4;
+    function copyAll() {
+      var nextOff = 0, endAt = Infinity, hard = false;
+      function wait(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+      function page(off, tries) {
+        return r2Call({ action: "r2_copy", limit: COPY_LIMIT, offset: off }).catch(function (e) {
+          if (tries >= 2 || r2State.stop) throw e;
+          return wait(1500).then(function () { return page(off, tries + 1); });
+        });
+      }
+      function lane() {
+        if (r2State.stop || hard || nextOff >= endAt) return Promise.resolve();
+        var off = nextOff; nextOff += COPY_LIMIT;
+        return page(off, 0).then(function (d) {
+          tl.seen += d.seen || 0; tl.copied += d.copied || 0; tl.skipped += d.skipped || 0; tl.failed += d.failed || 0;
+          if (!tl.firstErr && d.failures && d.failures[0]) tl.firstErr = d.failures[0];
+          if (d.next === null || d.next === undefined) endAt = Math.min(endAt, off + COPY_LIMIT);
+          renderR2();
+          return lane();
+        }, function (e) {
+          hard = true;
+          r2State.msg = t("r2_fail", { msg: (e && e.message) || "" });
+        });
+      }
+      var lanes = [];
+      for (var i = 0; i < COPY_LANES; i++) lanes.push(lane());
+      return Promise.all(lanes).then(function () { ended = hard ? "fail" : (r2State.stop ? "stopped" : "done"); });
+    }
     renderR2();
-    return step().then(function () {
+    return (kind === "copy" ? copyAll() : step()).then(function () {
       var done = kind === "copy"
         ? t("r2_copy_done", { copied: progNum(tl.copied), skipped: progNum(tl.skipped), failed: progNum(tl.failed) })
         : t("r2_purge_done", { deleted: progNum(tl.deleted), kept: progNum(tl.kept) });
@@ -4573,7 +4604,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "119";
+  var VOSEA_BUILD = "120";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
