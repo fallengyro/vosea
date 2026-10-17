@@ -2119,6 +2119,9 @@
   /* on the card: numbers, times and dates big and upright */
   .flash-prompt-main.is-number { font-size: clamp(38px, 11vw, 52px); font-style: normal; letter-spacing: 0.01em; font-variant-numeric: lining-nums; }
   .topic-front-tag[hidden] { display: none; }
+  /* Los irregulares (2026-10-17): the pattern(s) in that form as chips, on the back only */
+  .flash-back-badges:has(.irr-chip) { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
+  .irr-chip { display: inline-block; background: var(--brick-soft); color: var(--brick); border: 1px solid color-mix(in srgb, var(--brick) 35%, transparent); border-radius: 20px; padding: 3px 11px; font-family: "Public Sans", sans-serif; font-size: 12.5px; font-weight: 600; font-style: normal; line-height: 1.4; letter-spacing: 0; text-transform: none; white-space: nowrap; }
   /* pronunciation / spelling words: big and upright, a bit smaller than numbers */
   .flash-prompt-main.is-word { font-size: clamp(30px, 9vw, 42px); font-style: normal; }
 

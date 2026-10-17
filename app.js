@@ -4391,7 +4391,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "116";
+  var VOSEA_BUILD = "118";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7134,6 +7134,7 @@
   function flashBackBadges(card) {
     var frag = document.createDocumentFragment();
     var data = card.data;
+    if (card.kind === "topic" && card.backChips) { card.backChips.forEach(function (c) { frag.appendChild(progEl("span", "irr-chip", c)); }); return frag; }
     if (card.kind === "verb") {
       if (data.type) frag.appendChild(badge("type", tagLabel(data.type)));
       frag.appendChild(badge("irregular", tagLabel(data.irregularity || "regular")));
@@ -10079,15 +10080,49 @@
     ["decir", "él", "d[i]ce", "say", "says"], ["pensar", "yo", "p[ie]nso", "think", "thinks"],
     ["recordar", "yo", "rec[ue]rdo", "remember", "remembers"], ["servir", "él", "s[i]rve", "serve", "serves"]
   ];
+  // the infinitive's meaning, for the back of every card (mason,
+  // 2026-10-17: "the definition of the infinitive should be on the back")
+  var IRR_DEF = {
+    querer: "to want", pensar: "to think", empezar: "to start", cerrar: "to close", preferir: "to prefer",
+    entender: "to understand", perder: "to lose", sentir: "to feel", comenzar: "to begin", recomendar: "to recommend",
+    poder: "to be able to, can", dormir: "to sleep", volver: "to come back, return", encontrar: "to find",
+    almorzar: "to have lunch", recordar: "to remember", mostrar: "to show", contar: "to tell, count",
+    probar: "to try, taste", jugar: "to play", pedir: "to ask for, order", servir: "to serve", repetir: "to repeat",
+    seguir: "to keep going, follow", medir: "to measure", conseguir: "to get, manage to", elegir: "to choose",
+    tener: "to have", venir: "to come", decir: "to say, tell", hacer: "to do, make", poner: "to put",
+    salir: "to go out, leave", traer: "to bring", "oír": "to hear", conocer: "to know (a person, a place)",
+    parecer: "to seem", agradecer: "to be grateful for, thank", ofrecer: "to offer", traducir: "to translate",
+    conducir: "to drive", saber: "to know (a fact, how to)", ver: "to see", dar: "to give",
+    ser: "to be", ir: "to go", estar: "to be", haber: "there is, there are (hay)"
+  };
+  // The chips, on the BACK only (mason, 2026-10-17: "I don't want the
+  // chips on the front as a clue"; "the chips on the back should refer
+  // only to the irregular pattern for that conjugation"): the pattern(s)
+  // in that form — "digo" is yo: -go AND e → i. No spelling changes, no
+  // "vos: no cambia", and "tengo" is just -go (its e → ie is in tiene,
+  // which the note says).
+  var IRR_EXTRA = {
+    "decir|yo": { chips: ["e → i"], rich: "d[i][go]" }
+  };
+  // which change each verb's stem form has, for the vos pairs
+  var IRR_KIND = {};
+  IRR_EIE.forEach(function (v) { IRR_KIND[v.inf] = v.tag || "e → ie"; });
+  IRR_OUE.forEach(function (v) { IRR_KIND[v.inf] = v.tag || "o → ue"; });
+  IRR_EI.forEach(function (v) { IRR_KIND[v.inf] = v.tag || "e → i"; });
+  IRR_GO.forEach(function (x) { if (!IRR_KIND[x[0]]) IRR_KIND[x[0]] = "yo: -go"; });
+  IRR_KIND.tener = "e → ie"; IRR_KIND.decir = "e → i"; // their él/ella forms (tiene, dice)
+  function irrMeta(inf) { return inf + " · " + (IRR_DEF[inf] || ""); }
   // value "verb|person" → the card
   var IRR_CARDS = {};
   function irrAdd(range, key, c) { (IRR_CARDS[range] || (IRR_CARDS[range] = {}))[key] = c; }
   function irrSingle(range, tag, inf, person, rich, en, note) {
+    var ex = IRR_EXTRA[inf + "|" + person] || {};
+    if (ex.rich) rich = ex.rich;
     var form = irrPlain(rich);
     irrAdd(range, inf + "|" + person, {
-      frontMain: inf, frontSub: person + " · " + en, choice: tag, wordFront: true,
-      backMain: form, backRich: rich, backSpeak: form, answers: [form], backSub: note,
-      listenBackMain: form, listenBackRich: rich, listenBackSub: inf + " · " + person
+      frontMain: inf, frontSub: person + " · " + en, choice: tag, wordFront: true, chips: [tag].concat(ex.chips || []),
+      backMain: form, backRich: rich, backSpeak: form, answers: [form], backSub: note, backMeta: irrMeta(inf),
+      listenBackMain: form, listenBackRich: rich, listenBackSub: person + " · " + en
     });
   }
   [["eie", IRR_EIE, "e → ie"], ["oue", IRR_OUE, "o → ue"], ["ei", IRR_EI, "e → i"]].forEach(function (g) {
@@ -10101,7 +10136,7 @@
     });
   });
   IRR_GO.forEach(function (x) { irrSingle("go", "yo: -go", x[0], "yo", x[1], "I " + x[2], x[3]); });
-  IRR_ZCO.forEach(function (x) { irrSingle("zco", /zco/.test(x[1]) ? "yo: -zco" : "yo", x[0], "yo", x[1], "I " + x[2], x[3]); });
+  IRR_ZCO.forEach(function (x) { irrSingle("zco", /zco/.test(x[1]) ? "yo: -zco" : L("solo yo", "only yo"), x[0], "yo", x[1], "I " + x[2], x[3]); });
   IRR_TOTAL.forEach(function (x) {
     x[3].forEach(function (pf) {
       var en = x[4] ? x[4][pf[0]] : (IRR_PERSONS[pf[0]].en + " " + (IRR_PERSONS[pf[0]].third ? x[2] : x[1]));
@@ -10115,10 +10150,11 @@
     var v = { en: x[3], en3: x[4] };
     irrAdd("vos", x[0] + "|" + x[1] + "+vos", {
       frontMain: x[0], frontSub: x[1] + " · vos — " + irrEn(v, x[1]) + " · you " + x[3], choice: L("¿cambia con vos?", "does it change with vos?"), wordFront: true,
+      chips: [IRR_KIND[x[0]]], backMeta: irrMeta(x[0]),
       backMain: form + " · " + vn.vos, backRich: x[2] + " · " + vn.vos, backSpeak: form + ", " + vn.vos,
       answers: [form + " " + vn.vos, form + " y " + vn.vos, x[1] + " " + form + " vos " + vn.vos],
       backSub: L("con vos el acento cae en la terminación: la raíz no cambia", "with vos the stress falls on the ending, so the stem doesn't change"),
-      listenBackMain: form + " · " + vn.vos, listenBackRich: x[2] + " · " + vn.vos, listenBackSub: x[0] + " · " + x[1] + " · vos"
+      listenBackMain: form + " · " + vn.vos, listenBackRich: x[2] + " · " + vn.vos, listenBackSub: x[1] + " · vos — " + irrEn(v, x[1]) + " · you " + x[3]
     });
   });
   function irrRange(key, label) {
@@ -10143,9 +10179,11 @@
       var c = (IRR_CARDS[range] || {})[v];
       if (!c) return null;
       var o = Object.assign({}, c);
-      if (o.choice && typeof o.choice === "object") o.choice = topicText(o.choice);
       if (o.backSub && typeof o.backSub === "object") o.backSub = topicText(o.backSub);
-      o.listenBackSub = o.listenBackSub;
+      // nothing on the front says which change it is: that's the question
+      delete o.choice;
+      if (o.chips) o.backChips = o.chips.filter(Boolean).map(function (x) { return typeof x === "object" ? topicText(x) : x; });
+      delete o.chips;
       return o;
     },
     lesson: [
