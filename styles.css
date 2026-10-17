@@ -2414,7 +2414,8 @@
   .usage-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .usage-exempt { display: block; font-size: 11px; color: var(--ink-soft); }
   .usage-rules { margin-top: 10px; }
-  .usage-warm .usage-section { border-top: 1px solid var(--line); padding-top: 12px; }
+  .usage-warm .usage-section, .usage-r2 .usage-section { border-top: 1px solid var(--line); padding-top: 12px; }
+  .r2-actions { flex-wrap: wrap; margin: 8px 0 0; }
   .warm-sets { display: flex; flex-direction: column; gap: 6px; margin: 0 0 10px; }
   .warm-set { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: var(--ink); }
   .warm-set input { flex: none; margin: 0; transform: translateY(2px); }

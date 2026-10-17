@@ -931,6 +931,27 @@
       warm_stopped: "Parado en {done} de {total} ({miss} nuevos, {err} errores). Podés seguir: lo hecho no se repite.",
       warm_error: "Último error: «{text}» — {msg}",
       warm_not_paid: "La función tts todavía usa el recurso gratis (F0), así que paré para no gastar el mes gratis. Conectá el S0 y poné VOSEA_SPEECH_TIER=paid.",
+      warm_not_stored: "Un audio se hizo pero no se pudo guardar (el almacenamiento está lleno o no responde), así que paré. {msg}",
+      r2_title: "Audio en Cloudflare",
+      r2_loading: "Mirando Cloudflare…",
+      r2_off: "Los audios nuevos todavía se guardan en Supabase (1 GB gratis). Para pasarlos a Cloudflare seguí la guía de Cloudflare y después tocá Actualizar.",
+      r2_meter: "Cloudflare (audio guardado)",
+      r2_count: "{n} audios guardados en Cloudflare.",
+      r2_partial: "El conteo es parcial: hay más audios de los que se contaron.",
+      r2_error: "Cloudflare no respondió: {msg}",
+      r2_left: "En Supabase quedan {n} audios ({mb} MB).",
+      r2_none_left: "En Supabase no queda ningún audio.",
+      r2_copy: "Copiar a Cloudflare",
+      r2_purge: "Borrar de Supabase los ya copiados",
+      r2_stop: "Parar",
+      r2_copying: "Copiando… {seen} vistos · {copied} copiados · {skipped} ya estaban · {failed} fallaron",
+      r2_copy_done: "Listo: {copied} copiados · {skipped} ya estaban · {failed} fallaron",
+      r2_purging: "Borrando… {deleted} borrados · {kept} se quedan",
+      r2_purge_done: "Listo: {deleted} borrados de Supabase · {kept} se quedan",
+      r2_stopped: "Parado. Lo hecho queda hecho: podés seguir cuando quieras.",
+      r2_first_error: "Primer error: {msg}",
+      r2_fail: "Se cortó: {msg}",
+      r2_purge_confirm: "Esto borra de Supabase solo los audios que ya están completos en Cloudflare (se comprueba uno por uno). ¿Seguir?",
       lists_intro: "Armá una lista con los verbos, las palabras y las frases que quieras de tu colección — podés mezclarlos, por ejemplo todo lo útil para \"la cocina\" — y compartila con un enlace. Quien lo abra puede ver la lista e importarla a su propia cuenta, sin tocar el resto de tus datos.",
       lists_empty: "Todavía no creaste ninguna lista.",
       btn_create_list_toggle: "+ Crear lista",
@@ -1955,6 +1976,27 @@
       warm_stopped: "Stopped at {done} of {total} ({miss} new, {err} errors). You can start again: what's done isn't repeated.",
       warm_error: "Last error: “{text}” — {msg}",
       warm_not_paid: "The tts function is still on the free (F0) resource, so it stopped to save the free month. Connect the S0 resource and set VOSEA_SPEECH_TIER=paid.",
+      warm_not_stored: "A clip was made but couldn't be saved (storage is full or not answering), so it stopped. {msg}",
+      r2_title: "Audio on Cloudflare",
+      r2_loading: "Checking Cloudflare…",
+      r2_off: "New audio is still being saved in Supabase (1 GB free). To move it to Cloudflare, follow the Cloudflare guide and then tap Refresh.",
+      r2_meter: "Cloudflare (saved audio)",
+      r2_count: "{n} clips saved on Cloudflare.",
+      r2_partial: "The count is partial: there are more clips than were counted.",
+      r2_error: "Cloudflare didn't answer: {msg}",
+      r2_left: "{n} clips ({mb} MB) are left in Supabase.",
+      r2_none_left: "No clips are left in Supabase.",
+      r2_copy: "Copy to Cloudflare",
+      r2_purge: "Delete the copied ones from Supabase",
+      r2_stop: "Stop",
+      r2_copying: "Copying… {seen} seen · {copied} copied · {skipped} already there · {failed} failed",
+      r2_copy_done: "Done: {copied} copied · {skipped} already there · {failed} failed",
+      r2_purging: "Deleting… {deleted} deleted · {kept} kept",
+      r2_purge_done: "Done: {deleted} deleted from Supabase · {kept} kept",
+      r2_stopped: "Stopped. What's done stays done: you can carry on any time.",
+      r2_first_error: "First error: {msg}",
+      r2_fail: "It broke off: {msg}",
+      r2_purge_confirm: "This deletes from Supabase only the clips that are already whole on Cloudflare (checked one by one). Continue?",
       lists_intro: "Build a list out of any verbs, words, and phrases from your collection — you can mix them, for example everything useful for \"the kitchen\" — and share it with a link. Whoever opens it can see the list and import it into their own account, without touching the rest of your data.",
       lists_empty: "You haven't created any lists yet.",
       btn_create_list_toggle: "+ Create list",
@@ -2587,7 +2629,9 @@
     el.usageOverlay.hidden = false;
     renderUsage();
     renderWarm();
+    renderR2();
     refreshUsage();
+    refreshR2();
   }
   function closeUsage() { el.usageOverlay.hidden = true; }
 
@@ -2607,6 +2651,7 @@
     }, function () { usageError = "usage_error"; }).then(function () {
       usageLoading = false;
       renderUsage();
+      renderR2();
       if (!(warmRun && warmRun.running)) renderWarm();
     });
   }
@@ -3080,6 +3125,8 @@
     return { clips: n, chars: chars, bytes: chars * WARM_BYTES_PER_CHAR };
   }
   function warmStorageNow() {
+    // clips go to Cloudflare (10 GB free) once it is set up
+    if (r2State.loaded && r2State.configured && !r2State.error) return { used: r2State.bytes, free: R2_FREE_BYTES };
     var sb = usageData && usageData.supabase;
     if (!sb || sb.error) return null;
     var b = 0;
@@ -3155,6 +3202,138 @@
     box.appendChild(sec);
   }
 
+  // ---- Audio on Cloudflare (2026-10-17) ----
+  // The audio clips can live in a Cloudflare R2 bucket (10 GB free) instead
+  // of Supabase Storage (1 GB). The tts function switches over when its R2
+  // secrets are set; these owner-only actions (tts: r2_status / r2_copy /
+  // r2_purge) show where things stand and move the clips made before.
+  var R2_FREE_BYTES = 10 * 1073741824;
+  var r2State = { loaded: false, configured: false, files: 0, bytes: 0, partial: false, error: "", busy: "", stop: false, tally: null, msg: "" };
+
+  function r2Call(body) {
+    return supabaseClient.functions.invoke("tts", { body: body }).then(function (res) {
+      if (res.error) {
+        var ctx = res.error.context;
+        if (ctx && typeof ctx.json === "function") {
+          return Promise.resolve(ctx.clone ? ctx.clone().json() : ctx.json()).catch(function () { return null; }).then(function (b) {
+            throw new Error((b && (b.detail || b.error)) || ("HTTP " + (ctx.status || "?")));
+          });
+        }
+        throw new Error(res.error.message || "error");
+      }
+      if (!res.data) throw new Error("no_data");
+      if (res.data.error) throw new Error(res.data.detail || res.data.error);
+      return res.data;
+    });
+  }
+
+  function refreshR2() {
+    return r2Call({ action: "r2_status" }).then(function (d) {
+      r2State.loaded = true;
+      r2State.configured = !!d.configured;
+      r2State.files = Number(d.files) || 0;
+      r2State.bytes = Number(d.bytes) || 0;
+      r2State.partial = !!d.partial;
+      r2State.error = d.list_error ? String(d.list_error) : "";
+    }, function () {
+      // not an owner, or the function is the old one: just not available
+      r2State.loaded = true; r2State.configured = false; r2State.error = "";
+    }).then(function () { renderR2(); if (!(warmRun && warmRun.running)) renderWarm(); });
+  }
+
+  function r2SupabaseLeft() {
+    var sb = usageData && usageData.supabase;
+    if (!sb || sb.error) return null;
+    var n = 0, b = 0;
+    (sb.storage || []).forEach(function (x) { if (x.bucket === "tts-cache") { n += Number(x.files) || 0; b += Number(x.bytes) || 0; } });
+    return { n: n, bytes: b };
+  }
+
+  // copy or purge, page after page, until the function says there is no more
+  function r2Run(kind) {
+    if (r2State.busy) return;
+    r2State.busy = kind; r2State.stop = false; r2State.msg = "";
+    var tl = r2State.tally = kind === "copy" ? { seen: 0, copied: 0, skipped: 0, failed: 0, firstErr: "" } : { deleted: 0, kept: 0, errors: 0 };
+    var cursor = 0, bad = 0, ended = "";
+    function step() {
+      if (r2State.stop) { ended = "stopped"; return Promise.resolve(); }
+      var body = kind === "copy" ? { action: "r2_copy", limit: 25, offset: cursor } : { action: "r2_purge", limit: 50, skip: cursor };
+      return r2Call(body).then(function (d) {
+        bad = 0;
+        if (kind === "copy") {
+          tl.seen += d.seen || 0; tl.copied += d.copied || 0; tl.skipped += d.skipped || 0; tl.failed += d.failed || 0;
+          if (!tl.firstErr && d.failures && d.failures[0]) tl.firstErr = d.failures[0];
+          cursor = d.next;
+        } else {
+          tl.deleted += d.deleted || 0; tl.kept += d.kept || 0; tl.errors += d.errors || 0;
+          cursor = d.next_skip;
+        }
+        renderR2();
+        if (cursor === null || cursor === undefined) { ended = "done"; return; }
+        return step();
+      }, function (e) {
+        bad++;
+        if (bad >= 3) { ended = "fail"; r2State.msg = t("r2_fail", { msg: (e && e.message) || "" }); return; }
+        return new Promise(function (ok) { setTimeout(ok, 1500); }).then(step);
+      });
+    }
+    renderR2();
+    return step().then(function () {
+      var done = kind === "copy"
+        ? t("r2_copy_done", { copied: progNum(tl.copied), skipped: progNum(tl.skipped), failed: progNum(tl.failed) })
+        : t("r2_purge_done", { deleted: progNum(tl.deleted), kept: progNum(tl.kept) });
+      if (ended === "done") r2State.msg = done;
+      else if (ended === "stopped") r2State.msg = t("r2_stopped");
+      r2State.busy = "";
+      renderR2();
+      refreshUsage();
+      refreshR2();
+    });
+  }
+
+  function renderR2() {
+    var box = el.usageR2;
+    if (!box) return;
+    box.textContent = "";
+    var sec = usageSection(t("r2_title"));
+    if (!r2State.loaded) { sec.appendChild(uNode("p", "usage-note", t("r2_loading"))); box.appendChild(sec); return; }
+    if (!r2State.configured) { sec.appendChild(uNode("p", "usage-note", t("r2_off"))); box.appendChild(sec); return; }
+    if (r2State.error) sec.appendChild(uNode("p", "usage-problem", t("r2_error", { msg: r2State.error })));
+    else {
+      var freeMb = R2_FREE_BYTES / 1048576;
+      sec.appendChild(usageMeter(t("r2_meter"), t("usage_of_mb", { used: usageMb(r2State.bytes), free: progNum(freeMb) }), r2State.bytes, R2_FREE_BYTES, {}));
+      sec.appendChild(uNode("p", "usage-note", t("r2_count", { n: progNum(r2State.files) })));
+      if (r2State.partial) sec.appendChild(uNode("p", "usage-note", t("r2_partial")));
+    }
+    var left = r2SupabaseLeft();
+    if (left) sec.appendChild(uNode("p", "usage-note", left.n > 0 ? t("r2_left", { n: progNum(left.n), mb: usageMb(left.bytes) }) : t("r2_none_left")));
+    var busy = r2State.busy;
+    if (left && (left.n > 0 || busy)) {
+      var actions = uNode("div", "form-actions r2-actions");
+      var copy = uNode("button", "btn-secondary", busy === "copy" ? t("r2_stop") : t("r2_copy"));
+      copy.type = "button"; copy.id = "r2-copy";
+      copy.disabled = busy === "purge";
+      copy.addEventListener("click", function () { if (r2State.busy === "copy") { r2State.stop = true; copy.disabled = true; } else r2Run("copy"); });
+      actions.appendChild(copy);
+      var purge = uNode("button", "btn-secondary", busy === "purge" ? t("r2_stop") : t("r2_purge"));
+      purge.type = "button"; purge.id = "r2-purge";
+      purge.disabled = busy === "copy" || !!r2State.error;
+      purge.addEventListener("click", function () {
+        if (r2State.busy === "purge") { r2State.stop = true; purge.disabled = true; return; }
+        if (!window.confirm(t("r2_purge_confirm"))) return;
+        r2Run("purge");
+      });
+      actions.appendChild(purge);
+      sec.appendChild(actions);
+    }
+    var tl = r2State.tally;
+    if (tl && busy === "copy") sec.appendChild(uNode("p", "warm-progress", t("r2_copying", { seen: progNum(tl.seen), copied: progNum(tl.copied), skipped: progNum(tl.skipped), failed: progNum(tl.failed) })));
+    if (tl && busy === "purge") sec.appendChild(uNode("p", "warm-progress", t("r2_purging", { deleted: progNum(tl.deleted), kept: progNum(tl.kept) })));
+    if (!busy && r2State.msg) sec.appendChild(uNode("p", "warm-progress", r2State.msg));
+    if (tl && tl.firstErr && (busy === "copy" || r2State.msg)) sec.appendChild(uNode("p", "usage-problem", t("r2_first_error", { msg: tl.firstErr })));
+    box.appendChild(sec);
+  }
+
   function startWarm() {
     if (!warmPlan || (warmRun && warmRun.running)) return;
     var voices = warmVoiceList(), jobs = [];
@@ -3184,6 +3363,8 @@
             throw new Error(bits.join(" · "));
           });
         }
+        // made, but nowhere to put it: more would only be paid for and lost
+        if (res.data.stored === false) { run.error++; run.stop = true; run.lastError = t("warm_not_stored", { msg: res.data.store_error || "" }); return; }
         // a new clip made on the free resource would use up the free month
         if (!res.data.cached && !res.data.paid) { run.miss++; run.stop = true; run.lastError = t("warm_not_paid"); return; }
         if (res.data.cached) run.hit++; else run.miss++;
@@ -3243,7 +3424,7 @@
   function refreshAllTranslatedViews() {
     applyGrammarLabels();
     applyI18n();
-    if (el.usageOverlay && !el.usageOverlay.hidden) { renderUsage(); renderWarm(); }
+    if (el.usageOverlay && !el.usageOverlay.hidden) { renderUsage(); renderWarm(); renderR2(); }
     refreshListFilterUI();
     renderList();
     renderWordList();
@@ -3890,6 +4071,7 @@
     usageRefresh: document.getElementById("usage-refresh"),
     usageClose: document.getElementById("usage-close"),
     usageWarm: document.getElementById("usage-warm"),
+    usageR2: document.getElementById("usage-r2"),
     acctMenuLogout: document.getElementById("acct-menu-logout"),
     settingsOverlay: document.getElementById("settings-overlay"),
     settingsMsg: document.getElementById("settings-msg"),
@@ -4391,7 +4573,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "118";
+  var VOSEA_BUILD = "119";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7399,6 +7581,9 @@
           });
         }
         if (res.error || !res.data || !res.data.url) throw (res.error || new Error("no_url"));
+        // made but not saved (storage full): it plays now, but the address
+        // is the audio itself, so it isn't remembered
+        if (res.data.stored === false) return { url: res.data.url, how: "edge: AZURE SYNTHESIS (not saved)" };
         ttsUrlMemo[key] = res.data.url;
         saveTtsUrlMemo();
         return { url: res.data.url, how: res.data.cached ? "edge: cache hit" : "edge: AZURE SYNTHESIS (cache miss)" };
@@ -7454,6 +7639,7 @@
     p.then(clear, clear);
     return p;
   }
+  window.voseaTtsLoad = function (text, vk) { return ttsLoadAudio(text, vk); }; // tests
 
   // Powers the "Buscar en RAE" shortcut on the add-verb and add-word forms
   // (2026-09-26). Calls the dle-lookup Edge Function (see
@@ -7895,6 +8081,7 @@
       supabaseClient.functions.invoke("tts", { body: { text: pair.text, voice: pair.voice } })
         .then(function (res) {
           if (res.error || !res.data || !res.data.url) throw (res.error || new Error("no_url"));
+          if (res.data.stored === false) throw new Error("not_stored: " + (res.data.store_error || ""));
           if (res.data.cached) {
             stats.hit++;
           } else {
@@ -17783,7 +17970,7 @@
     if (!el.qaMenu.hidden) closeQuickAdd();
     if (!el.welcomeOverlay.hidden) closeWelcome();
   });
-  el.usageRefresh.addEventListener("click", function () { refreshUsage(); });
+  el.usageRefresh.addEventListener("click", function () { refreshUsage(); refreshR2(); });
   el.usageClose.addEventListener("click", closeUsage);
   el.acctMenuLogout.addEventListener("click", function () {
     closeAcctMenu();
