@@ -657,6 +657,13 @@
       esc_skipped: "Sin contestar",
       esc_review_n: "Repasar ({n})",
       esc_again: "Otra vez",
+      esc_near: "Lo más parecido: «{x}»",
+      esc_close_n: "{n} para revisar",
+      esc_close_one: "1 para revisar",
+      esc_repeat_same: "Te lo repite. Tocá el micrófono para contestar.",
+      esc_repeat_other: "Te lo dice de otra forma. Tocá el micrófono para contestar.",
+      esc_repeats: "Pediste que te lo repitan ({n})",
+      esc_repeats_one: "Pediste que te lo repitan",
       play_how_escena: "terminaste una escena",
       play_kick_escena: "¡Escena completa!",
       play_rule_racha: "Racha de {a}, {b}, {c}… días",
@@ -1674,6 +1681,13 @@
       esc_skipped: "Not answered",
       esc_review_n: "Review ({n})",
       esc_again: "Play again",
+      esc_near: "Closest: “{x}”",
+      esc_close_n: "{n} to review",
+      esc_close_one: "1 to review",
+      esc_repeat_same: "They say it again. Tap the mic to answer.",
+      esc_repeat_other: "They say it another way. Tap the mic to answer.",
+      esc_repeats: "You asked them to repeat it ({n})",
+      esc_repeats_one: "You asked them to repeat it",
       play_how_escena: "finished a scene",
       play_kick_escena: "Scene complete!",
       play_rule_racha: "A streak of {a}, {b}, {c}… days",
@@ -4377,7 +4391,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "115";
+  var VOSEA_BUILD = "116";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -13105,10 +13119,11 @@
   function escLine(p, i) {
     if (p.lines[i] !== undefined) return p.lines[i];
     var s = p.sc.steps[i];
-    var line = escPick(s.es).replace(/\{(\w+)\}/g, function (_, name) { var set = p.vals[name]; return set ? escSayValue(name, set[0]) : ""; });
+    var line = escFill(p, escPick(s.es));
     p.lines[i] = line;
     return line;
   }
+  function escFill(p, line) { return String(line).replace(/\{(\w+)\}/g, function (_, name) { var set = p.vals[name]; return set ? escSayValue(name, set[0]) : ""; }); }
   function escStart(sc) {
     if (!escCanPlay()) return;
     sc = escApplyPicks(escCast(sc), escChoosePicks(sc._base || sc));
@@ -13214,7 +13229,7 @@
   function escMine(kind, text, sub) {
     var wrap = progEl("div", "esc-msg esc-me is-" + kind);
     var bub = progEl("div", "esc-bub");
-    bub.appendChild(progEl("span", "esc-mark", kind === "ok" ? "✓" : (kind === "unsure" ? "?" : "≠")));
+    bub.appendChild(progEl("span", "esc-mark", { ok: "✓", close: "✓", unsure: "?", repeat: "↻" }[kind] || "≠"));
     bub.appendChild(document.createTextNode(" " + (text || "—")));
     if (sub) bub.appendChild(progEl("span", "esc-sub", sub));
     wrap.appendChild(bub);
@@ -13225,18 +13240,18 @@
   // Other ways to say a turn, behind a small "otras formas (n)" — the
   // best answer (unless it was just shown as "Mejor") and the alts,
   // minus what you said.
-  function escOtherWays(step, said, bestShown) {
+  function escOtherWays(step, said, bestShown, nearShown) {
     var seen = {}, out = [];
-    var saidN = speechNorm(said || "");
+    var saidN = speechNorm(said || ""), nearN = speechNorm(nearShown || "");
     [step.best].concat(step.alts || []).forEach(function (x, i) {
       var n = speechNorm(x);
-      if (!n || seen[n] || n === saidN || (i === 0 && bestShown)) return;
+      if (!n || seen[n] || n === saidN || n === nearN || (i === 0 && bestShown)) return;
       seen[n] = true; out.push(x);
     });
     return out;
   }
-  function escAltsInto(wrap, step, said, bestShown) {
-    var list = escOtherWays(step, said, bestShown);
+  function escAltsInto(wrap, step, said, bestShown, nearShown) {
+    var list = escOtherWays(step, said, bestShown, nearShown);
     if (!list.length) return;
     var bub = wrap.querySelector(".esc-bub") || wrap;
     var btn = progEl("button", "esc-alts-btn", t("esc_alts_n", { n: list.length }));
@@ -13308,12 +13323,16 @@
   // would be good if it showed the phrase that was said to you before
   // it"): the last line before the turn that wasn't one person talking to
   // the other, exactly as it was played this time.
-  function escPromptBefore(p, i) {
+  function escPromptIndex(p, i) {
     var steps = p.sc.steps, pick = -1;
     for (var j = i - 1; j >= 0 && steps[j].r; j--) {
       if (!steps[j].to) { pick = j; break; }
       if (pick < 0) pick = j;
     }
+    return pick;
+  }
+  function escPromptBefore(p, i) {
+    var steps = p.sc.steps, pick = escPromptIndex(p, i);
     if (pick < 0 || p.lines[pick] === undefined) return null;
     return { who: topicText(escRole(p.sc, steps[pick].r).name), text: p.lines[pick] };
   }
@@ -13480,6 +13499,76 @@
     if (lw.length > 1 && speechNorm(lw[lw.length - 1]) === speechNorm(m[2])) lw.pop();
     return { h: h2, cut: Object.assign({}, h2, { display: m[1], lexical: lw.join(" "), tail: m[2] }) };
   }
+  // ---- exact or close (2026-10-17) ----
+  // mason: "if the answer … isn't an exact match to any of the accepted
+  // phrases, but it is very close a check and proceeding is okay, but the
+  // box should highlight the golden or yellow color … a cue that the
+  // student should review this." Exact = what you said IS the best answer
+  // or one of the alts (accents, case, punctuation and a hesitation sound
+  // at either end don't matter). Anything else that still counts (the ok
+  // pieces, a reply that contains an answer plus more, the pronunciation
+  // score, the scoring pass, your own "Sí, lo dije bien") is close: ✓ in
+  // gold, with the nearest accepted phrase under it.
+  var ESC_HESITATE = /^(?:(?:eh+|em+|ehm+|mm+|este|ah+)(?: |$))+|(?:(?:^| )(?:eh+|em+|ehm+|mm+|este|ah+))+$/g;
+  function escExactN(x) { return speechNorm(x).replace(ESC_HESITATE, "").trim(); }
+  function escExact(step, heard) {
+    var h = escExactN(heard);
+    if (!h) return null;
+    var hs = h.replace(/ /g, "");
+    var all = [step.best].concat(step.alts || []);
+    for (var i = 0; i < all.length; i++) { var e = escExactN(all[i]); if (e && (e === h || e.replace(/ /g, "") === hs)) return all[i]; }
+    return null;
+  }
+  // the accepted phrase nearest to what you said (shared longer words,
+  // both ways)
+  function escNearest(step, heard) {
+    function sc(x) { return (escWordOverlap(heard, x) + escWordOverlap(x, heard)) / 2; }
+    var best = null, top = -1;
+    (step.alts || []).forEach(function (x) { var n = sc(x); if (n > top) { top = n; best = x; } });
+    // the best answer wins anything about as near
+    return best === null || sc(step.best) >= top - 0.1 ? step.best : best;
+  }
+  window.voseaEscExact = function (step, heard) { return escExact(step, heard); }; // tests
+
+  // ---- "¿Cómo?": asking them to say it again (2026-10-17) ----
+  // mason: "as with real conversation, we don't always catch what the
+  // speaker said the first time. especially when it's loud." When what you
+  // said isn't an exact answer, it's checked against the usual ways of
+  // asking for it again (¿cómo?, ¿qué?, ¿perdón?, ¿podés repetir?, no te
+  // entendí, más despacio…). The whole reply has to be that — "Perdón,
+  // ¿me das permiso?" is an answer, "Perdón, ¿cómo?" is not — and then the
+  // person says their line again; ask a second time and they say it
+  // another way (another of that line's versions, same values). It
+  // doesn't use up your try, and every ask is logged with the turn.
+  var ESC_REP_FILL = ["perdon", "perdona", "perdone", "perdoname", "perdoneme", "disculpa", "disculpame", "disculpe", "disculpeme", "lo siento", "che", "eh", "em", "ehm", "mm", "este", "ay", "uy", "bueno", "si", "a ver", "por favor", "senor", "senora", "amigo", "amiga", "y"];
+  var ESC_REP_SORRY = /^(perdon|perdona|perdone|perdoname|perdoneme|disculpa|disculpame|disculpe|disculpeme)$/;
+  var ESC_REP_CORE = [
+    "como", "que", "mande", "como dijiste", "como dice", "como dijo", "como decis", "como me dijiste", "como era",
+    "que dijiste", "que dijo", "que me dijiste", "que decis", "que me decis", "que me dijo",
+    "(?:me lo |me la |lo |la |me )?(?:podes|puede|podrias|podria|pueden|podrian|podes volver a|puede volver a) (?:repetir(?:lo|la|melo|mela|me)?|decir(?:lo|la|melo|mela|me)? (?:de nuevo|otra vez)|hablar mas (?:despacio|lento|fuerte|alto))",
+    "(?:me lo |me la |lo |la |me )?(?:repetis|repite|repetirias|repetiria|repetimelo|repetimela|repetime|repetilo|repetila|repeti|repita|repitamelo|repitame|repitalo|repetir)",
+    "otra vez", "de nuevo", "una vez mas",
+    "no (?:te |le |les |lo |la )?(?:entiendo|entendi|escuche|escucho|oi|oigo)(?: bien| nada)?",
+    "no se (?:escucha|escucho|entiende|entendio|oye|oyo)(?: bien| nada)?",
+    "no te sigo", "mas (?:despacio|lento|fuerte|alto)"
+  ].map(function (x) { return new RegExp("^(?:" + x + ")(?= |$)"); });
+  var ESC_REP_FILL_RE = ESC_REP_FILL.map(function (x) { return new RegExp("^" + x + "(?= |$)"); });
+  function escIsRepeatAsk(text) {
+    var rest = speechNorm(text);
+    if (!rest || rest.split(" ").length > 12) return false;
+    var core = false, sorry = false;
+    while (rest) {
+      var len = 0, isCore = false;
+      ESC_REP_CORE.forEach(function (re) { var m = re.exec(rest); if (m && m[0].length > len) { len = m[0].length; isCore = true; } });
+      if (!len) ESC_REP_FILL_RE.forEach(function (re) { var m = re.exec(rest); if (m && m[0].length > len) len = m[0].length; });
+      if (!len) return false;
+      if (isCore) core = true; else if (ESC_REP_SORRY.test(rest.slice(0, len))) sorry = true;
+      rest = rest.slice(len).trim();
+    }
+    return core || sorry; // a lone "¿Perdón?" asks for it again too
+  }
+  window.voseaEscIsRepeatAsk = function (text) { return escIsRepeatAsk(text); }; // tests
+
   function escJudge(step, data) {
     var td = escTidyHeard(data && data.heard);
     var d1 = Object.assign({}, data, { heard: td.h });
@@ -13492,6 +13581,11 @@
     return r2;
   }
   function escJudgeHeard(step, data) {
+    var res = escJudgeHeard0(step, data);
+    if (res.auto_grade === "bien") res.exact = !!(escExact(step, res.heard) || escExact(step, (data && data.heard && data.heard.display) || ""));
+    return res;
+  }
+  function escJudgeHeard0(step, data) {
     var res = hablarJudge({ answers: [step.best] }, data);
     var heard = res.heard || res.heard_display || "";
     var wrong = null;
@@ -13537,8 +13631,11 @@
       p.busy = false;
       var r = escJudge(step, res.data);
       r.rec_ms = recMs;
-      speechDiagLog(escDiagBase(p, Object.assign(speechDiagFromResult(r), { rec_ms: recMs, detail: recInfo && recInfo.detail, extra: Object.assign(speechDiagResultExtra(r), { mime: recInfo && recInfo.mime, tail_dropped: r.tail_dropped || undefined, wrong: r.wrong ? true : undefined }) })));
+      // not an exact answer, but a way of asking for it again?
+      if (r.rule !== "nothing" && !(r.auto_grade === "bien" && r.exact) && (escIsRepeatAsk(r.heard_display) || escIsRepeatAsk(r.heard))) r.repeat_ask = true;
+      speechDiagLog(escDiagBase(p, Object.assign(speechDiagFromResult(r), { rec_ms: recMs, detail: recInfo && recInfo.detail, extra: Object.assign(speechDiagResultExtra(r), { mime: recInfo && recInfo.mime, tail_dropped: r.tail_dropped || undefined, wrong: r.wrong ? true : undefined, repeat_ask: r.repeat_ask || undefined, close: r.auto_grade === "bien" && !r.exact ? true : undefined }) })));
       if (r.rule === "nothing") { hablarDropStream(); escTurnPanel("speak", { hint: t("esc_heard_nothing") }); return; }
+      if (r.repeat_ask && escRepeatLine(p, String(r.heard_display || r.heard || "").trim())) return; // shown as heard: "¿Cómo?"
       if (r.auto_grade === "bien") { escResolve("bien", r, {}); return; }
       if (r.auto_grade === "otra") { escResolve("otra", r, {}); return; }
       // not sure: you decide
@@ -13553,6 +13650,37 @@
       escTurnPanel("speak", { hint: t("esc_analyse_error", { why: (err && err.message) || "" }), skip: true });
     });
   }
+  // You asked them to say it again: the line said to you plays again (the
+  // first time) or another version of it (after that). Returns false when
+  // there's no line to repeat (a turn the scene opens with): then it's
+  // judged as an answer.
+  function escRepeatLine(p, said) {
+    var c = p.cur, j = escPromptIndex(p, c.i);
+    if (j < 0 || p.lines[j] === undefined) return false;
+    var st = p.sc.steps[j];
+    c.repeats = (c.repeats || 0) + 1;
+    (c.repeatSaid = c.repeatSaid || []).push(said);
+    if (c.result) { c.result.repeats = c.repeats; } // asked on a retry
+    escMine("repeat", said);
+    var text = p.lines[j];
+    if (c.repeats > 1) {
+      var used = c.usedLines || (c.usedLines = [text]);
+      var all = (Array.isArray(st.es) ? st.es : [st.es]).map(function (x) { return escFill(p, x); });
+      var fresh = all.filter(function (x) { return used.map(speechNorm).indexOf(speechNorm(x)) === -1; });
+      if (!fresh.length) { c.usedLines = used = [text]; fresh = all.filter(function (x) { return speechNorm(x) !== speechNorm(text); }); }
+      if (fresh.length) { text = escPick(fresh); used.push(text); p.lines[j] = text; }
+    }
+    escTurnPanel("listen");
+    var b = escBubble(p, st.r, text, st.to);
+    p.pending.push(b);
+    var hint = t(c.repeats > 1 ? "esc_repeat_other" : "esc_repeat_same");
+    setTimeout(function () {
+      if (!escAlive(p) || p.cur !== c) return;
+      escSay(text, p.voices[st.r], b, st.r).then(function () { if (escAlive(p) && p.cur === c) escTurnPanel("speak", { hint: hint, skip: c.repeats > 2 }); });
+    }, 260 + Math.round(Math.random() * 240));
+    return true;
+  }
+
   // A spoken turn has its result. Only the first try counts (for the stars
   // and the log); a retry after a miss just lets you say it right.
   function escResolve(grade, r, how) {
@@ -13562,19 +13690,26 @@
     p.cur.tries++;
     var first = p.cur.tries === 1;
     var heardShown = r ? speechCleanShown(r.heard_display || r.heard) : "";
+    // right but not word for word (or right because you said so): gold
+    var close = grade === "bien" && !(r && r.exact && !how.userGraded);
+    var near = close && heardShown ? escNearest(step, heardShown) : null;
+    if (near && speechNorm(near) === speechNorm(heardShown)) near = null;
     var mine = null;
     if (!how.userGraded) {
-      if (grade === "bien") mine = escMine("ok", heardShown || step.best);
+      if (grade === "bien") mine = escMine(close ? "close" : "ok", heardShown || step.best, near ? t("esc_near", { x: near }) : "");
       else if (!how.skipped) mine = escMine("miss", heardShown, t("esc_better", { best: step.best }));
     } else {
       var last = el.escChat.lastElementChild;
-      if (last && last.classList.contains("is-unsure")) { mine = last; last.classList.remove("is-unsure"); last.classList.add(grade === "bien" ? "is-ok" : "is-miss"); var mk = last.querySelector(".esc-mark"); if (mk) mk.textContent = grade === "bien" ? "✓" : "≠"; if (grade !== "bien") last.firstChild.appendChild(progEl("span", "esc-sub", t("esc_better", { best: step.best }))); }
+      if (last && last.classList.contains("is-unsure")) { mine = last; last.classList.remove("is-unsure"); last.classList.add(grade === "bien" ? "is-close" : "is-miss"); var mk = last.querySelector(".esc-mark"); if (mk) mk.textContent = grade === "bien" ? "✓" : "≠"; if (grade !== "bien") last.firstChild.appendChild(progEl("span", "esc-sub", t("esc_better", { best: step.best }))); else if (near) last.firstChild.appendChild(progEl("span", "esc-sub", t("esc_near", { x: near }))); }
     }
-    if (mine && first) escAltsInto(mine, step, heardShown, grade !== "bien");
+    if (mine && first) escAltsInto(mine, step, heardShown, grade !== "bien", near);
     escRevealPending(p);
+    var reps = p.cur.repeats || 0;
     if (first) {
-      p.results.push({ kind: "speak", step: step, ok: grade === "bien", said: heardShown, skipped: !!how.skipped, prompt: escPromptBefore(p, p.cur.i) });
-      escLog(p, grade, "hablar", r ? Object.assign({}, r, { user_graded: !!how.userGraded }) : { rule: how.skipped ? "skipped" : "none" }, !how.userGraded && !how.skipped);
+      p.cur.result = { kind: "speak", step: step, ok: grade === "bien", close: close, near: near, said: heardShown, skipped: !!how.skipped, prompt: escPromptBefore(p, p.cur.i), repeats: reps };
+      p.results.push(p.cur.result);
+      var extraLog = { close: close || undefined, repeats: reps || undefined, repeat_said: reps ? p.cur.repeatSaid.slice(0, 5) : undefined };
+      escLog(p, grade, "hablar", Object.assign(r ? Object.assign({}, r, { user_graded: !!how.userGraded }) : { rule: how.skipped ? "skipped" : "none" }, extraLog), !how.userGraded && !how.skipped);
     }
     if (grade === "bien") { escTurnPanel("listen"); setTimeout(escAdvance, 900); return; }
     var after = function () { if (escAlive(p)) escTurnPanel("after", { retry: !how.skipped }); };
@@ -13640,10 +13775,13 @@
     box.textContent = "";
     box.appendChild(progEl("h2", null, t("esc_done_title")));
     box.appendChild(escStarsNode(stars, "esc-stars esc-stars-big"));
-    box.appendChild(progEl("p", "esc-end-sub", t("esc_first_try", { ok: ok, total: total }) + (before.plays ? " · " + t("esc_before", { n: before.ok }) : "")));
+    var closeN = p.results.filter(function (r) { return r.ok && r.close; }).length;
+    var sub = progEl("p", "esc-end-sub", t("esc_first_try", { ok: ok, total: total }) + (before.plays ? " · " + t("esc_before", { n: before.ok }) : ""));
+    if (closeN) { sub.appendChild(document.createTextNode(" · ")); sub.appendChild(progEl("span", "esc-end-close-n", t(closeN === 1 ? "esc_close_one" : "esc_close_n", { n: closeN }))); }
+    box.appendChild(sub);
     var recap = progEl("div", "esc-recap");
     p.results.forEach(function (r) {
-      var line = progEl("div", "esc-recap-row" + (r.ok ? " is-ok" : " is-miss"));
+      var line = progEl("div", "esc-recap-row" + (r.ok ? (r.close ? " is-close" : " is-ok") : " is-miss"));
       line.appendChild(progEl("span", "esc-mark", r.ok ? "✓" : "≠"));
       var main = progEl("span", "esc-recap-main");
       if (r.prompt) {
@@ -13658,12 +13796,14 @@
       var mineOk = r.kind === "speak" && r.ok && r.said;
       main.appendChild(progEl("span", "esc-recap-you", r.kind === "check" ? r.answer : (mineOk ? r.said : r.step.best)));
       if (!r.ok) main.appendChild(progEl("span", "esc-said", r.kind === "check" ? t("esc_you_chose", { v: r.said }) : (r.skipped ? t("esc_skipped") : t("esc_you_said", { said: r.said || "—" }))));
+      if (r.ok && r.close && r.near) main.appendChild(progEl("span", "esc-said esc-near", t("esc_near", { x: r.near })));
+      if (r.repeats) main.appendChild(progEl("span", "esc-said esc-reps", "↻ " + t(r.repeats === 1 ? "esc_repeats_one" : "esc_repeats", { n: r.repeats })));
       // three other ways, picked at random (mason, 2026-10-12: with ten per
       // turn the whole list made the recap too long): the model answer can
       // be one of them when you said it your own way; never the one shown
       if (r.kind === "speak" && (r.step.alts || []).length) {
-        var shownN = speechNorm(mineOk ? r.said : r.step.best), saidN = speechNorm(r.said || "");
-        var pool = (mineOk ? [r.step.best] : []).concat(r.step.alts).filter(function (x, i, a) { var n = speechNorm(x); return n !== shownN && n !== saidN && a.map(speechNorm).indexOf(n) === i; });
+        var shownN = speechNorm(mineOk ? r.said : r.step.best), saidN = speechNorm(r.said || ""), nearN = speechNorm(r.near || "");
+        var pool = (mineOk ? [r.step.best] : []).concat(r.step.alts).filter(function (x, i, a) { var n = speechNorm(x); return n !== shownN && n !== saidN && n !== nearN && a.map(speechNorm).indexOf(n) === i; });
         main.appendChild(progEl("span", "esc-said esc-also", t("esc_also", { list: escSample(pool, 3).map(function (x) { return "«" + x + "»"; }).join(" · ") })));
       }
       line.appendChild(main);
