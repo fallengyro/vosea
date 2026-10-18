@@ -963,13 +963,19 @@
       r2_first_error: "Primer error: {msg}",
       r2_fail: "Se cortó: {msg}",
       r2_purge_confirm: "Esto borra de Supabase solo los audios que ya están completos en Cloudflare (se comprueba uno por uno). ¿Seguir?",
+      esc_voice_title: "Voz de {role}",
+      esc_voice_aria: "Voz de {role}: {voice}. Cambiar",
+      esc_voice_premium: "Voces premium ✦ (ElevenLabs)",
+      esc_voice_standard: "Voces estándar",
+      esc_voice_hint: "Las voces premium suenan más naturales. Una aparece cuando ya tiene todas las líneas de este personaje.",
+      esc_voice_missing: "todavía le faltan líneas",
       el_title: "Voces de ElevenLabs",
       el_loading: "Mirando ElevenLabs…",
       el_off: "Falta la clave de ElevenLabs: poné ELEVENLABS_API_KEY en los secretos de Supabase y volvé a desplegar tts (mirá la guía de ElevenLabs).",
       el_error: "ElevenLabs no respondió: {msg}",
       el_credits: "Créditos de ElevenLabs",
       el_credits_of: "{used} de {limit} usados",
-      el_left: "Quedan {left} créditos · se renuevan el {date}.",
+      el_left: "Para generar quedan {left} créditos (el tope es el {pct} %: {cap}) · se renuevan el {date}.",
       el_voice: "Voz",
       el_ready: "lista",
       el_unit_cost: "{n} audios · {c} caracteres",
@@ -2044,13 +2050,19 @@
       r2_first_error: "First error: {msg}",
       r2_fail: "It broke off: {msg}",
       r2_purge_confirm: "This deletes from Supabase only the clips that are already whole on Cloudflare (checked one by one). Continue?",
+      esc_voice_title: "Voice for {role}",
+      esc_voice_aria: "Voice for {role}: {voice}. Change",
+      esc_voice_premium: "Premium voices ✦ (ElevenLabs)",
+      esc_voice_standard: "Standard voices",
+      esc_voice_hint: "Premium voices sound more natural. One shows up once all of this character's lines are made.",
+      esc_voice_missing: "lines still missing",
       el_title: "ElevenLabs voices",
       el_loading: "Checking ElevenLabs…",
       el_off: "The ElevenLabs key is missing: add ELEVENLABS_API_KEY to the Supabase secrets and redeploy tts (see the ElevenLabs guide).",
       el_error: "ElevenLabs didn't answer: {msg}",
       el_credits: "ElevenLabs credits",
       el_credits_of: "{used} of {limit} used",
-      el_left: "{left} credits left · they renew on {date}.",
+      el_left: "{left} credits left to generate with (the cap is {pct}%: {cap}) · they renew on {date}.",
       el_voice: "Voice",
       el_ready: "ready",
       el_unit_cost: "{n} clips · {c} characters",
@@ -3552,7 +3564,15 @@
     if (!unix) return "";
     return new Date(unix * 1000).toLocaleDateString(currentLang === "es" ? "es-AR" : "en-US", { day: "numeric", month: "short" });
   }
-  function elLeft() { var st = elState.status; return st && st.limit ? Math.max(0, st.limit - st.used) : 0; }
+  // Generating stops at 90 % of the account's credits (mason, 2026-10-17:
+  // "use 90% of the total credits (subscription + any purchased
+  // credits)"), keeping the last 10 % for the web editor and retakes. The
+  // total is ElevenLabs' own character_limit for this period, which
+  // includes rollover and bought credits.
+  var EL_CAP_PCT = 90;
+  function elCap(st) { return st && st.limit ? Math.floor(st.limit * EL_CAP_PCT / 100) : 0; }
+  function elLeftOf(st) { return st && st.limit ? Math.max(0, elCap(st) - (Number(st.used) || 0)) : 0; }
+  function elLeft() { return elLeftOf(elState.status); }
   function renderEleven() {
     var box = el.usageEleven;
     if (!box) return;
@@ -3564,8 +3584,8 @@
     if (st.configured === false) { sec.appendChild(uNode("p", "usage-note", t("el_off"))); return; }
     if (st.error) sec.appendChild(uNode("p", "usage-problem", st.old ? st.error : t("el_error", { msg: st.error })));
     else if (st.limit) {
-      sec.appendChild(usageMeter(t("el_credits"), t("el_credits_of", { used: progNum(st.used), limit: progNum(st.limit) }), st.used, st.limit, {}));
-      sec.appendChild(uNode("p", "usage-note", t("el_left", { left: progNum(elLeft()), date: elDate(st.reset_unix) })));
+      sec.appendChild(usageMeter(t("el_credits"), t("el_credits_of", { used: progNum(st.used), limit: progNum(st.limit) }), st.used, st.limit, { reservePct: EL_CAP_PCT }));
+      sec.appendChild(uNode("p", "usage-note", t("el_left", { left: progNum(elLeft()), cap: progNum(elCap(st)), pct: EL_CAP_PCT, date: elDate(st.reset_unix) })));
       var rate = elRate();
       sec.appendChild(uNode("p", "usage-note el-rate", rate ? t("el_rate", { r: progNum(rate, 2) }) : t("el_rate_unknown")));
     }
@@ -3645,7 +3665,7 @@
           // enough to say: ElevenLabs' counter can lag a moment)
           if (run.baseUsed === null) run.baseUsed = stt.used;
           else if (run.sent >= 1000) { var r = (stt.used - run.baseUsed) / run.sent; if (r >= 0.05 && r <= 3) elSetRate(r); }
-          var left = stt && stt.limit ? Math.max(0, stt.limit - stt.used) : 0;
+          var left = elLeftOf(stt);
           var needChars = need;
           // (if the rate is a little off and the credits run out mid-role,
           // the lines made so far are kept and not paid for again)
@@ -3829,6 +3849,7 @@
     applyGrammarLabels();
     applyI18n();
     if (el.usageOverlay && !el.usageOverlay.hidden) { renderUsage(); renderWarm(); renderR2(); renderEleven(); }
+    if (escVoicePick && !el.escVoiceOverlay.hidden) renderEscVoicePicker();
     refreshListFilterUI();
     renderList();
     renderWordList();
@@ -4477,6 +4498,10 @@
     usageWarm: document.getElementById("usage-warm"),
     usageR2: document.getElementById("usage-r2"),
     usageEleven: document.getElementById("usage-eleven"),
+    escVoiceOverlay: document.getElementById("esc-voice-overlay"),
+    escVoiceTitle: document.getElementById("esc-voice-title"),
+    escVoiceList: document.getElementById("esc-voice-list"),
+    escVoiceClose: document.getElementById("esc-voice-close"),
     acctMenuLogout: document.getElementById("acct-menu-logout"),
     settingsOverlay: document.getElementById("settings-overlay"),
     settingsMsg: document.getElementById("settings-msg"),
@@ -4978,7 +5003,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "123";
+  var VOSEA_BUILD = "125";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -13428,16 +13453,35 @@
 
   // ---- voices per role (remembered per scene, on this device) ----
   function escVoicesAll() { try { return JSON.parse(localStorage.getItem(ESC_VOICES_KEY) || "{}") || {}; } catch (e) { return {}; } }
+  // A role's voice: the one chosen for it on this device, if it can still
+  // play it; otherwise (2026-10-17, mason: "if a default voice selection
+  // is warranted, please default to a premium voice") a premium voice whose
+  // lines for this role are all made, the role's own gender first and not
+  // one another role of the scene already has; otherwise its standard voice.
+  // Saves from before (no _v) held every role's default as well, so those
+  // defaults don't count as a choice.
   function escVoices(sc) {
-    var saved = escVoicesAll()[sc.id] || {}, out = {};
-    // an ElevenLabs voice only while every line of that role exists in it
-    sc.roles.forEach(function (r) { var v = saved[r.key]; out[r.key] = TTS_VOICES[v] || escElevenReady(sc, r.key, v) ? v : (r.voice || ttsVoiceKey); });
+    var raw = escVoicesAll()[sc.id] || {}, legacy = !raw._v, out = {}, used = {};
+    sc.roles.forEach(function (r) {
+      var v = raw[r.key];
+      if (legacy && v === (r.voice || ttsVoiceKey)) v = null;
+      if (v && (TTS_VOICES[v] || escElevenReady(sc, r.key, v))) { out[r.key] = v; used[v] = true; }
+    });
+    sc.roles.forEach(function (r) {
+      if (out[r.key]) return;
+      var g = ESC_VOICE_G[r.voice] || "f";
+      var prem = Object.keys(ELEVEN_VOICES).filter(function (vk) { return !used[vk] && escElevenReady(sc, r.key, vk); });
+      prem.sort(function (a, b) { return (ELEVEN_VOICES[a].g === g ? 0 : 1) - (ELEVEN_VOICES[b].g === g ? 0 : 1); });
+      out[r.key] = prem[0] || r.voice || ttsVoiceKey;
+      used[out[r.key]] = true;
+    });
     return out;
   }
   function escSetVoice(sc, roleKey, vk) {
-    var all = escVoicesAll(), v = escVoices(sc);
-    v[roleKey] = vk;
-    all[sc.id] = v;
+    var all = escVoicesAll(), cur = Object.assign({}, all[sc.id] || {});
+    if (!cur._v) sc.roles.forEach(function (r) { if (cur[r.key] === (r.voice || ttsVoiceKey)) delete cur[r.key]; });
+    cur[roleKey] = vk; cur._v = 2;
+    all[sc.id] = cur;
     try { localStorage.setItem(ESC_VOICES_KEY, JSON.stringify(all)); } catch (e) {}
   }
 
@@ -13554,6 +13598,7 @@
     var cast = escCast(u.sc, voices), r = cast.roles.find(function (x) { return x.key === u.role; });
     return topicText(cast.name) + " · " + topicText(r ? r.name : { es: u.role, en: u.role });
   }
+  window.voseaEscVoices = function (id) { var sc = escById(id); return sc ? escVoices(sc) : null; }; // tests
   window.voseaElevenUnit = function (id, role, vk) { var sc = escById(id); return sc ? elevenUnit(sc, role, vk || "valeria") : null; }; // tests
 
   var elevenVoicesSql = true;
@@ -13569,6 +13614,8 @@
       (u.data || []).forEach(function (row) { ready[row.voice + "|" + row.scene + "|" + row.role] = row.sig; });
       (rt.data || []).forEach(function (row) { takes[row.voice + "\u0000" + (row.tag || "") + "\u0000" + row.text] = Number(row.take) || 0; });
       elevenUnitsReady = ready; elevenTakes = takes;
+      // the start screen's defaults may now be a premium voice
+      if (el.playPanel && !el.playPanel.hidden && el.escOverlay && el.escOverlay.hidden) renderPlay();
     }, function () { elevenVoicesSql = false; });
   }
 
@@ -13745,6 +13792,59 @@
     selectTopic(id);
     try { window.scrollTo({ top: 0 }); } catch (e) {}
   }
+  // The voice picker: premium (ElevenLabs) voices first, then the standard
+  // ones (Azure). A premium voice whose lines for this role aren't all made
+  // yet shows, but can't be picked. Each row says who the role becomes.
+  var escVoicePick = null;
+  function openEscVoicePicker(sc, roleKey) {
+    escVoicePick = { sc: sc, role: roleKey };
+    renderEscVoicePicker();
+    el.escVoiceOverlay.hidden = false;
+  }
+  function closeEscVoicePicker() { el.escVoiceOverlay.hidden = true; escVoicePick = null; }
+  function renderEscVoicePicker() {
+    var pk = escVoicePick;
+    if (!pk) return;
+    var sc = pk.sc, base = sc._base || sc, cur = escVoices(base), role = escRole(escCast(base, cur), pk.role);
+    el.escVoiceTitle.textContent = t("esc_voice_title", { role: topicText(role.name) });
+    var list = el.escVoiceList;
+    list.textContent = "";
+    function group(label, cls) { var li = document.createElement("li"); li.className = "picker-group " + cls; li.textContent = label; list.appendChild(li); }
+    function row(vk, ok) {
+      var li = document.createElement("li");
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "picker-row state-" + (cur[pk.role] === vk ? "include" : "neutral") + (ok ? "" : " is-off");
+      b.setAttribute("data-voice", vk);
+      b.disabled = !ok;
+      var left = document.createElement("span");
+      var nm = progEl("span", "name", escVoiceLabel(vk));
+      left.appendChild(nm);
+      if (ELEVEN_VOICES[vk]) left.appendChild(progEl("span", "voice-premium", " ✦"));
+      // who the role is with this voice
+      var v2 = {}; v2[pk.role] = vk;
+      var as = escRole(escCast(base, Object.assign({}, cur, v2)), pk.role);
+      left.appendChild(progEl("span", "meta", ok ? topicText(as.name) : t("esc_voice_missing")));
+      b.appendChild(left);
+      b.appendChild(progEl("span", "state-glyph"));
+      b.addEventListener("click", function () {
+        if (!ok) return;
+        escSetVoice(base, pk.role, vk);
+        closeEscVoicePicker();
+        renderPlay();
+      });
+      li.appendChild(b);
+      list.appendChild(li);
+    }
+    var prem = Object.keys(ELEVEN_VOICES);
+    if (prem.length) {
+      group(t("esc_voice_premium"), "is-premium");
+      prem.forEach(function (vk) { row(vk, escElevenReady(base, pk.role, vk)); });
+    }
+    group(t("esc_voice_standard"), "is-standard");
+    Object.keys(TTS_VOICES).forEach(function (vk) { row(vk, true); });
+  }
+
   function drawEscStart(sc) {
     var box = el.escBody;
     var voices = escVoices(sc), cast = escCast(sc, voices);
@@ -13758,17 +13858,17 @@
       var nm = progEl("span", "esc-role-n", topicText(r.name));
       nm.appendChild(progEl("small", null, topicText(r.sub)));
       row.appendChild(nm);
-      var seg = progEl("div", "lang-toggle esc-voice");
-      var pool = Object.keys(TTS_VOICES).concat(Object.keys(ELEVEN_VOICES).filter(function (vk) { return escElevenReady(sc, r.key, vk); }));
-      if (pool.length > 2) seg.classList.add("is-wide");
-      pool.forEach(function (vk) {
-        var b = progEl("button", "lang-option" + (voices[r.key] === vk ? " active" : "") + (ELEVEN_VOICES[vk] ? " is-eleven" : ""), escVoiceLabel(vk));
-        b.type = "button";
-        b.setAttribute("aria-pressed", voices[r.key] === vk ? "true" : "false");
-        b.setAttribute("data-role", r.key); b.setAttribute("data-voice", vk);
-        b.addEventListener("click", function () { escSetVoice(sc, r.key, vk); renderPlay(); });
-        seg.appendChild(b);
-      });
+      // the voice, behind a picker (2026-10-17, mason: "a slightly cleaner
+      // layout for the voice selection… behind a list (like the widget used
+      // for listas filtering)"); premium voices carry a ✦
+      var vk0 = voices[r.key], seg = progEl("button", "lists-trigger esc-voice-btn" + (ELEVEN_VOICES[vk0] ? " is-premium" : ""));
+      seg.type = "button";
+      seg.setAttribute("data-role", r.key);
+      seg.setAttribute("aria-label", t("esc_voice_aria", { role: topicText(r.name), voice: escVoiceLabel(vk0) }));
+      seg.appendChild(progEl("span", "stack-icon", "☰"));
+      seg.appendChild(progEl("span", "esc-voice-name", escVoiceLabel(vk0)));
+      if (ELEVEN_VOICES[vk0]) seg.appendChild(progEl("span", "voice-premium", "✦"));
+      seg.addEventListener("click", function () { openEscVoicePicker(sc, r.key); });
       row.appendChild(seg);
       box.appendChild(row);
     });
@@ -18525,6 +18625,8 @@
     if (!el.qaMenu.hidden) closeQuickAdd();
     if (!el.welcomeOverlay.hidden) closeWelcome();
   });
+  el.escVoiceClose.addEventListener("click", closeEscVoicePicker);
+  el.escVoiceOverlay.addEventListener("click", function (e) { if (e.target === el.escVoiceOverlay) closeEscVoicePicker(); });
   el.usageRefresh.addEventListener("click", function () { refreshUsage(); refreshR2(); if (!(elState.run && elState.run.running)) refreshEleven(); });
   el.usageClose.addEventListener("click", closeUsage);
   el.acctMenuLogout.addEventListener("click", function () {

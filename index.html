@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="123">
+<meta name="vosea-build" content="125">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1092,6 +1092,19 @@
      tri-state (tap to include, tap twice to exclude) instead of a single
      add action, and a live search narrows the list — this is what scales
      to many saved lists without the filter-chips row itself growing. -->
+<!-- Escenas: the voice for one role (2026-10-17) — premium (ElevenLabs)
+     voices, then the standard ones; same picker rows as the Listas filter. -->
+<div class="modal-overlay" id="esc-voice-overlay" hidden>
+  <div class="modal-card">
+    <h3 id="esc-voice-title">Voz</h3>
+    <p class="flash-setup-note" data-i18n="esc_voice_hint">Las voces premium suenan más naturales. Una aparece cuando ya tiene todas las líneas de este personaje.</p>
+    <ul class="picker-list esc-voice-list" id="esc-voice-list"></ul>
+    <div class="modal-actions">
+      <span></span>
+      <button type="button" class="btn-secondary" id="esc-voice-close" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="list-filter-overlay" hidden>
   <div class="modal-card">
     <h3 data-i18n="list_filter_title">Filtrar por lista</h3>
