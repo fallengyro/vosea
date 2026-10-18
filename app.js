@@ -969,8 +969,19 @@
       el_left: "Quedan {left} créditos · se renuevan el {date}.",
       el_voice: "Voz",
       el_ready: "lista",
-      el_unit_cost: "{n} audios · {c} créditos",
-      el_todo: "Faltan {n} personajes · {c} créditos en total.",
+      el_unit_cost: "{n} audios · {c} caracteres",
+      el_unit_credits: "≈ {k} créditos",
+      el_old_fn: "La función tts desplegada es la anterior: volvé a desplegar supabase/functions/tts.",
+      el_rate: "Por la API, cada carácter cuesta {r} créditos (medido en este dispositivo).",
+      el_rate_unknown: "Hasta medirlo (se mide al generar), se cuenta 1 crédito por carácter.",
+      el_have: "{voice}: {have} de {total} audios guardados.",
+      count_go: "Contar los audios guardados",
+      count_again: "Volver a contar",
+      count_running: "Contando… {n} de {of}",
+      count_total: "Guardados: {line} (contado a las {time}).",
+      count_voice: "{voice} {have}/{total}",
+      count_fail: "No se pudo contar: {msg}",
+      el_todo: "Faltan {n} personajes · {c} caracteres (≈ {k} créditos).",
       el_all_done: "Todos los personajes están listos con esta voz.",
       el_go: "Generar en orden",
       el_stop: "Parar",
@@ -2039,8 +2050,19 @@
       el_left: "{left} credits left · they renew on {date}.",
       el_voice: "Voice",
       el_ready: "ready",
-      el_unit_cost: "{n} clips · {c} credits",
-      el_todo: "{n} characters to go · {c} credits in all.",
+      el_unit_cost: "{n} clips · {c} characters",
+      el_unit_credits: "≈ {k} credits",
+      el_old_fn: "The deployed tts function is the previous one: redeploy supabase/functions/tts.",
+      el_rate: "Through the API, each character costs {r} credits (measured on this device).",
+      el_rate_unknown: "Until it's measured (it is while generating), 1 credit per character is assumed.",
+      el_have: "{voice}: {have} of {total} clips saved.",
+      count_go: "Count the saved clips",
+      count_again: "Count again",
+      count_running: "Counting… {n} of {of}",
+      count_total: "Saved: {line} (counted at {time}).",
+      count_voice: "{voice} {have}/{total}",
+      count_fail: "Couldn't count: {msg}",
+      el_todo: "{n} characters to go · {c} letters of text (≈ {k} credits).",
       el_all_done: "Every character is ready in this voice.",
       el_go: "Generate in order",
       el_stop: "Stop",
@@ -3197,17 +3219,114 @@
     return { used: b, free: (sb.free && sb.free.storage_bytes) || 1073741824 };
   }
 
+  // ---- How many clips are made, per voice (2026-10-17) ----
+  // mason: "it would be nice to see a count of the clips for each of the
+  // voices… if i add new content in the future, i expect that not only the
+  // elevenlabs voices will get more lines, but that tomas and elena get
+  // updated as well." "Contar los audios" asks the tts function for every
+  // clip name in Cloudflare (r2_keys: 12 characters each), works out the
+  // name of every clip the app can ask for (the warm-up plan's groups, in
+  // each voice; the same hash as the tts function: voice, text,
+  // TTS_CACHE_VERSION "v2", and the slash salt) and counts the ones already
+  // there. ElevenLabs names come from the function (eleven_keys), since the
+  // voice settings live there.
+  var clipCount = { running: false, done: false, at: 0, groups: {}, voices: {}, eleven: {}, error: "", n: 0, of: 0 };
+  var AZ_CACHE_VERSION = "v2", AZ_SLASH_SALT = "slash-pause-v1";
+  function clipSha(str) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)).then(function (buf) {
+      var v = new Uint8Array(buf), h = "";
+      for (var i = 0; i < 6; i++) h += (v[i] < 16 ? "0" : "") + v[i].toString(16);
+      return h;
+    });
+  }
+  // the first 12 characters of an Azure clip's name (tts function: sha256Hex)
+  function azureClipKey(voiceName, text) {
+    text = String(text || "").trim();
+    return clipSha(voiceName + "\u0000" + text + "\u0000" + AZ_CACHE_VERSION + (text.indexOf("/") !== -1 ? "\u0000" + AZ_SLASH_SALT : ""));
+  }
+  window.voseaClipKey = azureClipKey; // tests
+  function countClips() {
+    if (clipCount.running) return;
+    if (!warmPlan) warmPlan = buildWarmPlan();
+    var cc = clipCount = { running: true, done: false, at: 0, groups: {}, voices: {}, eleven: {}, error: "", n: 0, of: 0 };
+    var byName = {};
+    Object.keys(TTS_VOICES).forEach(function (vk) { byName[TTS_VOICES[vk]] = vk; });
+    var jobs = [];
+    warmPlan.sets.forEach(function (s) {
+      if (s.pairs) s.pairs.forEach(function (pr) { jobs.push({ g: s.key, vk: byName[pr.voice], voice: pr.voice, text: pr.text }); });
+      else Object.keys(TTS_VOICES).forEach(function (vk) { s.texts.forEach(function (tx) { jobs.push({ g: s.key, vk: vk, voice: TTS_VOICES[vk], text: tx }); }); });
+    });
+    var elJobs = [];
+    Object.keys(ELEVEN_VOICES).forEach(function (vk) {
+      elevenUnits(vk).forEach(function (u) { u.texts.forEach(function (tx) { elJobs.push({ vk: vk, item: { voice: "eleven:" + vk, text: tx, tag: u.tag, take: elevenTakeOf(vk, u.tag, tx) } }); }); });
+    });
+    cc.of = jobs.length + elJobs.length;
+    function paint() { renderWarm(); renderEleven(); }
+    paint();
+    var have = {};
+    function tally(bucket, key, got) { var x = bucket[key] || (bucket[key] = [0, 0]); x[1]++; if (got) x[0]++; }
+    function hashAll(i) {
+      if (i >= jobs.length) return Promise.resolve();
+      var part = jobs.slice(i, i + 400);
+      return Promise.all(part.map(function (j) { return azureClipKey(j.voice, j.text); })).then(function (keys) {
+        part.forEach(function (j, k) {
+          var got = !!have[keys[k]];
+          tally(cc.voices, j.vk, got);
+          tally(cc.groups[j.g] || (cc.groups[j.g] = {}), j.vk, got);
+        });
+        cc.n += part.length;
+        if (cc.n % 4000 < 400) paint();
+        return hashAll(i + 400);
+      });
+    }
+    function elevenAll(i) {
+      if (i >= elJobs.length) return Promise.resolve();
+      var part = elJobs.slice(i, i + 1000);
+      return elCall({ action: "eleven_keys", items: part.map(function (j) { return j.item; }) }).then(function (d) {
+        part.forEach(function (j, k) { tally(cc.eleven, j.vk, !!(d.keys && d.keys[k] && have[d.keys[k]])); });
+        cc.n += part.length;
+        return elevenAll(i + 1000);
+      });
+    }
+    return elCall({ action: "r2_keys" }).then(function (d) {
+      var ks = d.keys || "";
+      for (var i = 0; i + 12 <= ks.length; i += 12) have[ks.substr(i, 12)] = true;
+      return hashAll(0).then(function () { return elevenAll(0).catch(function () { /* an older tts: Azure counts only */ }); });
+    }).then(function () {
+      cc.done = true; cc.at = Date.now();
+    }, function (e) {
+      cc.error = e && e.code === "unknown_action" ? t("el_old_fn") : t("count_fail", { msg: (e && e.message) || "" });
+    }).then(function () { cc.running = false; paint(); });
+  }
+  function countLine(bucket, keys) {
+    return keys.filter(function (vk) { return bucket[vk]; }).map(function (vk) {
+      return t("count_voice", { voice: escVoiceLabel(vk), have: progNum(bucket[vk][0]), total: progNum(bucket[vk][1]) });
+    }).join(" · ");
+  }
+
   function renderWarm() {
     var box = el.usageWarm;
     if (!box) return;
     box.textContent = "";
     var sec = usageSection(t("warm_title"));
     sec.appendChild(uNode("p", "usage-note", t("warm_intro")));
+    // how many are made, per voice
+    var cbox = uNode("div", "count-box");
+    var cbtn = uNode("button", "btn-secondary", clipCount.running ? t("count_running", { n: progNum(clipCount.n), of: progNum(clipCount.of) }) : t(clipCount.done ? "count_again" : "count_go"));
+    cbtn.type = "button"; cbtn.id = "count-go";
+    cbtn.disabled = clipCount.running || !!(warmRun && warmRun.running);
+    cbtn.addEventListener("click", function () { countClips(); });
+    cbox.appendChild(cbtn);
+    if (clipCount.done) {
+      cbox.appendChild(uNode("p", "usage-note count-total", t("count_total", { line: countLine(clipCount.voices, Object.keys(TTS_VOICES)) + (Object.keys(clipCount.eleven).length ? " · " + countLine(clipCount.eleven, Object.keys(ELEVEN_VOICES)) : ""), time: usageTime(new Date(clipCount.at).toISOString()) })));
+    }
+    if (clipCount.error) cbox.appendChild(uNode("p", "usage-problem", clipCount.error));
     if (!warmPlan) {
       var calc = uNode("button", "btn-secondary", t("warm_calc"));
       calc.type = "button";
       calc.addEventListener("click", function () { warmPlan = buildWarmPlan(); renderWarm(); });
       sec.appendChild(calc);
+      sec.appendChild(cbox);
       box.appendChild(sec);
       return;
     }
@@ -3224,6 +3343,7 @@
       cb.addEventListener("change", function () { warmPicked[s.key] = cb.checked; renderWarm(); });
       lab.appendChild(cb);
       var txt = uNode("span", "warm-set-name", t("warm_set_" + s.key));
+      if (clipCount.done && clipCount.groups[s.key]) txt.appendChild(uNode("small", "warm-set-have", countLine(clipCount.groups[s.key], Object.keys(TTS_VOICES))));
       lab.appendChild(txt);
       lab.appendChild(uNode("span", "count", t("warm_set_count", { n: progNum(sc.n), mb: progNum(sc.chars * WARM_BYTES_PER_CHAR / 1048576) })));
       list.appendChild(lab);
@@ -3262,6 +3382,7 @@
         done: progNum(r.done), total: progNum(r.total), miss: progNum(r.miss), hit: progNum(r.hit), err: progNum(r.error) })));
       if (r.lastError) sec.appendChild(uNode("p", "usage-problem", r.lastError));
     }
+    sec.appendChild(cbox);
     box.appendChild(sec);
   }
 
@@ -3390,6 +3511,17 @@
   // and "Generar en orden": unit by unit, only what's missing, and only
   // when the credits left cover the whole unit (tags included).
   var elState = { loaded: false, status: null, vk: Object.keys(ELEVEN_VOICES)[0], run: null };
+  // Credits per character through the API (2026-10-17). ElevenLabs:
+  // "for generations made in the app (the web editor), credits are used at
+  // 1 credit per character"; through the API v4 is billed by the
+  // character at a rate that comes to ~275,000 characters for the plan
+  // (≈ 0.44 credits each). voseá uses the API, so the real rate is measured
+  // during "Generar" (credits used ÷ characters sent) and kept on this
+  // device. Until it's measured, 1 credit per character (never short).
+  var EL_RATE_KEY = "vosea-el-rate";
+  function elRate() { try { var r = Number(localStorage.getItem(EL_RATE_KEY)); return r >= 0.05 && r <= 3 ? r : 0; } catch (e) { return 0; } }
+  function elSetRate(r) { try { localStorage.setItem(EL_RATE_KEY, String(Math.round(r * 1000) / 1000)); } catch (e) {} }
+  function elCredits(chars) { return Math.ceil(chars * (elRate() || 1)); }
   function elCall(body) {
     return supabaseClient.functions.invoke("tts", { body: body }).then(function (res) {
       if (res.error) {
@@ -3405,7 +3537,10 @@
     });
   }
   function refreshEleven() {
-    return Promise.all([elCall({ action: "eleven_status" }).catch(function (e) { return { configured: true, error: e.message }; }), loadElevenVoices()]).then(function (r) {
+    return Promise.all([elCall({ action: "eleven_status" }).catch(function (e) {
+      // an older tts (before commit 100) doesn't know these actions
+      return { configured: true, error: e.code === "unknown_action" ? t("el_old_fn") : e.message, old: e.code === "unknown_action" };
+    }), loadElevenVoices()]).then(function (r) {
       elState.loaded = true; elState.status = r[0];
       renderEleven();
     });
@@ -3424,10 +3559,12 @@
     if (!elState.loaded) { sec.appendChild(uNode("p", "usage-note", t("el_loading"))); return; }
     var st = elState.status || {};
     if (st.configured === false) { sec.appendChild(uNode("p", "usage-note", t("el_off"))); return; }
-    if (st.error) sec.appendChild(uNode("p", "usage-problem", t("el_error", { msg: st.error })));
+    if (st.error) sec.appendChild(uNode("p", "usage-problem", st.old ? st.error : t("el_error", { msg: st.error })));
     else if (st.limit) {
       sec.appendChild(usageMeter(t("el_credits"), t("el_credits_of", { used: progNum(st.used), limit: progNum(st.limit) }), st.used, st.limit, {}));
       sec.appendChild(uNode("p", "usage-note", t("el_left", { left: progNum(elLeft()), date: elDate(st.reset_unix) })));
+      var rate = elRate();
+      sec.appendChild(uNode("p", "usage-note el-rate", rate ? t("el_rate", { r: progNum(rate, 2) }) : t("el_rate_unknown")));
     }
     if (!elevenVoicesSql) sec.appendChild(uNode("p", "usage-problem", t("el_sql")));
     var vks = Object.keys(ELEVEN_VOICES), run = elState.run, busy = !!(run && run.running);
@@ -3448,10 +3585,13 @@
       li.setAttribute("data-unit", u.sc.id + "|" + u.role);
       li.appendChild(uNode("span", "el-unit-n", elevenUnitName(u)));
       li.appendChild(uNode("span", "count", ready ? "✓ " + t("el_ready") : t("el_unit_cost", { n: progNum(u.texts.length), c: progNum(u.chars) })));
+      li.title = t("el_unit_credits", { k: progNum(elCredits(u.chars)) });
       list.appendChild(li);
       if (!ready) { todo++; todoChars += u.chars; }
     });
-    sec.appendChild(uNode("p", "usage-note el-todo", todo ? t("el_todo", { n: progNum(todo), c: progNum(todoChars) }) : t("el_all_done")));
+    sec.appendChild(uNode("p", "usage-note el-todo", todo ? t("el_todo", { n: progNum(todo), c: progNum(todoChars), k: progNum(elCredits(todoChars)) }) : t("el_all_done")));
+    var cc = clipCount.eleven[elState.vk];
+    if (cc) sec.appendChild(uNode("p", "usage-note el-have", t("el_have", { voice: ELEVEN_VOICES[elState.vk].label, have: progNum(cc[0]), total: progNum(cc[1]) })));
     sec.appendChild(list);
     sec.appendChild(uNode("p", "usage-note", t("el_note")));
     var actions = uNode("div", "form-actions");
@@ -3465,7 +3605,7 @@
   }
   function elevenRun() {
     if (elState.run && elState.run.running) return;
-    var vk = elState.vk, run = elState.run = { running: true, stop: false, msg: "", bad: false, cur: "", finished: 0 };
+    var vk = elState.vk, run = elState.run = { running: true, stop: false, msg: "", bad: false, cur: "", finished: 0, sent: 0, baseUsed: null };
     var queue = elevenUnits(vk).filter(function (u) { return elevenUnitsReady[vk + "|" + u.sc.id + "|" + u.role] !== u.sig; });
     function say(key, vars, bad) { run.msg = t(key, vars); run.bad = !!bad; renderEleven(); }
     function wait(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
@@ -3498,14 +3638,22 @@
         missing.forEach(function (it) { need += elevenSpoken(it.text, it.tag).length; });
         return elCall({ action: "eleven_status" }).then(function (stt) {
           elState.status = stt;
+          // credits used ÷ characters sent so far in this run (once it's
+          // enough to say: ElevenLabs' counter can lag a moment)
+          if (run.baseUsed === null) run.baseUsed = stt.used;
+          else if (run.sent >= 1000) { var r = (stt.used - run.baseUsed) / run.sent; if (r >= 0.05 && r <= 3) elSetRate(r); }
           var left = stt && stt.limit ? Math.max(0, stt.limit - stt.used) : 0;
+          var needChars = need;
+          // (if the rate is a little off and the credits run out mid-role,
+          // the lines made so far are kept and not paid for again)
+          need = elCredits(needChars);
           if (need > left) { run.stop = true; run.end = "low"; say("el_low", { unit: name, need: progNum(need), left: progNum(left), date: elDate(stt && stt.reset_unix) }); return false; }
           var done = items.length - missing.length, spent = 0, k = 0, failed = null;
           function worker() {
             if (failed || run.stop || k >= missing.length) return Promise.resolve();
             var it = missing[k++];
             return makeOne(it, 0).then(function (c) {
-              spent += c; done++;
+              spent += c; done++; run.sent += c;
               say("el_progress", { unit: name, done: progNum(done), total: progNum(items.length), spent: progNum(spent) });
               return worker();
             }, function (e) { failed = e; });
@@ -3534,9 +3682,14 @@
     renderEleven();
     return loop().then(function () {
       run.running = false; run.cur = "";
+      // one last reading for the rate
+      if (run.sent >= 1000 && run.baseUsed !== null) return elCall({ action: "eleven_status" }).then(function (stt) { var r = (stt.used - run.baseUsed) / run.sent; if (r >= 0.05 && r <= 3) elSetRate(r); }, function () {}).then(finish);
+      return finish();
+    });
+    function finish() {
       if (!run.end) { run.end = run.stop ? "stopped" : "done"; run.bad = false; run.msg = run.end === "done" ? t("el_done", { n: progNum(run.finished) }) : t("el_stopped"); }
       return refreshEleven();
-    });
+    }
   }
 
   function renderR2() {
@@ -4822,7 +4975,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "121";
+  var VOSEA_BUILD = "122";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
