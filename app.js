@@ -78,7 +78,10 @@
   // hasn't been made yet. The voice ids and settings live in the tts
   // function (ELEVEN_VOICES there); ELEVEN_VER matches its
   // ELEVEN_CACHE_VERSION. See "ElevenLabs voices" below.
-  var ELEVEN_VOICES = { valeria: { label: "Valeria", g: "f", fallback: "elena" } };
+  var ELEVEN_VOICES = {
+    valeria: { label: "Valeria", g: "f", fallback: "elena" },
+    agustin: { label: "Agustín", g: "m", fallback: "tomas" } // 2026-10-17, after Valeria
+  };
   var ELEVEN_VER = "e1";
   var TTS_VOICE_LOCAL_KEY = "vosea-tts-voice";
   var ttsVoiceKey = (function () {
@@ -4975,7 +4978,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "122";
+  var VOSEA_BUILD = "123";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
