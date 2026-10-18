@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="126">
+<meta name="vosea-build" content="127">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -29,7 +29,19 @@
 </head>
 <body>
 
-<section id="auth-screen" class="auth-wrap">
+<!-- Opening (2026-10-18, mason: "when the webapp opens it briefly loads as
+     though it is new… you see several flashes with different states"): this
+     covers the app while it signs in and loads your things, then fades out.
+     app.js hides it; the inline timer is only a net in case app.js never
+     runs (the login screen used to show at once, so it never stays stuck). -->
+<div class="boot-screen" id="boot-screen" role="status" aria-live="polite">
+  <div class="boot-mark">voseá</div>
+  <div class="boot-tag">rioplatense &middot; voseo</div>
+  <div class="boot-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+</div>
+<script>setTimeout(function () { var b = document.getElementById("boot-screen"); if (b && !b.hidden) { b.hidden = true; var a = document.getElementById("auth-screen"), s = document.getElementById("app-screen"); if (a && s && s.hidden) a.hidden = false; } }, 12000);</script>
+
+<section id="auth-screen" class="auth-wrap" hidden>
   <div class="auth-card">
     <h1>voseá</h1>
     <p class="tag" data-i18n="app_tagline">rioplatense · voseo</p>
@@ -1435,6 +1447,7 @@
     <div class="welcome-kick" id="welcome-kick"></div>
     <h2 class="welcome-title" id="welcome-title"></h2>
     <p class="welcome-text" id="welcome-text"></p>
+    <button type="button" class="welcome-listen" id="welcome-listen" hidden>▶ Escuchar</button>
     <div class="welcome-pack" id="welcome-pack" hidden>
       <b data-i18n="welcome_pack_title">¿Arrancamos con el paquete inicial?</b>
       <span id="welcome-pack-sub"></span>

@@ -170,22 +170,24 @@
       welcome_menu: "Ver la bienvenida",
       welcome_kick_0: "Bienvenida",
       welcome_title_0: "Cinco pestañas, un ciclo",
-      welcome_text_0: "Aprendés algo en Temas, lo guardás en Colección, lo fijás con tarjetas y lo usás en Jugar. Hoy te dice qué toca y Progreso, cómo vas. Te mostramos dónde está cada cosa.",
+      welcome_text_0: "voseá funciona como un ciclo. Aprendés cómo funciona algo en **Temas**, guardás lo que vas escuchando en tu **Colección**, lo fijás practicando con tarjetas y lo usás en voz alta en **Jugar**. **Hoy** te dice qué te conviene hacer cada día y **Progreso** te muestra cómo vas. En los próximos pasos te mostramos dónde está cada cosa.",
       welcome_kick_1: "Pestaña Hoy",
       welcome_title_1: "Empezá cada día acá",
-      welcome_text_1: "Lo que te toca hoy, en tres partes: las tarjetas que se te están por olvidar (Practicar), el tema en el que ibas (Aprender) y la próxima escena (Jugar). Tocá una y arrancás.",
+      welcome_text_1: "Es la primera pestaña y la que conviene abrir cada día. Tiene tres partes: **Practicar**, con las tarjetas que se te están por olvidar; **Aprender**, con el tema en el que ibas; y **Jugar**, con la próxima escena. Tocá cualquiera y vas directo, sin tener que buscar nada.",
       welcome_kick_2: "Pestaña Colección",
       welcome_title_2: "Lo tuyo: verbos, palabras y frases",
-      welcome_text_2: "Lo que escuchás en la calle lo agregás con el + de arriba. Filtrá por tipo o por lista, armá listas (y compartilas) y tocá Practicar para hacer tarjetas con lo que elegiste.",
+      welcome_text_2: "Acá vive todo lo que vas sumando. Cuando escuchás algo nuevo en la calle, lo agregás con el **+** de arriba. Podés filtrar por tipo o por lista, armar **Listas** y compartirlas, y tocar **Practicar** para convertir lo que elegiste en tarjetas.",
       welcome_kick_3: "Pestaña Temas",
       welcome_title_3: "Cómo funciona el castellano de acá",
-      welcome_text_3: "Cada tema explica algo (el voseo, los números, el pretérito) con ejemplos de la calle, y se practica en tarjetas: Leer, Escuchar o Hablar. Están todos abiertos; en Camino los ves en orden, con las escenas en el medio.",
+      welcome_text_3: "Cada tema explica una parte del idioma (el voseo, los números, el pretérito…) con ejemplos que vas a escuchar en la calle. Después lo practicás en tarjetas de tres maneras: **Leer**, **Escuchar** o **Hablar**. Están todos abiertos; en **Camino** los ves en el orden de los libros, con las escenas en el medio.",
       welcome_kick_4: "Pestaña Jugar",
       welcome_title_4: "Usalo en voz alta",
-      welcome_text_4: "Escenas: charlas de todos los días (la panadería, el taxi, el médico). La panadería está abierta; las demás se abren cuando sabés sus frases. Además: Partida (sin fin), Contrarreloj (60 segundos) y Te reto (con un amigo).",
+      welcome_text_4: "Las **Escenas** son charlas de todos los días (la panadería, el taxi, el médico) en las que respondés hablando. La panadería está abierta desde el principio; las demás se abren cuando ya sabés sus frases. Y para desafiarte a vos o a tus amigos tenés **Partida** (sin fin), **Contrarreloj** (60 segundos) y **Te reto** (las mismas tarjetas para los dos).",
       welcome_kick_5: "Pestaña Progreso",
       welcome_title_5: "Mirá cómo vas",
-      welcome_text_5: "Tu semana y tu racha, lo que te cuesta, lo que ya aprendiste y cada tiempo verbal por persona. Acá ves qué conviene repasar.",
+      welcome_text_5: "Acá ves tu semana y tu racha, lo que más te cuesta, lo que ya aprendiste y cómo vas con cada tiempo verbal y cada persona. Es el lugar para decidir qué repasar.",
+      welcome_listen: "Escuchar",
+      welcome_stop: "Parar",
       welcome_pack_title: "¿Arrancamos con el paquete inicial?",
       welcome_next: "Siguiente",
       welcome_start: "Empezar",
@@ -978,6 +980,11 @@
       esc_voice_standard: "Voces estándar",
       esc_voice_hint: "Las voces premium suenan más naturales. Una aparece cuando ya tiene todas las líneas de este personaje.",
       esc_voice_missing: "todavía le faltan líneas",
+      el_welcome_title: "Bienvenida narrada",
+      el_welcome_es: "Bienvenida · castellano",
+      el_welcome_en: "Bienvenida · inglés",
+      el_welcome_go: "Generar la bienvenida (≈ {k} créditos)",
+      el_welcome_confirm: "Esto genera la bienvenida narrada en castellano y en inglés, con Valeria y Agustín (≈ {k} créditos). Puede usar el 10 % de reserva. ¿Seguir?",
       el_title: "Voces de ElevenLabs",
       el_loading: "Mirando ElevenLabs…",
       el_off: "Falta la clave de ElevenLabs: poné ELEVENLABS_API_KEY en los secretos de Supabase y volvé a desplegar tts (mirá la guía de ElevenLabs).",
@@ -1272,22 +1279,24 @@
       welcome_menu: "See the welcome",
       welcome_kick_0: "Welcome",
       welcome_title_0: "Five tabs, one loop",
-      welcome_text_0: "You learn something in Topics, keep it in Collection, make it stick with cards, and use it in Play. Today tells you what's next and Progress how you're doing. Here's where everything is.",
+      welcome_text_0: "voseá works as a loop. You learn how something works in **Topics**, keep what you hear in your **Collection**, make it stick by practicing with flashcards, and use it out loud in **Play**. **Today** tells you what's worth doing each day, and **Progress** shows how you're doing. The next steps show you where everything is.",
       welcome_kick_1: "The Today tab",
       welcome_title_1: "Start each day here",
-      welcome_text_1: "What's up for today, in three parts: the cards you're about to forget (Practice), the topic you were on (Learn), and the next scene (Play). Tap one and you're off.",
+      welcome_text_1: "It's the first tab, and the one to open every day. It has three parts: **Practice**, with the flashcards you're about to forget; **Learn**, with the topic you were on; and **Play**, with the next scene. Tap any of them and you go straight there, without having to look for anything.",
       welcome_kick_2: "The Collection tab",
       welcome_title_2: "Yours: verbs, words and phrases",
-      welcome_text_2: "Add what you hear on the street with the + at the top. Filter by type or by list, make lists (and share them), and tap Practice to turn what you picked into cards.",
+      welcome_text_2: "Everything you add lives here. When you hear something new on the street, add it with the **+** at the top. You can filter by type or by list, make **Lists** and share them, and tap **Practice** to turn what you picked into flashcards.",
       welcome_kick_3: "The Topics tab",
       welcome_title_3: "How the Spanish here works",
-      welcome_text_3: "Each topic explains something (voseo, numbers, the past tense) with examples from the street, and you practice it on cards: Read, Listen or Speak. They're all open; Path shows them in order, with the scenes along the way.",
+      welcome_text_3: "Each topic explains one part of the language (voseo, numbers, the past tense…) with examples you'll hear on the street. Then you practice it on flashcards three ways: **Read**, **Listen** or **Speak**. They're all open; **Path** shows them in the order of the textbooks, with the scenes along the way.",
       welcome_kick_4: "The Play tab",
       welcome_title_4: "Use it out loud",
-      welcome_text_4: "Escenas: everyday conversations (the bakery, the taxi, the doctor). The bakery is open; the others open once you know their phrases. Also: Partida (endless), Contrarreloj (60 seconds) and Te reto (with a friend).",
+      welcome_text_4: "**Escenas** are everyday conversations (the bakery, the taxi, the doctor) where you answer out loud. The bakery is open from the start; the others open once you know their phrases. And to challenge yourself or your friends, there's **Partida** (endless), **Contrarreloj** (60 seconds) and **Te reto** (the same flashcards for both of you).",
       welcome_kick_5: "The Progress tab",
       welcome_title_5: "See how you're doing",
-      welcome_text_5: "Your week and streak, what's giving you trouble, what you've learned, and each verb tense by person. This is where you see what to review.",
+      welcome_text_5: "Here you see your week and your streak, what's giving you the most trouble, what you've learned, and how you're doing with each verb tense and person. It's the place to decide what to review.",
+      welcome_listen: "Listen",
+      welcome_stop: "Stop",
       welcome_pack_title: "Start with the starter pack?",
       welcome_next: "Next",
       welcome_start: "Get started",
@@ -2074,6 +2083,11 @@
       esc_voice_standard: "Standard voices",
       esc_voice_hint: "Premium voices sound more natural. One shows up once all of this character's lines are made.",
       esc_voice_missing: "lines still missing",
+      el_welcome_title: "Narrated welcome",
+      el_welcome_es: "Welcome · Spanish",
+      el_welcome_en: "Welcome · English",
+      el_welcome_go: "Generate the welcome (≈ {k} credits)",
+      el_welcome_confirm: "This makes the narrated welcome in Spanish and English, with Valeria and Agustín (≈ {k} credits). It may use the 10% reserve. Continue?",
       el_title: "ElevenLabs voices",
       el_loading: "Checking ElevenLabs…",
       el_off: "The ElevenLabs key is missing: add ELEVENLABS_API_KEY to the Supabase secrets and redeploy tts (see the ElevenLabs guide).",
@@ -3635,6 +3649,29 @@
     if (cc) sec.appendChild(uNode("p", "usage-note el-have", t("el_have", { voice: ELEVEN_VOICES[elState.vk].label, have: progNum(cc[0]), total: progNum(cc[1]) })));
     sec.appendChild(list);
     sec.appendChild(uNode("p", "usage-note", t("el_note")));
+    // the narrated welcome (both languages, Valeria and Agustín in turns)
+    var wu = welcomeUnits(), wTodo = 0, wChars = 0, wl = uNode("ul", "el-units el-welcome");
+    wu.forEach(function (u) {
+      var ready = elevenUnitsReady[u.vk + "|" + u.sc.id + "|n"] === u.sig;
+      var li = uNode("li", "el-unit" + (ready ? " is-ready" : ""));
+      li.setAttribute("data-unit", u.sc.id + "|" + u.vk);
+      li.appendChild(uNode("span", "el-unit-n", u.name));
+      li.appendChild(uNode("span", "count", ready ? "✓ " + t("el_ready") : t("el_unit_cost", { n: progNum(u.texts.length), c: progNum(u.chars) })));
+      wl.appendChild(li);
+      if (!ready) { wTodo++; wChars += u.chars; }
+    });
+    sec.appendChild(uNode("h5", "el-sub", t("el_welcome_title")));
+    sec.appendChild(wl);
+    if (wTodo) {
+      var wgo = uNode("button", "btn-secondary", t("el_welcome_go", { k: progNum(elCredits(wChars)) }));
+      wgo.type = "button"; wgo.id = "el-welcome-go";
+      wgo.disabled = busy || !st.limit || !!st.error || !elevenVoicesSql;
+      wgo.addEventListener("click", function () {
+        if (!window.confirm(t("el_welcome_confirm", { k: progNum(elCredits(wChars)) }))) return;
+        elevenRun(welcomeUnits(), { reserve: true });
+      });
+      var wa = uNode("div", "form-actions"); wa.appendChild(wgo); sec.appendChild(wa);
+    }
     var actions = uNode("div", "form-actions");
     var go = uNode("button", "btn-primary", busy ? t("el_stop") : t("el_go"));
     go.type = "button"; go.id = "el-go";
@@ -3644,10 +3681,14 @@
     sec.appendChild(actions);
     if (run && run.msg) sec.appendChild(uNode("p", run.bad ? "usage-problem" : "warm-progress", run.msg));
   }
-  function elevenRun() {
+  // queue: the units to make (default: the chosen voice's scene roles);
+  // opts.reserve: may use the last 10 % (the narrated welcome, asked for
+  // explicitly, like a retake)
+  function elevenRun(queueIn, opts) {
     if (elState.run && elState.run.running) return;
-    var vk = elState.vk, run = elState.run = { running: true, stop: false, msg: "", bad: false, cur: "", finished: 0, sent: 0, baseUsed: null };
-    var queue = elevenUnits(vk).filter(function (u) { return elevenUnitsReady[vk + "|" + u.sc.id + "|" + u.role] !== u.sig; });
+    opts = opts || {};
+    var run = elState.run = { running: true, stop: false, msg: "", bad: false, cur: "", finished: 0, sent: 0, baseUsed: null };
+    var queue = (queueIn || elevenUnits(elState.vk)).filter(function (u) { return elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] !== u.sig; });
     function say(key, vars, bad) { run.msg = t(key, vars); run.bad = !!bad; renderEleven(); }
     function wait(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
     function have(items) {
@@ -3660,7 +3701,9 @@
       return next();
     }
     function makeOne(it, tries) {
-      return elCall({ text: it.text, voice: "eleven:" + vk, tag: it.tag, take: it.take, gen: true }).then(function (d) {
+      var body = { text: it.text, voice: it.voice, tag: it.tag, take: it.take, gen: true };
+      if (it.lang) body.lang = it.lang;
+      return elCall(body).then(function (d) {
         if (d.stored === false) throw new Error("not_stored: " + (d.store_error || ""));
         return d.chars || elevenSpoken(it.text, it.tag).length;
       }, function (e) {
@@ -3672,7 +3715,8 @@
       var name = elevenUnitName(u);
       run.cur = u.sc.id + "|" + u.role;
       say("el_checking", { unit: name });
-      var items = u.texts.map(function (tx) { return { text: tx, tag: u.tag, take: elevenTakeOf(vk, u.tag, tx), voice: "eleven:" + vk }; });
+      var vk = u.vk;
+      var items = u.texts.map(function (tx) { var it = { text: tx, tag: u.tag, take: elevenTakeOf(vk, u.tag, tx), voice: "eleven:" + vk }; if (u.lang === "en") it.lang = "en"; return it; });
       return have(items).then(function (h) {
         var missing = items.filter(function (it, i) { return !h[i]; });
         var need = 0;
@@ -3683,7 +3727,7 @@
           // enough to say: ElevenLabs' counter can lag a moment)
           if (run.baseUsed === null) run.baseUsed = stt.used;
           else if (run.sent >= 1000) { var r = (stt.used - run.baseUsed) / run.sent; if (r >= 0.05 && r <= 3) elSetRate(r); }
-          var left = elLeftOf(stt);
+          var left = opts.reserve ? Math.max(0, (Number(stt.limit) || 0) - (Number(stt.used) || 0)) : elLeftOf(stt);
           var needChars = need;
           // (if the rate is a little off and the credits run out mid-role,
           // the lines made so far are kept and not paid for again)
@@ -3909,8 +3953,10 @@
   // user_settings.lang column — 2026-09-26, mason's ask) stands until the
   // person picks something in settings.
   function loadUserSettings() {
-    if (!currentUser) return;
-    supabaseClient.from("user_settings").select("lang, tts_voice").eq("user_id", currentUser.id).maybeSingle().then(function (res) {
+    if (!currentUser) return Promise.resolve();
+    loadSpeechDiagSetting();
+    loadPlayGoal();
+    return supabaseClient.from("user_settings").select("lang, tts_voice").eq("user_id", currentUser.id).maybeSingle().then(function (res) {
       if (res.error) return;
       var lang = (res.data && res.data.lang) || "en";
       if (lang !== currentLang) {
@@ -3927,8 +3973,6 @@
       }
       renderVoiceButtons();
     });
-    loadSpeechDiagSetting();
-    loadPlayGoal();
   }
 
   // ================= conjugation model (unchanged from the original tool) =================
@@ -4634,6 +4678,8 @@
     acctMenuWelcome: document.getElementById("acct-menu-welcome"),
     welcomeOverlay: document.getElementById("welcome-overlay"),
     welcomeTabs: document.getElementById("welcome-tabs"),
+    welcomeListen: document.getElementById("welcome-listen"),
+    bootScreen: document.getElementById("boot-screen"),
     welcomeKick: document.getElementById("welcome-kick"),
     welcomeTitle: document.getElementById("welcome-title"),
     welcomeText: document.getElementById("welcome-text"),
@@ -5022,7 +5068,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "126";
+  var VOSEA_BUILD = "127";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6522,6 +6568,65 @@
   // in the order of the tab bar, each with a small copy of the bar showing
   // where it is. The starter pack is offered on the last step.
   var WELCOME_TABS = [null, "hoy", "col", "topics", "play", "progress"];
+  // Feature names in the text are marked **like this** and shown in bold
+  // (mason: "for the words that are actually app features… bold them").
+  function richText(node, str) {
+    node.textContent = "";
+    String(str).split("**").forEach(function (part, i) {
+      if (!part) return;
+      if (i % 2) node.appendChild(progEl("b", "welcome-feature", part)); else node.appendChild(document.createTextNode(part));
+    });
+  }
+  // Narrated by the premium voices (2026-10-18, mason: "it would be cool if
+  // we used the premium voices to describe the intro… speak the description
+  // part leaving out the title"): Valeria and Agustín take turns, step by
+  // step, in the app's language. The clips are made from the Uso page
+  // (ElevenLabs → "Bienvenida narrada"); a step only offers Escuchar once
+  // its clip exists. Once you tap Escuchar, the next steps play as you go.
+  var WELCOME_NARRATORS = ["valeria", "agustin"];
+  var WELCOME_TAG = "warm, welcoming";
+  function welcomeNarrator(n) { return WELCOME_NARRATORS[n % WELCOME_NARRATORS.length]; }
+  function welcomeSpoken(n, lang) { var d = I18N[lang] || I18N.es; return String(d["welcome_text_" + n] || "").split("**").join(""); }
+  // the clips of one narrator in one language, as a unit like a scene role's
+  function welcomeUnit(vk, lang) {
+    var texts = [];
+    WELCOME_TABS.forEach(function (x, n) { if (welcomeNarrator(n) === vk) texts.push(welcomeSpoken(n, lang)); });
+    var chars = 0;
+    texts.forEach(function (tx) { chars += elevenSpoken(tx, WELCOME_TAG).length; });
+    return {
+      vk: vk, sc: { id: "welcome-" + lang }, role: "n", tag: WELCOME_TAG, texts: texts, chars: chars, lang: lang,
+      name: t(lang === "en" ? "el_welcome_en" : "el_welcome_es") + " · " + ELEVEN_VOICES[vk].label,
+      sig: elevenFnv(ELEVEN_VER + "\n" + vk + "\n" + WELCOME_TAG + "\n" + lang + "\n" + texts.join("\n"))
+    };
+  }
+  function welcomeUnits() {
+    var out = [];
+    ["es", "en"].forEach(function (lang) { WELCOME_NARRATORS.forEach(function (vk) { if (ELEVEN_VOICES[vk]) out.push(welcomeUnit(vk, lang)); }); });
+    return out;
+  }
+  function welcomeHasAudio(n) {
+    var vk = welcomeNarrator(n), lang = currentLang === "en" ? "en" : "es";
+    if (!ELEVEN_VOICES[vk]) return false;
+    var u = welcomeUnit(vk, lang);
+    return elevenUnitsReady[vk + "|" + u.sc.id + "|n"] === u.sig;
+  }
+  var welcomeNarrate = false, welcomeAudio = null;
+  function welcomeStopAudio() { if (welcomeAudio) { try { welcomeAudio.pause(); } catch (e) {} } el.welcomeListen.classList.remove("is-playing"); }
+  function welcomePlay(n) {
+    welcomeStopAudio();
+    var vk = welcomeNarrator(n), lang = currentLang === "en" ? "en" : "es";
+    el.welcomeListen.classList.add("is-playing");
+    el.welcomeListen.textContent = "■ " + t("welcome_stop");
+    return ttsLoadAudio(welcomeSpoken(n, lang), vk, { tag: WELCOME_TAG, lang: lang }).then(function (r) {
+      if (el.welcomeOverlay.hidden || welcomeStep !== n) return;
+      if (!welcomeAudio) welcomeAudio = new Audio();
+      welcomeAudio.onended = welcomeAudio.onerror = function () { if (welcomeStep === n) { el.welcomeListen.classList.remove("is-playing"); el.welcomeListen.textContent = "▶ " + t("welcome_listen"); } };
+      welcomeAudio.src = r.src;
+      var pr = welcomeAudio.play();
+      if (pr && pr.catch) pr.catch(function () { el.welcomeListen.classList.remove("is-playing"); el.welcomeListen.textContent = "▶ " + t("welcome_listen"); });
+    }, function () { el.welcomeListen.classList.remove("is-playing"); el.welcomeListen.textContent = "▶ " + t("welcome_listen"); });
+  }
+  window.voseaWelcomeUnits = function () { return welcomeUnits(); }; // tests
   var WELCOME_KEY = "vosea-welcome-seen";
   var welcomeStep = 0;
   var contentReady = {};
@@ -6537,6 +6642,8 @@
     try { el.welcomeNext.focus({ preventScroll: true }); } catch (e) {}
   }
   function closeWelcome() {
+    welcomeStopAudio();
+    welcomeNarrate = false;
     el.welcomeOverlay.hidden = true;
     renderHoySoon();
   }
@@ -6544,7 +6651,12 @@
     var n = welcomeStep, last = n === WELCOME_TABS.length - 1;
     el.welcomeKick.textContent = t("welcome_kick_" + n);
     el.welcomeTitle.textContent = t("welcome_title_" + n);
-    el.welcomeText.textContent = t("welcome_text_" + n);
+    richText(el.welcomeText, t("welcome_text_" + n));
+    welcomeStopAudio();
+    var audio = welcomeHasAudio(n);
+    el.welcomeListen.hidden = !audio;
+    el.welcomeListen.textContent = "▶ " + t("welcome_listen");
+    if (audio && welcomeNarrate) welcomePlay(n);
     // the tab bar in small, with this step's tab lit
     el.welcomeTabs.textContent = "";
     WELCOME_TABS.slice(1).forEach(function (tab) {
@@ -8003,7 +8115,7 @@
   // opts (ElevenLabs only): { tag, take } — part of which clip it is
   function ttsKey(text, vk, opts) {
     var k = ttsVoiceName(vk) + "\u0000" + String(text || "").trim();
-    if (vk && ELEVEN_VOICES[vk]) k += "\u0000" + ((opts && opts.tag) || "") + "\u0000" + ((opts && opts.take) || 0);
+    if (vk && ELEVEN_VOICES[vk]) k += "\u0000" + ((opts && opts.tag) || "") + "\u0000" + ((opts && opts.take) || 0) + (opts && opts.lang === "en" ? "\u0000en" : "");
     return k;
   }
 
@@ -8041,7 +8153,7 @@
     // looked up, never made here, so they aren't held back.)
     if (!eleven && ttsLimitHit && Date.now() < ttsLimitHit.until) return Promise.reject(ttsLimitError(ttsLimitHit.code));
     var body = { text: String(text).trim(), voice: ttsVoiceName(vk) };
-    if (eleven) { body.tag = (opts && opts.tag) || ""; body.take = (opts && opts.take) || 0; }
+    if (eleven) { body.tag = (opts && opts.tag) || ""; body.take = (opts && opts.take) || 0; if (opts && opts.lang === "en") body.lang = "en"; }
     return supabaseClient.functions.invoke("tts", { body: body })
       .then(function (res) {
         // an ElevenLabs line that hasn't been made: the same-gender Azure
@@ -8089,7 +8201,7 @@
   // downloaded, or the plain public URL as a fallback (the <audio> element
   // then streams it itself).
   function ttsLoadAudio(text, vk, opts) {
-    if (vk && ELEVEN_VOICES[vk]) opts = { tag: (opts && opts.tag) || "", take: elevenTakeOf(vk, (opts && opts.tag) || "", text) };
+    if (vk && ELEVEN_VOICES[vk]) opts = { tag: (opts && opts.tag) || "", take: elevenTakeOf(vk, (opts && opts.tag) || "", text), lang: opts && opts.lang === "en" ? "en" : "es" };
     else opts = null;
     var key = ttsKey(text, vk, opts);
     if (ttsBlobUrls[key]) return Promise.resolve({ src: ttsBlobUrls[key], how: "already downloaded" });
@@ -13624,6 +13736,7 @@
     return out;
   }
   function elevenUnitName(u) {
+    if (u.name) return u.name;
     var g = ELEVEN_VOICES[u.vk].g, voices = escVoices(u.sc);
     voices[u.role] = g === "m" ? "tomas" : "elena";
     var cast = escCast(u.sc, voices), r = cast.roles.find(function (x) { return x.key === u.role; });
@@ -13647,6 +13760,8 @@
       elevenUnitsReady = ready; elevenTakes = takes;
       // the start screen's defaults may now be a premium voice
       if (el.playPanel && !el.playPanel.hidden && el.escOverlay && el.escOverlay.hidden) renderPlay();
+      // the welcome may already be open: offer Escuchar once we know
+      if (el.welcomeOverlay && !el.welcomeOverlay.hidden && !el.welcomeListen.classList.contains("is-playing")) el.welcomeListen.hidden = !welcomeHasAudio(welcomeStep);
     }, function () { elevenVoicesSql = false; });
   }
 
@@ -18482,16 +18597,43 @@
     el.authMsg.textContent = "";
   }
 
+  // ---- opening (2026-10-18) ----
+  // The app used to show the login screen, then an empty app, then fill in
+  // as each part loaded (several visible states). Now #boot-screen covers
+  // everything until we know who's signed in and, if someone is, until
+  // their settings, collection, lists and practice history are in (or 6 s
+  // have passed: offline, slow network), then fades out once, onto the
+  // finished screen. Sign-in also used to be handled twice on every open
+  // (getSession and onAuthStateChange) and again on every token refresh,
+  // reloading everything each time; now it's handled once per account.
+  var bootDone = false, authUid = undefined;
+  function bootFinish() {
+    if (bootDone) return;
+    bootDone = true;
+    var b = el.bootScreen;
+    if (!b) return;
+    b.classList.add("is-done");
+    setTimeout(function () { b.hidden = true; }, 260);
+  }
+  function bootAfter(promises) {
+    if (bootDone) return;
+    var all = Promise.all(promises.map(function (x) { return Promise.resolve(x).catch(function () {}); }));
+    Promise.race([all, new Promise(function (ok) { setTimeout(ok, 6000); })]).then(function () {
+      // one more beat so Hoy's own short re-render lands under the cover
+      setTimeout(bootFinish, 90);
+    });
+  }
+
   function renderAuthState() {
+    var uid = currentUser ? currentUser.id : null;
+    if (uid === authUid) { if (currentUser) el.acctMenuEmail.textContent = currentUser.email || ""; return; }
+    authUid = uid;
     if (currentUser) {
       el.authScreen.hidden = true;
       el.appScreen.hidden = false;
       el.acctMenuEmail.textContent = currentUser.email || "";
-      loadUserSettings();
-      loadVerbs();
-      loadWords();
-      loadPhrases();
-      loadLists();
+      var bootLoads = [loadUserSettings(), loadVerbs(), loadWords(), loadPhrases(), loadLists(), loadPracticeHistory(false)];
+      bootAfter(bootLoads);
       loadRewards();
       loadGameRecords();
       loadUsageRole();
@@ -18506,6 +18648,7 @@
     } else {
       el.authScreen.hidden = false;
       el.appScreen.hidden = true;
+      bootFinish();
       el.acctMenuUsage.hidden = true;
       el.usageOverlay.hidden = true;
       usageData = null;
@@ -18634,6 +18777,11 @@
   });
   el.acctMenuWelcome.addEventListener("click", openWelcome);
   el.welcomeNext.addEventListener("click", welcomeNextClick);
+  el.welcomeListen.addEventListener("click", function () {
+    if (el.welcomeListen.classList.contains("is-playing")) { welcomeStopAudio(); welcomeNarrate = false; el.welcomeListen.textContent = "▶ " + t("welcome_listen"); return; }
+    welcomeNarrate = true;
+    welcomePlay(welcomeStep);
+  });
   el.welcomeAlt.addEventListener("click", closeWelcome);
   el.welcomeSkip.addEventListener("click", closeWelcome);
   el.welcomeOverlay.addEventListener("click", function (evt) { if (evt.target === el.welcomeOverlay) closeWelcome(); });

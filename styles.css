@@ -2425,6 +2425,7 @@
   .el-unit.is-ready .count { color: var(--teal); }
   .el-unit.is-now { font-weight: 600; }
   .el-voices { margin: 0 0 10px; }
+  .el-sub { margin: 14px 0 2px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
   .count-box { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--line); }
   .count-total { margin: 8px 0 0; color: var(--ink); }
   .warm-set-have { display: block; font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
@@ -2702,6 +2703,10 @@
   .welcome-kick { font-size: 11px; letter-spacing: .12em; font-weight: 700; color: var(--accent); text-transform: uppercase; }
   .welcome-title { font-family: "Fraunces", Georgia, serif; font-size: 26px; font-weight: 600; margin: 6px 0 8px; line-height: 1.15; color: var(--ink); }
   .welcome-text { font-size: 15.5px; line-height: 1.5; margin: 0; color: var(--ink); }
+  .welcome-text .welcome-feature { font-weight: 700; color: var(--accent-deep, var(--accent)); }
+  .welcome-listen { margin-top: 12px; border: 1px solid var(--line); background: var(--paper-raised); color: var(--accent-deep, var(--accent)); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .welcome-listen[hidden] { display: none; }
+  .welcome-listen.is-playing { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   .welcome-pack { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--gold-soft); border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line)); display: flex; flex-direction: column; gap: 3px; }
   .welcome-pack[hidden] { display: none; }
   .welcome-pack b { font-size: 14.5px; }
@@ -2732,3 +2737,18 @@
   /* Temas: how many cards, next to Practicar (2026-10-17) */
   .flash-start-row .topic-limit { display: inline-flex; flex: none; }
   .topic-limit .lang-option { min-width: 44px; min-height: 40px; padding: 0 10px; }
+
+
+/* Opening cover (2026-10-18): shown until the app has your things, then
+   fades out once. */
+.boot-screen { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: var(--paper); transition: opacity .25s ease; }
+.boot-screen[hidden] { display: none; }
+.boot-screen.is-done { opacity: 0; pointer-events: none; }
+.boot-mark { font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 600; font-size: 40px; color: var(--accent-deep, var(--accent)); line-height: 1; }
+.boot-tag { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--ink-soft); }
+.boot-dots { display: flex; gap: 6px; margin-top: 18px; }
+.boot-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: .25; animation: boot-dot 1.1s infinite ease-in-out; }
+.boot-dots i:nth-child(2) { animation-delay: .18s; }
+.boot-dots i:nth-child(3) { animation-delay: .36s; }
+@keyframes boot-dot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .boot-dots i { animation: none; opacity: .6; } .boot-screen { transition: none; } }
