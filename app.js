@@ -186,8 +186,8 @@
       welcome_kick_5: "Pestaña Progreso",
       welcome_title_5: "Mirá cómo vas",
       welcome_text_5: "Acá ves tu semana y tu racha, lo que más te cuesta, lo que ya aprendiste y cómo vas con cada tiempo verbal y cada persona. Es el lugar para decidir qué repasar.",
-      welcome_listen: "Escuchar",
-      welcome_stop: "Parar",
+      welcome_mute: "Silenciar",
+      welcome_unmute: "Activar la voz",
       welcome_pack_title: "¿Arrancamos con el paquete inicial?",
       welcome_next: "Siguiente",
       welcome_start: "Empezar",
@@ -1018,9 +1018,6 @@
       el_stopped: "Parado. Lo que ya se hizo queda guardado: seguí cuando quieras.",
       el_sql: "Falta correr pending_2026-10-17_voces.sql en Supabase.",
       el_note: "En Escenas, una voz se ofrece para un personaje solo cuando tiene todas sus líneas. La etiqueta de ánimo cuenta como caracteres.",
-      el_retake: "Otra toma",
-      el_retake_confirm: "¿Hacer otra toma de esta línea con {voice}? Cuesta {n} créditos.",
-      el_retake_fail: "No se pudo: {msg}",
       lists_intro: "Armá una lista con los verbos, las palabras y las frases que quieras de tu colección — podés mezclarlos, por ejemplo todo lo útil para \"la cocina\" — y compartila con un enlace. Quien lo abra puede ver la lista e importarla a su propia cuenta, sin tocar el resto de tus datos.",
       lists_empty: "Todavía no creaste ninguna lista.",
       btn_create_list_toggle: "+ Crear lista",
@@ -1295,8 +1292,8 @@
       welcome_kick_5: "The Progress tab",
       welcome_title_5: "See how you're doing",
       welcome_text_5: "Here you see your week and your streak, what's giving you the most trouble, what you've learned, and how you're doing with each verb tense and person. It's the place to decide what to review.",
-      welcome_listen: "Listen",
-      welcome_stop: "Stop",
+      welcome_mute: "Mute",
+      welcome_unmute: "Turn the voice on",
       welcome_pack_title: "Start with the starter pack?",
       welcome_next: "Next",
       welcome_start: "Get started",
@@ -2121,9 +2118,6 @@
       el_stopped: "Stopped. What's made is kept: carry on any time.",
       el_sql: "pending_2026-10-17_voces.sql still needs to be run in Supabase.",
       el_note: "In Escenas, a voice is offered for a character only once all of its lines exist. The mood tag counts as characters.",
-      el_retake: "Another take",
-      el_retake_confirm: "Make another take of this line with {voice}? It costs {n} credits.",
-      el_retake_fail: "Couldn't: {msg}",
       lists_intro: "Build a list out of any verbs, words, and phrases from your collection — you can mix them, for example everything useful for \"the kitchen\" — and share it with a link. Whoever opens it can see the list and import it into their own account, without touching the rest of your data.",
       lists_empty: "You haven't created any lists yet.",
       btn_create_list_toggle: "+ Create list",
@@ -5068,7 +5062,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "127";
+  var VOSEA_BUILD = "128";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6584,7 +6578,12 @@
   // (ElevenLabs → "Bienvenida narrada"); a step only offers Escuchar once
   // its clip exists. Once you tap Escuchar, the next steps play as you go.
   var WELCOME_NARRATORS = ["valeria", "agustin"];
-  var WELCOME_TAG = "warm, welcoming";
+  // (2026-10-18, mason: the voices are "upbeat and pleasant and
+  // conversational… but here they need to be a little more explanatory".)
+  // Kept friendly so it doesn't fight the voices' character; "explanatory"
+  // for a guide's delivery, "unhurried" so an A2 listener can follow the
+  // Spanish. One tag at the start of each step carries through it.
+  var WELCOME_TAG = "friendly, explanatory, unhurried";
   function welcomeNarrator(n) { return WELCOME_NARRATORS[n % WELCOME_NARRATORS.length]; }
   function welcomeSpoken(n, lang) { var d = I18N[lang] || I18N.es; return String(d["welcome_text_" + n] || "").split("**").join(""); }
   // the clips of one narrator in one language, as a unit like a scene role's
@@ -6610,21 +6609,54 @@
     var u = welcomeUnit(vk, lang);
     return elevenUnitsReady[vk + "|" + u.sc.id + "|n"] === u.sig;
   }
-  var welcomeNarrate = false, welcomeAudio = null;
-  function welcomeStopAudio() { if (welcomeAudio) { try { welcomeAudio.pause(); } catch (e) {} } el.welcomeListen.classList.remove("is-playing"); }
+  // The welcome speaks by itself (2026-10-18, mason: "instead of having an
+  // escuchar button… have them speak immediately and then change the button
+  // out for a silent button"). The button mutes; muted is remembered on the
+  // device. If the browser won't play sound before a tap (autoplay rules),
+  // the button offers to turn the voice on instead.
+  var WELCOME_MUTE_KEY = "vosea-welcome-mute";
+  var welcomeAudio = null, welcomeBlocked = false;
+  function welcomeMuted() { try { return localStorage.getItem(WELCOME_MUTE_KEY) === "1"; } catch (e) { return false; } }
+  function welcomeSetMuted(m) { try { if (m) localStorage.setItem(WELCOME_MUTE_KEY, "1"); else localStorage.removeItem(WELCOME_MUTE_KEY); } catch (e) {} }
+  function welcomeStopAudio() { if (welcomeAudio) { try { welcomeAudio.pause(); } catch (e) {} } }
+  function welcomeIcon(on) {
+    var NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("aria-hidden", "true"); svg.setAttribute("class", "welcome-voice-icon");
+    var d = ["M4 9h4l5-4v14l-5-4H4z"].concat(on ? ["M16 9.5a3.5 3.5 0 0 1 0 5", "M18.5 7a7 7 0 0 1 0 10"] : ["M16.5 9.5l5 5", "M21.5 9.5l-5 5"]);
+    d.forEach(function (x, i) { var pth = document.createElementNS(NS, "path"); pth.setAttribute("d", x); if (i === 0) pth.setAttribute("fill", "currentColor"); svg.appendChild(pth); });
+    return svg;
+  }
+  // the button shows what a tap does: Silenciar while the voice is on,
+  // Activar la voz when muted (or the browser held the sound back)
+  function welcomeVoiceButton() {
+    var b = el.welcomeListen, off = welcomeMuted() || welcomeBlocked;
+    b.textContent = "";
+    b.appendChild(welcomeIcon(off));
+    b.appendChild(document.createTextNode(t(off ? "welcome_unmute" : "welcome_mute")));
+    b.classList.toggle("is-muted", off);
+    b.setAttribute("aria-pressed", off ? "true" : "false");
+  }
   function welcomePlay(n) {
     welcomeStopAudio();
     var vk = welcomeNarrator(n), lang = currentLang === "en" ? "en" : "es";
-    el.welcomeListen.classList.add("is-playing");
-    el.welcomeListen.textContent = "■ " + t("welcome_stop");
     return ttsLoadAudio(welcomeSpoken(n, lang), vk, { tag: WELCOME_TAG, lang: lang }).then(function (r) {
-      if (el.welcomeOverlay.hidden || welcomeStep !== n) return;
+      if (el.welcomeOverlay.hidden || welcomeStep !== n || welcomeMuted()) return;
       if (!welcomeAudio) welcomeAudio = new Audio();
-      welcomeAudio.onended = welcomeAudio.onerror = function () { if (welcomeStep === n) { el.welcomeListen.classList.remove("is-playing"); el.welcomeListen.textContent = "▶ " + t("welcome_listen"); } };
       welcomeAudio.src = r.src;
       var pr = welcomeAudio.play();
-      if (pr && pr.catch) pr.catch(function () { el.welcomeListen.classList.remove("is-playing"); el.welcomeListen.textContent = "▶ " + t("welcome_listen"); });
-    }, function () { el.welcomeListen.classList.remove("is-playing"); el.welcomeListen.textContent = "▶ " + t("welcome_listen"); });
+      if (pr && pr.then) pr.then(function () { if (welcomeBlocked) { welcomeBlocked = false; welcomeVoiceButton(); } }, function (e) {
+        if (e && e.name === "NotAllowedError" && welcomeStep === n) { welcomeBlocked = true; welcomeVoiceButton(); }
+      });
+    }, function () {});
+  }
+  // a step's voice: show the button and speak, unless muted
+  function welcomeVoiceStep(n) {
+    welcomeStopAudio();
+    var audio = welcomeHasAudio(n);
+    el.welcomeListen.hidden = !audio;
+    if (!audio) return;
+    welcomeVoiceButton();
+    if (!welcomeMuted() && !welcomeBlocked) welcomePlay(n);
   }
   window.voseaWelcomeUnits = function () { return welcomeUnits(); }; // tests
   var WELCOME_KEY = "vosea-welcome-seen";
@@ -6643,7 +6675,6 @@
   }
   function closeWelcome() {
     welcomeStopAudio();
-    welcomeNarrate = false;
     el.welcomeOverlay.hidden = true;
     renderHoySoon();
   }
@@ -6652,11 +6683,7 @@
     el.welcomeKick.textContent = t("welcome_kick_" + n);
     el.welcomeTitle.textContent = t("welcome_title_" + n);
     richText(el.welcomeText, t("welcome_text_" + n));
-    welcomeStopAudio();
-    var audio = welcomeHasAudio(n);
-    el.welcomeListen.hidden = !audio;
-    el.welcomeListen.textContent = "▶ " + t("welcome_listen");
-    if (audio && welcomeNarrate) welcomePlay(n);
+    welcomeVoiceStep(n);
     // the tab bar in small, with this step's tab lit
     el.welcomeTabs.textContent = "";
     WELCOME_TABS.slice(1).forEach(function (tab) {
@@ -13761,31 +13788,8 @@
       // the start screen's defaults may now be a premium voice
       if (el.playPanel && !el.playPanel.hidden && el.escOverlay && el.escOverlay.hidden) renderPlay();
       // the welcome may already be open: offer Escuchar once we know
-      if (el.welcomeOverlay && !el.welcomeOverlay.hidden && !el.welcomeListen.classList.contains("is-playing")) el.welcomeListen.hidden = !welcomeHasAudio(welcomeStep);
+      if (el.welcomeOverlay && !el.welcomeOverlay.hidden && el.welcomeListen.hidden) welcomeVoiceStep(welcomeStep);
     }, function () { elevenVoicesSql = false; });
-  }
-
-  // owners: make one line again, everyone hears the new take after
-  function elevenRetake(p, roleKey, text, wrap, btn) {
-    var vk = p.voices[roleKey], tag = escRoleTag(p.sc, roleKey);
-    if (!ELEVEN_VOICES[vk]) return;
-    if (!window.confirm(t("el_retake_confirm", { voice: escVoiceLabel(vk), n: progNum(elevenSpoken(text, tag).length) }))) return;
-    btn.disabled = true;
-    supabaseClient.functions.invoke("tts", { body: { action: "eleven_retake", voice: "eleven:" + vk, text: String(text).trim(), tag: tag } }).then(function (res) {
-      if (res.error || !res.data || !res.data.take) {
-        var ctx = res.error && res.error.context;
-        return Promise.resolve(ctx && typeof ctx.json === "function" ? (ctx.clone ? ctx.clone().json() : ctx.json()) : null).catch(function () { return null; }).then(function (b) {
-          throw new Error((b && (b.detail || b.error)) || (res.error && res.error.message) || "error");
-        });
-      }
-      elevenTakes[vk + "\u0000" + tag + "\u0000" + String(text).trim()] = res.data.take;
-      btn.disabled = false;
-      return escSay(text, vk, wrap, roleKey);
-    }).catch(function (e) {
-      btn.disabled = false;
-      btn.title = t("el_retake_fail", { msg: (e && e.message) || "" });
-      btn.classList.add("is-fail");
-    });
   }
 
   // ---- picks: a choice that doesn't change the story, taken both ways ----
@@ -14237,15 +14241,6 @@
     wrap.reveal = function () { bub.classList.remove("is-hidden"); };
     wrap.classList.remove("is-playing");
     play.addEventListener("click", function () { if (escPlay) escPlay.replays = (escPlay.replays || 0) + 1; escSay(text, p.voices[roleKey], wrap, roleKey); });
-    // owners: a line in an ElevenLabs voice that sounds wrong can be made
-    // again ("otra toma"); everyone hears the new take from then on
-    if (usageRole.can_view_usage && ELEVEN_VOICES[p.voices[roleKey]]) {
-      var again = progEl("button", "esc-retake", "↻");
-      again.type = "button";
-      again.title = t("el_retake"); again.setAttribute("aria-label", t("el_retake"));
-      again.addEventListener("click", function () { elevenRetake(p, roleKey, text, wrap, again); });
-      bub.insertBefore(again, see);
-    }
     see.addEventListener("click", function () { wrap.reveal(); if (escPlay) escPlay.peeked = true; });
     el.escChat.appendChild(wrap);
     escScroll();
@@ -18632,12 +18627,11 @@
       el.authScreen.hidden = true;
       el.appScreen.hidden = false;
       el.acctMenuEmail.textContent = currentUser.email || "";
-      var bootLoads = [loadUserSettings(), loadVerbs(), loadWords(), loadPhrases(), loadLists(), loadPracticeHistory(false)];
+      var bootLoads = [loadUserSettings(), loadVerbs(), loadWords(), loadPhrases(), loadLists(), loadPracticeHistory(false), loadElevenVoices()];
       bootAfter(bootLoads);
       loadRewards();
       loadGameRecords();
       loadUsageRole();
-      loadElevenVoices();
       loadAmigos().then(amigoHandlePendingInvite);
       loadRetos();
       if (el.hoyPanel && !el.hoyPanel.hidden) {
@@ -18778,9 +18772,16 @@
   el.acctMenuWelcome.addEventListener("click", openWelcome);
   el.welcomeNext.addEventListener("click", welcomeNextClick);
   el.welcomeListen.addEventListener("click", function () {
-    if (el.welcomeListen.classList.contains("is-playing")) { welcomeStopAudio(); welcomeNarrate = false; el.welcomeListen.textContent = "▶ " + t("welcome_listen"); return; }
-    welcomeNarrate = true;
-    welcomePlay(welcomeStep);
+    if (welcomeBlocked || welcomeMuted()) {
+      // this tap is the gesture the browser wanted: speak this step now
+      welcomeSetMuted(false); welcomeBlocked = false;
+      welcomeVoiceButton();
+      welcomePlay(welcomeStep);
+    } else {
+      welcomeSetMuted(true);
+      welcomeStopAudio();
+      welcomeVoiceButton();
+    }
   });
   el.welcomeAlt.addEventListener("click", closeWelcome);
   el.welcomeSkip.addEventListener("click", closeWelcome);
