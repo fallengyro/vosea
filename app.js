@@ -5074,7 +5074,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "130";
+  var VOSEA_BUILD = "131";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -18171,7 +18171,8 @@
       rowErrors.push(t("import_err_verb_bad_type", { n: n, inf: inf }));
     } else {
       var base = baseInfinitive(inf, !!(v && v.reflexive));
-      if (base.slice(-2).toLowerCase() !== IMPORT_TYPE_ENDING[type]) {
+      // (oír, reír, sonreír, freír are -ir verbs: compare without the accent)
+      if (base.slice(-2).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") !== IMPORT_TYPE_ENDING[type]) {
         rowErrors.push(t("import_err_verb_type_mismatch", { n: n, inf: inf, type: type }));
       }
     }
