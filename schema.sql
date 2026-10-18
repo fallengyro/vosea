@@ -2337,3 +2337,17 @@ drop policy if exists "read all" on public.voice_retakes;
 create policy "read all" on public.voice_retakes for select to authenticated using (true);
 revoke all on public.voice_retakes from anon;
 grant select on public.voice_retakes to authenticated;
+
+-- ===========================================================================
+-- 2026-10-18 — longer voice tags (commit 109)
+-- ===========================================================================
+-- mason's tag for the English welcome is 85 characters ("friendly,
+-- explanatory, strong Argentine Rioplatense accent, speaking American
+-- English"); voice_units.tag allowed 60. This raises it to 120 (the tts
+-- function allows 120 too). Nothing else changes. Safe to run twice.
+-- ===========================================================================
+
+alter table public.voice_units drop constraint if exists voice_units_tag_check;
+alter table public.voice_units add constraint voice_units_tag_check check (char_length(tag) <= 120);
+alter table public.voice_retakes drop constraint if exists voice_retakes_tag_check;
+alter table public.voice_retakes add constraint voice_retakes_tag_check check (char_length(tag) <= 120);

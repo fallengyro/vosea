@@ -984,7 +984,8 @@
       el_welcome_es: "Bienvenida · castellano",
       el_welcome_en: "Bienvenida · inglés",
       el_welcome_go: "Generar la bienvenida (≈ {k} créditos)",
-      el_welcome_confirm: "Esto genera la bienvenida narrada en castellano y en inglés, con Valeria y Agustín (≈ {k} créditos). Puede usar el 10 % de reserva. ¿Seguir?",
+      el_welcome_confirm: "Esto genera {what} (≈ {k} créditos). Puede usar el 10 % de reserva. ¿Seguir?",
+      el_sql_tag: "Falta correr pending_2026-10-18_tags.sql en Supabase (los audios ya hechos quedan guardados: volvé a tocar Generar después).",
       el_title: "Voces de ElevenLabs",
       el_loading: "Mirando ElevenLabs…",
       el_off: "Falta la clave de ElevenLabs: poné ELEVENLABS_API_KEY en los secretos de Supabase y volvé a desplegar tts (mirá la guía de ElevenLabs).",
@@ -2084,7 +2085,8 @@
       el_welcome_es: "Welcome · Spanish",
       el_welcome_en: "Welcome · English",
       el_welcome_go: "Generate the welcome (≈ {k} credits)",
-      el_welcome_confirm: "This makes the narrated welcome in Spanish and English, with Valeria and Agustín (≈ {k} credits). It may use the 10% reserve. Continue?",
+      el_welcome_confirm: "This makes {what} (≈ {k} credits). It may use the 10% reserve. Continue?",
+      el_sql_tag: "pending_2026-10-18_tags.sql still needs to be run in Supabase (the clips already made are kept: tap Generate again afterwards).",
       el_title: "ElevenLabs voices",
       el_loading: "Checking ElevenLabs…",
       el_off: "The ElevenLabs key is missing: add ELEVENLABS_API_KEY to the Supabase secrets and redeploy tts (see the ElevenLabs guide).",
@@ -2434,6 +2436,14 @@
   function renderLangButtons() {
     el.langEs.classList.toggle("active", currentLang === "es");
     el.langEn.classList.toggle("active", currentLang === "en");
+    // the welcome card's own switch (and the card itself, voice included)
+    if (el.welcomeLangEs) {
+      [["es", el.welcomeLangEs], ["en", el.welcomeLangEn]].forEach(function (x) {
+        x[1].classList.toggle("on", currentLang === x[0]);
+        x[1].setAttribute("aria-pressed", currentLang === x[0] ? "true" : "false");
+      });
+    }
+    if (el.welcomeOverlay && !el.welcomeOverlay.hidden && welcomeShownLang !== currentLang) renderWelcome();
   }
 
   function renderVoiceButtons() {
@@ -3644,7 +3654,7 @@
     sec.appendChild(list);
     sec.appendChild(uNode("p", "usage-note", t("el_note")));
     // the narrated welcome (both languages, Valeria and Agustín in turns)
-    var wu = welcomeUnits(), wTodo = 0, wChars = 0, wl = uNode("ul", "el-units el-welcome");
+    var wu = welcomeUnits(), wTodo = 0, wChars = 0, wNames = [], wl = uNode("ul", "el-units el-welcome");
     wu.forEach(function (u) {
       var ready = elevenUnitsReady[u.vk + "|" + u.sc.id + "|n"] === u.sig;
       var li = uNode("li", "el-unit" + (ready ? " is-ready" : ""));
@@ -3652,7 +3662,7 @@
       li.appendChild(uNode("span", "el-unit-n", u.name));
       li.appendChild(uNode("span", "count", ready ? "✓ " + t("el_ready") : t("el_unit_cost", { n: progNum(u.texts.length), c: progNum(u.chars) })));
       wl.appendChild(li);
-      if (!ready) { wTodo++; wChars += u.chars; }
+      if (!ready) { wTodo++; wChars += u.chars; wNames.push(u.name); }
     });
     sec.appendChild(uNode("h5", "el-sub", t("el_welcome_title")));
     sec.appendChild(wl);
@@ -3661,7 +3671,7 @@
       wgo.type = "button"; wgo.id = "el-welcome-go";
       wgo.disabled = busy || !st.limit || !!st.error || !elevenVoicesSql;
       wgo.addEventListener("click", function () {
-        if (!window.confirm(t("el_welcome_confirm", { k: progNum(elCredits(wChars)) }))) return;
+        if (!window.confirm(t("el_welcome_confirm", { what: wNames.join(", "), k: progNum(elCredits(wChars)) }))) return;
         elevenRun(welcomeUnits(), { reserve: true });
       });
       var wa = uNode("div", "form-actions"); wa.appendChild(wgo); sec.appendChild(wa);
@@ -3749,7 +3759,7 @@
         });
       }).catch(function (e) {
         run.stop = true; run.end = "fail";
-        say(e && e.code === "voices_sql_missing" ? "el_sql" : "el_fail", { unit: name, msg: (e && e.message) || "" }, true);
+        say(e && e.code === "voices_sql_missing" ? "el_sql" : e && e.code === "voices_sql_tag" ? "el_sql_tag" : "el_fail", { unit: name, msg: (e && e.message) || "" }, true);
         return false;
       });
     }
@@ -4672,6 +4682,8 @@
     acctMenuWelcome: document.getElementById("acct-menu-welcome"),
     welcomeOverlay: document.getElementById("welcome-overlay"),
     welcomeTabs: document.getElementById("welcome-tabs"),
+    welcomeLangEs: document.getElementById("welcome-lang-es"),
+    welcomeLangEn: document.getElementById("welcome-lang-en"),
     welcomeListen: document.getElementById("welcome-listen"),
     bootScreen: document.getElementById("boot-screen"),
     welcomeKick: document.getElementById("welcome-kick"),
@@ -5062,7 +5074,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "128";
+  var VOSEA_BUILD = "130";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6583,19 +6595,30 @@
   // Kept friendly so it doesn't fight the voices' character; "explanatory"
   // for a guide's delivery, "unhurried" so an A2 listener can follow the
   // Spanish. One tag at the start of each step carries through it.
-  var WELCOME_TAG = "friendly, explanatory, unhurried";
+  // English (2026-10-18, mason after listening: "agustin has a somewhat
+  // british accent… more argentine and his english sounded like he learned
+  // american english"; Castellano "nothing needs to change"): his tag,
+  // word for word. Only the English clips are made again.
+  var WELCOME_TAGS = {
+    es: "friendly, explanatory, unhurried",
+    en: "friendly, explanatory, strong Argentine Rioplatense accent, speaking American English"
+  };
+  // earlier tags whose clips may still be the ones in place: they keep
+  // playing until the new ones are made
+  var WELCOME_TAGS_BEFORE = { es: [], en: ["friendly, explanatory, unhurried"] };
   function welcomeNarrator(n) { return WELCOME_NARRATORS[n % WELCOME_NARRATORS.length]; }
   function welcomeSpoken(n, lang) { var d = I18N[lang] || I18N.es; return String(d["welcome_text_" + n] || "").split("**").join(""); }
   // the clips of one narrator in one language, as a unit like a scene role's
-  function welcomeUnit(vk, lang) {
+  function welcomeUnit(vk, lang, tag) {
+    tag = tag || WELCOME_TAGS[lang];
     var texts = [];
     WELCOME_TABS.forEach(function (x, n) { if (welcomeNarrator(n) === vk) texts.push(welcomeSpoken(n, lang)); });
     var chars = 0;
-    texts.forEach(function (tx) { chars += elevenSpoken(tx, WELCOME_TAG).length; });
+    texts.forEach(function (tx) { chars += elevenSpoken(tx, tag).length; });
     return {
-      vk: vk, sc: { id: "welcome-" + lang }, role: "n", tag: WELCOME_TAG, texts: texts, chars: chars, lang: lang,
+      vk: vk, sc: { id: "welcome-" + lang }, role: "n", tag: tag, texts: texts, chars: chars, lang: lang,
       name: t(lang === "en" ? "el_welcome_en" : "el_welcome_es") + " · " + ELEVEN_VOICES[vk].label,
-      sig: elevenFnv(ELEVEN_VER + "\n" + vk + "\n" + WELCOME_TAG + "\n" + lang + "\n" + texts.join("\n"))
+      sig: elevenFnv(ELEVEN_VER + "\n" + vk + "\n" + tag + "\n" + lang + "\n" + texts.join("\n"))
     };
   }
   function welcomeUnits() {
@@ -6603,12 +6626,16 @@
     ["es", "en"].forEach(function (lang) { WELCOME_NARRATORS.forEach(function (vk) { if (ELEVEN_VOICES[vk]) out.push(welcomeUnit(vk, lang)); }); });
     return out;
   }
-  function welcomeHasAudio(n) {
+  // the tag of the clips in place for a step (the current one, or an
+  // earlier one until it is replaced), or null when none are made
+  function welcomeReadyTag(n) {
     var vk = welcomeNarrator(n), lang = currentLang === "en" ? "en" : "es";
-    if (!ELEVEN_VOICES[vk]) return false;
-    var u = welcomeUnit(vk, lang);
-    return elevenUnitsReady[vk + "|" + u.sc.id + "|n"] === u.sig;
+    if (!ELEVEN_VOICES[vk]) return null;
+    var have = elevenUnitsReady[vk + "|welcome-" + lang + "|n"], tags = [WELCOME_TAGS[lang]].concat(WELCOME_TAGS_BEFORE[lang] || []);
+    for (var i = 0; i < tags.length; i++) if (have && have === welcomeUnit(vk, lang, tags[i]).sig) return tags[i];
+    return null;
   }
+  function welcomeHasAudio(n) { return welcomeReadyTag(n) !== null; }
   // The welcome speaks by itself (2026-10-18, mason: "instead of having an
   // escuchar button… have them speak immediately and then change the button
   // out for a silent button"). The button mutes; muted is remembered on the
@@ -6639,7 +6666,9 @@
   function welcomePlay(n) {
     welcomeStopAudio();
     var vk = welcomeNarrator(n), lang = currentLang === "en" ? "en" : "es";
-    return ttsLoadAudio(welcomeSpoken(n, lang), vk, { tag: WELCOME_TAG, lang: lang }).then(function (r) {
+    var tag = welcomeReadyTag(n);
+    if (tag === null) return Promise.resolve();
+    return ttsLoadAudio(welcomeSpoken(n, lang), vk, { tag: tag, lang: lang }).then(function (r) {
       if (el.welcomeOverlay.hidden || welcomeStep !== n || welcomeMuted()) return;
       if (!welcomeAudio) welcomeAudio = new Audio();
       welcomeAudio.src = r.src;
@@ -6678,8 +6707,12 @@
     el.welcomeOverlay.hidden = true;
     renderHoySoon();
   }
+  // the language the open card was last drawn in: a switch redraws it and
+  // starts the step's voice over in the new language
+  var welcomeShownLang = null;
   function renderWelcome() {
     var n = welcomeStep, last = n === WELCOME_TABS.length - 1;
+    welcomeShownLang = currentLang;
     el.welcomeKick.textContent = t("welcome_kick_" + n);
     el.welcomeTitle.textContent = t("welcome_title_" + n);
     richText(el.welcomeText, t("welcome_text_" + n));
@@ -18771,6 +18804,13 @@
   });
   el.acctMenuWelcome.addEventListener("click", openWelcome);
   el.welcomeNext.addEventListener("click", welcomeNextClick);
+  // (2026-10-18, mason: "at welcome we don't know if the user will be low
+  // A1 and not able to navigate to the configuration… allow the user to
+  // toggle between english and castellano on the welcome card. this can
+  // share the user setting… somewhat discrete.") Same setting as Ajustes.
+  // (the tap is also the gesture a browser wants before it plays sound)
+  el.welcomeLangEs.addEventListener("click", function () { welcomeBlocked = false; setLang("es"); });
+  el.welcomeLangEn.addEventListener("click", function () { welcomeBlocked = false; setLang("en"); });
   el.welcomeListen.addEventListener("click", function () {
     if (welcomeBlocked || welcomeMuted()) {
       // this tap is the gesture the browser wanted: speak this step now
