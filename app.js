@@ -168,15 +168,24 @@
       qa_import_sub: "Un archivo JSON de un viaje o un tema",
       qa_pack: "El paquete inicial",
       welcome_menu: "Ver la bienvenida",
-      welcome_kick_0: "1 · Aprender",
-      welcome_title_0: "Los temas explican",
-      welcome_text_0: "Cómo funciona el castellano de acá, con ejemplos que vas a escuchar en la calle. Están todos abiertos: empezá por donde quieras.",
-      welcome_kick_1: "2 · Practicar",
-      welcome_title_1: "Las tarjetas fijan",
-      welcome_text_1: "Tu colección, tus listas y los temas, en tarjetas para leer, escuchar o decir en voz alta. Hoy te dice qué repasar.",
-      welcome_kick_2: "3 · Jugar",
-      welcome_title_2: "Las escenas te sueltan",
-      welcome_text_2: "Charlas de verdad: la panadería, el taxi, el médico. La panadería está abierta; las demás se abren cuando practicás las frases que usan.",
+      welcome_kick_0: "Bienvenida",
+      welcome_title_0: "Cinco pestañas, un ciclo",
+      welcome_text_0: "Aprendés algo en Temas, lo guardás en Colección, lo fijás con tarjetas y lo usás en Jugar. Hoy te dice qué toca y Progreso, cómo vas. Te mostramos dónde está cada cosa.",
+      welcome_kick_1: "Pestaña Hoy",
+      welcome_title_1: "Empezá cada día acá",
+      welcome_text_1: "Lo que te toca hoy, en tres partes: las tarjetas que se te están por olvidar (Practicar), el tema en el que ibas (Aprender) y la próxima escena (Jugar). Tocá una y arrancás.",
+      welcome_kick_2: "Pestaña Colección",
+      welcome_title_2: "Lo tuyo: verbos, palabras y frases",
+      welcome_text_2: "Lo que escuchás en la calle lo agregás con el + de arriba. Filtrá por tipo o por lista, armá listas (y compartilas) y tocá Practicar para hacer tarjetas con lo que elegiste.",
+      welcome_kick_3: "Pestaña Temas",
+      welcome_title_3: "Cómo funciona el castellano de acá",
+      welcome_text_3: "Cada tema explica algo (el voseo, los números, el pretérito) con ejemplos de la calle, y se practica en tarjetas: Leer, Escuchar o Hablar. Están todos abiertos; en Camino los ves en orden, con las escenas en el medio.",
+      welcome_kick_4: "Pestaña Jugar",
+      welcome_title_4: "Usalo en voz alta",
+      welcome_text_4: "Escenas: charlas de todos los días (la panadería, el taxi, el médico). La panadería está abierta; las demás se abren cuando sabés sus frases. Además: Partida (sin fin), Contrarreloj (60 segundos) y Te reto (con un amigo).",
+      welcome_kick_5: "Pestaña Progreso",
+      welcome_title_5: "Mirá cómo vas",
+      welcome_text_5: "Tu semana y tu racha, lo que te cuesta, lo que ya aprendiste y cada tiempo verbal por persona. Acá ves qué conviene repasar.",
       welcome_pack_title: "¿Arrancamos con el paquete inicial?",
       welcome_next: "Siguiente",
       welcome_start: "Empezar",
@@ -965,7 +974,7 @@
       r2_purge_confirm: "Esto borra de Supabase solo los audios que ya están completos en Cloudflare (se comprueba uno por uno). ¿Seguir?",
       esc_voice_title: "Voz de {role}",
       esc_voice_aria: "Voz de {role}: {voice}. Cambiar",
-      esc_voice_premium: "Voces premium ✦ (ElevenLabs)",
+      esc_voice_premium: "Voces premium ✦",
       esc_voice_standard: "Voces estándar",
       esc_voice_hint: "Las voces premium suenan más naturales. Una aparece cuando ya tiene todas las líneas de este personaje.",
       esc_voice_missing: "todavía le faltan líneas",
@@ -1261,15 +1270,24 @@
       qa_import_sub: "A JSON file from a trip or a topic",
       qa_pack: "The starter pack",
       welcome_menu: "See the welcome",
-      welcome_kick_0: "1 · Learn",
-      welcome_title_0: "Topics explain",
-      welcome_text_0: "How the Spanish here works, with examples you'll hear on the street. They're all open: start wherever you like.",
-      welcome_kick_1: "2 · Practice",
-      welcome_title_1: "Cards make it stick",
-      welcome_text_1: "Your collection, your lists, and the topics, on cards to read, listen to or say out loud. Today tells you what to review.",
-      welcome_kick_2: "3 · Play",
-      welcome_title_2: "Scenes set you loose",
-      welcome_text_2: "Real conversations: the bakery, the taxi, the doctor. The bakery is open; the others open once you practice the phrases they use.",
+      welcome_kick_0: "Welcome",
+      welcome_title_0: "Five tabs, one loop",
+      welcome_text_0: "You learn something in Topics, keep it in Collection, make it stick with cards, and use it in Play. Today tells you what's next and Progress how you're doing. Here's where everything is.",
+      welcome_kick_1: "The Today tab",
+      welcome_title_1: "Start each day here",
+      welcome_text_1: "What's up for today, in three parts: the cards you're about to forget (Practice), the topic you were on (Learn), and the next scene (Play). Tap one and you're off.",
+      welcome_kick_2: "The Collection tab",
+      welcome_title_2: "Yours: verbs, words and phrases",
+      welcome_text_2: "Add what you hear on the street with the + at the top. Filter by type or by list, make lists (and share them), and tap Practice to turn what you picked into cards.",
+      welcome_kick_3: "The Topics tab",
+      welcome_title_3: "How the Spanish here works",
+      welcome_text_3: "Each topic explains something (voseo, numbers, the past tense) with examples from the street, and you practice it on cards: Read, Listen or Speak. They're all open; Path shows them in order, with the scenes along the way.",
+      welcome_kick_4: "The Play tab",
+      welcome_title_4: "Use it out loud",
+      welcome_text_4: "Escenas: everyday conversations (the bakery, the taxi, the doctor). The bakery is open; the others open once you know their phrases. Also: Partida (endless), Contrarreloj (60 seconds) and Te reto (with a friend).",
+      welcome_kick_5: "The Progress tab",
+      welcome_title_5: "See how you're doing",
+      welcome_text_5: "Your week and streak, what's giving you trouble, what you've learned, and each verb tense by person. This is where you see what to review.",
       welcome_pack_title: "Start with the starter pack?",
       welcome_next: "Next",
       welcome_start: "Get started",
@@ -2052,7 +2070,7 @@
       r2_purge_confirm: "This deletes from Supabase only the clips that are already whole on Cloudflare (checked one by one). Continue?",
       esc_voice_title: "Voice for {role}",
       esc_voice_aria: "Voice for {role}: {voice}. Change",
-      esc_voice_premium: "Premium voices ✦ (ElevenLabs)",
+      esc_voice_premium: "Premium voices ✦",
       esc_voice_standard: "Standard voices",
       esc_voice_hint: "Premium voices sound more natural. One shows up once all of this character's lines are made.",
       esc_voice_missing: "lines still missing",
@@ -4615,6 +4633,7 @@
     qaPackSub: document.getElementById("qa-pack-sub"),
     acctMenuWelcome: document.getElementById("acct-menu-welcome"),
     welcomeOverlay: document.getElementById("welcome-overlay"),
+    welcomeTabs: document.getElementById("welcome-tabs"),
     welcomeKick: document.getElementById("welcome-kick"),
     welcomeTitle: document.getElementById("welcome-title"),
     welcomeText: document.getElementById("welcome-text"),
@@ -5003,7 +5022,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "125";
+  var VOSEA_BUILD = "126";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6497,7 +6516,12 @@
     note.appendChild(ex);
   }
 
-  // The welcome: Aprender / Practicar / Jugar.
+  // The welcome (2026-10-18, mason: "make it clear how the flow/tooling of
+  // things should be with the five tabs… «Scenes set you loose» is true but
+  // they are one submenu of the Play tab"): the loop, then one step per tab
+  // in the order of the tab bar, each with a small copy of the bar showing
+  // where it is. The starter pack is offered on the last step.
+  var WELCOME_TABS = [null, "hoy", "col", "topics", "play", "progress"];
   var WELCOME_KEY = "vosea-welcome-seen";
   var welcomeStep = 0;
   var contentReady = {};
@@ -6517,11 +6541,18 @@
     renderHoySoon();
   }
   function renderWelcome() {
-    var n = welcomeStep, last = n === 2;
+    var n = welcomeStep, last = n === WELCOME_TABS.length - 1;
     el.welcomeKick.textContent = t("welcome_kick_" + n);
     el.welcomeTitle.textContent = t("welcome_title_" + n);
     el.welcomeText.textContent = t("welcome_text_" + n);
-    Array.prototype.forEach.call(el.welcomeDots.children, function (d, i) { d.className = i === n ? "on" : ""; });
+    // the tab bar in small, with this step's tab lit
+    el.welcomeTabs.textContent = "";
+    WELCOME_TABS.slice(1).forEach(function (tab) {
+      el.welcomeTabs.appendChild(progEl("span", "welcome-tab" + (tab === WELCOME_TABS[n] ? " on" : ""), t("nav_" + tab)));
+    });
+    el.welcomeTabs.classList.toggle("is-all", !WELCOME_TABS[n]);
+    el.welcomeDots.textContent = "";
+    WELCOME_TABS.forEach(function (x, i) { var d = document.createElement("i"); if (i === n) d.className = "on"; el.welcomeDots.appendChild(d); });
     var pk = starterPackHave();
     var offer = last && !!currentUser && pk.have < pk.total;
     el.welcomePack.hidden = !offer;
@@ -6532,7 +6563,7 @@
     el.welcomeNext.textContent = !last ? t("welcome_next") : offer ? t("pack_add_btn") : t("welcome_start");
   }
   function welcomeNextClick() {
-    if (welcomeStep < 2) { welcomeStep++; renderWelcome(); return; }
+    if (welcomeStep < WELCOME_TABS.length - 1) { welcomeStep++; renderWelcome(); return; }
     var offer = !el.welcomePack.hidden;
     closeWelcome();
     if (offer) addStarterPack();

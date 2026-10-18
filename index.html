@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="125">
+<meta name="vosea-build" content="126">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1431,6 +1431,7 @@
      menu's "Ver la bienvenida". app.js: the welcome section. -->
 <div class="modal-overlay welcome-overlay" id="welcome-overlay" hidden>
   <div class="modal-card welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+    <div class="welcome-tabs" id="welcome-tabs" aria-hidden="true"></div>
     <div class="welcome-kick" id="welcome-kick"></div>
     <h2 class="welcome-title" id="welcome-title"></h2>
     <p class="welcome-text" id="welcome-text"></p>
@@ -1438,7 +1439,7 @@
       <b data-i18n="welcome_pack_title">¿Arrancamos con el paquete inicial?</b>
       <span id="welcome-pack-sub"></span>
     </div>
-    <div class="welcome-dots" id="welcome-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="welcome-dots" id="welcome-dots" aria-hidden="true"></div>
     <div class="welcome-actions">
       <button type="button" class="hoy-link" id="welcome-skip" data-i18n="welcome_skip">Saltar</button>
       <button type="button" class="btn-secondary" id="welcome-alt" hidden></button>
