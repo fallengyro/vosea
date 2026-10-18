@@ -2287,3 +2287,53 @@ begin
 end $$;
 revoke all on function public.vosea_speech_report(integer) from public, anon;
 grant execute on function public.vosea_speech_report(integer) to authenticated;
+
+-- ===========================================================================
+-- 2026-10-17 — ElevenLabs voices in Escenas (commit 100)
+-- ===========================================================================
+-- mason: ElevenLabs voices join the pool next to Elena and Tomás, and "show
+-- selectable characters for each scene when we have all of their lines".
+--
+--   - voice_units: one row per finished (voice, scene, role): every line
+--     that role can say, in every wording and cast, exists for that voice.
+--     `sig` fingerprints the lines and the mood tag; the app only offers a
+--     voice for a role when the row's sig matches the scene as it is now
+--     (a changed line or tag means the role is not finished any more).
+--   - voice_retakes: a line the owner asked to be made again ("otra
+--     toma"): which take everyone should hear.
+--   - Everyone signed in can read both (the app needs them to know which
+--     voices to offer). Only the tts Edge Function writes them, with the
+--     service key, after an owner (public.app_owners) asks.
+-- Safe to run twice.
+-- ===========================================================================
+
+create table if not exists public.voice_units (
+  voice text not null check (char_length(voice) <= 40),
+  scene text not null check (char_length(scene) <= 60),
+  role text not null check (char_length(role) <= 20),
+  sig text not null check (char_length(sig) <= 40),
+  tag text not null default '' check (char_length(tag) <= 60),
+  clips integer not null default 0,
+  chars integer not null default 0,
+  made_at timestamptz not null default now(),
+  primary key (voice, scene, role)
+);
+alter table public.voice_units enable row level security;
+drop policy if exists "read all" on public.voice_units;
+create policy "read all" on public.voice_units for select to authenticated using (true);
+revoke all on public.voice_units from anon;
+grant select on public.voice_units to authenticated;
+
+create table if not exists public.voice_retakes (
+  voice text not null check (char_length(voice) <= 40),
+  tag text not null default '' check (char_length(tag) <= 60),
+  text text not null check (char_length(text) <= 500),
+  take integer not null default 1 check (take between 1 and 50),
+  made_at timestamptz not null default now(),
+  primary key (voice, tag, text)
+);
+alter table public.voice_retakes enable row level security;
+drop policy if exists "read all" on public.voice_retakes;
+create policy "read all" on public.voice_retakes for select to authenticated using (true);
+revoke all on public.voice_retakes from anon;
+grant select on public.voice_retakes to authenticated;

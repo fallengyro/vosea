@@ -2416,6 +2416,15 @@
   .usage-rules { margin-top: 10px; }
   .usage-warm .usage-section, .usage-r2 .usage-section { border-top: 1px solid var(--line); padding-top: 12px; }
   .r2-actions { flex-wrap: wrap; margin: 8px 0 0; }
+  /* ElevenLabs voices (2026-10-17) */
+  .usage-eleven .usage-section { border-top: 1px solid var(--line); padding-top: 12px; }
+  .el-units { list-style: none; margin: 4px 0 8px; padding: 0; }
+  .el-unit { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; color: var(--ink); }
+  .el-unit-n { flex: 1 1 auto; min-width: 0; }
+  .el-unit .count { flex: none; font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .el-unit.is-ready .count { color: var(--teal); }
+  .el-unit.is-now { font-weight: 600; }
+  .el-voices { margin: 0 0 10px; }
   .warm-sets { display: flex; flex-direction: column; gap: 6px; margin: 0 0 10px; }
   .warm-set { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: var(--ink); }
   .warm-set input { flex: none; margin: 0; transform: translateY(2px); }
@@ -2480,6 +2489,13 @@
   .esc-role-n { flex: 1 1 auto; min-width: 0; font-size: 15px; color: var(--ink); }
   .esc-role-n small { display: block; font-size: 12px; color: var(--ink-soft); }
   .esc-voice { flex: none; }
+  /* a third voice (ElevenLabs): the buttons go under the name */
+  .esc-role:has(.esc-voice.is-wide) { flex-wrap: wrap; }
+  .esc-voice.is-wide { flex: 1 1 100%; }
+  .esc-voice .is-eleven { font-style: italic; }
+  .esc-retake { border: 0; background: none; color: var(--ink-soft); font-size: 15px; padding: 0 2px; cursor: pointer; flex: none; }
+  .esc-retake:disabled { opacity: .4; }
+  .esc-retake.is-fail { color: var(--danger); }
   .esc-swap { border: 0; background: none; font: inherit; font-size: 13px; color: var(--accent-deep); padding: 8px 0 0; cursor: pointer; }
   .esc-best { font-size: 13.5px; color: var(--ink-soft); margin: 12px 0 0; }
   .esc-start { display: block; width: 100%; margin-top: 14px; padding: 13px; font-size: 16px; border-radius: 12px; }

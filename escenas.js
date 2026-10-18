@@ -8,12 +8,17 @@
 // Each scene:
 //   id, level, name {es,en}, sub {es,en}, desc {es,en}
 //   open: true          — playable from the start (the others unlock)
-//   roles: [{ key, voice: "elena"|"tomas", f: { name {es,en}, sub {es,en} },
+//   roles: [{ key, voice: "elena"|"tomas", tag: "two words", f: { name {es,en}, sub {es,en} },
 //             m: { name, sub } }] — a role is a woman when Elena plays it
 //         and a man with Tomás (the voice is chosen per role, so both
 //         forms are needed). Any text can say {key:feminine|masculine}:
 //         "Thank {e:her|him}", "{d:Doctora|Doctor}, ya llegó…". Nothing
 //         is ever gender-marked toward the learner.
+//   tag (2026-10-17): the role's mood for ElevenLabs voices, one or two
+//         words, said as "[warmly, friendly]" before every line the role
+//         speaks (ElevenLabs reads it as direction, not words). It is part
+//         of each clip: changing it means that role's ElevenLabs lines are
+//         made again, and paid for again. Azure (Elena, Tomás) ignores it.
 //   needs: ["tema-id", ...] — the Temas behind YOUR answers (2026-10-11, the new
 //         flow). The scene sits on the Camino right after the last of them.
 //   adelanta: ["tema-id", ...] — what it previews: only heard, or said in a
@@ -68,7 +73,7 @@ window.VOSEA_ESCENAS = [
     adelanta: ["imperativo", "objeto-directo", "saber-poder"],
     ruido: { src: "ruido/panaderia.mp3", loop: [0.15, 56] },
     roles: [
-      { key: "e", voice: "elena", f: { name: { es: "La empleada", en: "The clerk" }, sub: { es: "atiende", en: "serves you" } }, m: { name: { es: "El empleado", en: "The clerk" }, sub: { es: "atiende", en: "serves you" } } }
+      { key: "e", voice: "elena", tag: "warmly, friendly", f: { name: { es: "La empleada", en: "The clerk" }, sub: { es: "atiende", en: "serves you" } }, m: { name: { es: "El empleado", en: "The clerk" }, sub: { es: "atiende", en: "serves you" } } }
     ],
     prep: [
       { id: "p01", es: "Quiero [media docena] de medialunas.", en: "I'd like half a dozen croissants.", p: "media docena = seis" },
@@ -104,7 +109,7 @@ window.VOSEA_ESCENAS = [
     adelanta: ["objeto-directo", "imperativo", "saber-poder"],
     ruido: { src: "ruido/kiosco.mp3", loop: [0.15, 68.16], where: { es: "Grabado en Buenos Aires, en Díaz Vélez y Yatay.", en: "Recorded in Buenos Aires, at Díaz Vélez and Yatay." } },
     roles: [
-      { key: "k", voice: "tomas", f: { name: { es: "La kiosquera", en: "The kiosco owner" }, sub: { es: "atiende", en: "serves you" } }, m: { name: { es: "El kiosquero", en: "The kiosco owner" }, sub: { es: "atiende", en: "serves you" } } }
+      { key: "k", voice: "tomas", tag: "casually, matter-of-fact", f: { name: { es: "La kiosquera", en: "The kiosco owner" }, sub: { es: "atiende", en: "serves you" } }, m: { name: { es: "El kiosquero", en: "The kiosco owner" }, sub: { es: "atiende", en: "serves you" } } }
     ],
     prep: [
       { id: "k01", es: "¿Me [cargás] la SUBE?", en: "Can you put money on my SUBE card?", p: "cargar la SUBE" },
@@ -141,8 +146,8 @@ window.VOSEA_ESCENAS = [
     adelanta: ["ir-a", "objeto-directo", "dobles", "imperativo", "gustar"],
     ruido: { src: "ruido/cafe.mp3", loop: [0.15, 56.06], where: { es: "Grabado en un bar-café de Argentina.", en: "Recorded in a café-bar in Argentina." } },
     roles: [
-      { key: "l", voice: "elena", f: { name: { es: "Lucía", en: "Lucía" }, sub: { es: "tu amiga", en: "your friend" } }, m: { name: { es: "Lucas", en: "Lucas" }, sub: { es: "tu amigo", en: "your friend" } } },
-      { key: "m", voice: "tomas", f: { name: { es: "La moza", en: "The waitress" }, sub: { es: "toma el pedido", en: "takes the order" } }, m: { name: { es: "El mozo", en: "The waiter" }, sub: { es: "toma el pedido", en: "takes the order" } } }
+      { key: "l", voice: "elena", tag: "relaxed, cheerful", f: { name: { es: "Lucía", en: "Lucía" }, sub: { es: "tu amiga", en: "your friend" } }, m: { name: { es: "Lucas", en: "Lucas" }, sub: { es: "tu amigo", en: "your friend" } } },
+      { key: "m", voice: "tomas", tag: "polite, upbeat", f: { name: { es: "La moza", en: "The waitress" }, sub: { es: "toma el pedido", en: "takes the order" } }, m: { name: { es: "El mozo", en: "The waiter" }, sub: { es: "toma el pedido", en: "takes the order" } } }
     ],
     prep: [
       { id: "c01", es: "Para mí, [un cortado].", en: "A cortado for me.", p: "para mí" },
@@ -186,8 +191,8 @@ window.VOSEA_ESCENAS = [
     adelanta: ["cuando-subj", "imperativo"],
     ruido: { src: "ruido/colectivo.mp3", loop: [0.15, 56.94], where: { es: "Grabado en un colectivo en Argentina.", en: "Recorded on a bus in Argentina." } },
     roles: [
-      { key: "c", voice: "tomas", f: { name: { es: "La chofer", en: "The driver" }, sub: { es: "maneja", en: "drives" } }, m: { name: { es: "El chofer", en: "The driver" }, sub: { es: "maneja", en: "drives" } } },
-      { key: "s", voice: "elena", f: { name: { es: "La señora", en: "The lady" }, sub: { es: "va al mismo lugar", en: "is going the same way" } }, m: { name: { es: "El señor", en: "The man" }, sub: { es: "va al mismo lugar", en: "is going the same way" } } }
+      { key: "c", voice: "tomas", tag: "brusque, busy", f: { name: { es: "La chofer", en: "The driver" }, sub: { es: "maneja", en: "drives" } }, m: { name: { es: "El chofer", en: "The driver" }, sub: { es: "maneja", en: "drives" } } },
+      { key: "s", voice: "elena", tag: "chatty, warm", f: { name: { es: "La señora", en: "The lady" }, sub: { es: "va al mismo lugar", en: "is going the same way" } }, m: { name: { es: "El señor", en: "The man" }, sub: { es: "va al mismo lugar", en: "is going the same way" } } }
     ],
     prep: [
       { id: "b01", es: "¿[Pasa por] Plaza Italia?", en: "Does it go past Plaza Italia?", p: "pasar por" },
@@ -227,7 +232,7 @@ window.VOSEA_ESCENAS = [
     adelanta: ["objeto-directo", "imperativo", "subjuntivo"],
     ruido: { src: "ruido/farmacia.mp3", loop: [0.15, 47.84] },
     roles: [
-      { key: "f", voice: "elena", f: { name: { es: "La farmacéutica", en: "The pharmacist" }, sub: { es: "atiende", en: "serves you" } }, m: { name: { es: "El farmacéutico", en: "The pharmacist" }, sub: { es: "atiende", en: "serves you" } } }
+      { key: "f", voice: "elena", tag: "calm, reassuring", f: { name: { es: "La farmacéutica", en: "The pharmacist" }, sub: { es: "atiende", en: "serves you" } }, m: { name: { es: "El farmacéutico", en: "The pharmacist" }, sub: { es: "atiende", en: "serves you" } } }
     ],
     prep: [
       { id: "f01", es: "¿Tenés algo [para la tos]?", en: "Do you have something for a cough?", p: "para + síntoma" },
@@ -269,8 +274,8 @@ window.VOSEA_ESCENAS = [
     adelanta: ["gerundio", "preterito", "imperfecto", "imperativo"],
     ruido: { src: "ruido/juntada.mp3", loop: [0.15, 55.6] },
     roles: [
-      { key: "m", voice: "tomas", f: { name: { es: "Martina", en: "Martina" }, sub: { es: "la dueña de casa", en: "the host" } }, m: { name: { es: "Martín", en: "Martín" }, sub: { es: "el dueño de casa", en: "the host" } } },
-      { key: "s", voice: "elena", f: { name: { es: "Sofi", en: "Sofi" }, sub: { es: "su hermana", en: "{m:her|his} sister" } }, m: { name: { es: "Santi", en: "Santi" }, sub: { es: "su hermano", en: "{m:her|his} brother" } } }
+      { key: "m", voice: "tomas", tag: "excited, welcoming", f: { name: { es: "Martina", en: "Martina" }, sub: { es: "la dueña de casa", en: "the host" } }, m: { name: { es: "Martín", en: "Martín" }, sub: { es: "el dueño de casa", en: "the host" } } },
+      { key: "s", voice: "elena", tag: "playful, excited", f: { name: { es: "Sofi", en: "Sofi" }, sub: { es: "su hermana", en: "{m:her|his} sister" } }, m: { name: { es: "Santi", en: "Santi" }, sub: { es: "su hermano", en: "{m:her|his} brother" } } }
     ],
     prep: [
       { id: "j01", es: "¡Hola! [Mucho gusto].", en: "Hi! Nice to meet you.", p: "mucho gusto" },
@@ -312,8 +317,8 @@ window.VOSEA_ESCENAS = [
     adelanta: ["preterito", "subjuntivo", "imperativo", "ir-a"],
     ruido: { src: "ruido/portero.mp3", loop: [0.15, 67.02], where: { es: "Grabado en una calle tranquila de Buenos Aires.", en: "Recorded on a quiet street in Buenos Aires." } },
     roles: [
-      { key: "j", voice: "tomas", f: { name: { es: "Julia", en: "Julia" }, sub: { es: "la encargada", en: "the building manager" } }, m: { name: { es: "Julio", en: "Julio" }, sub: { es: "el encargado", en: "the building manager" } } },
-      { key: "r", voice: "elena", f: { name: { es: "Rosa", en: "Rosa" }, sub: { es: "la vecina del quinto", en: "the neighbor from the fifth floor" } }, m: { name: { es: "Rodolfo", en: "Rodolfo" }, sub: { es: "el vecino del quinto", en: "the neighbor from the fifth floor" } } }
+      { key: "j", voice: "tomas", tag: "helpful, tired", f: { name: { es: "Julia", en: "Julia" }, sub: { es: "la encargada", en: "the building manager" } }, m: { name: { es: "Julio", en: "Julio" }, sub: { es: "el encargado", en: "the building manager" } } },
+      { key: "r", voice: "elena", tag: "friendly, chatty", f: { name: { es: "Rosa", en: "Rosa" }, sub: { es: "la vecina del quinto", en: "the neighbor from the fifth floor" } }, m: { name: { es: "Rodolfo", en: "Rodolfo" }, sub: { es: "el vecino del quinto", en: "the neighbor from the fifth floor" } } }
     ],
     prep: [
       { id: "e01", es: "¿Llegó [un paquete] para mí?", en: "Did a package come for me?", p: "llegar" },
@@ -353,7 +358,7 @@ window.VOSEA_ESCENAS = [
     adelanta: ["comparativos", "gerundio", "objeto-directo"],
     ruido: { src: "ruido/taxi.mp3", loop: [0.15, 56.96] },
     roles: [
-      { key: "t", voice: "tomas", f: { name: { es: "La taxista", en: "The taxi driver" }, sub: { es: "maneja", en: "drives" } }, m: { name: { es: "El taxista", en: "The taxi driver" }, sub: { es: "maneja", en: "drives" } } }
+      { key: "t", voice: "tomas", tag: "laid-back, talkative", f: { name: { es: "La taxista", en: "The taxi driver" }, sub: { es: "maneja", en: "drives" } }, m: { name: { es: "El taxista", en: "The taxi driver" }, sub: { es: "maneja", en: "drives" } } }
     ],
     prep: [
       { id: "t01", es: "¿Me [llevás a] Palermo?", en: "Can you take me to Palermo?", p: "llevar a" },
@@ -394,7 +399,7 @@ window.VOSEA_ESCENAS = [
     adelanta: ["ir-a", "condicional", "imperativo", "objeto-directo"],
     ruido: { src: "ruido/delivery.mp3", loop: [0.15, 57.48], phone: ["p"] },
     roles: [
-      { key: "p", voice: "elena", f: { name: { es: "La pizzería", en: "The pizzeria" }, sub: { es: "la empleada que toma el pedido", en: "the woman taking the order" } }, m: { name: { es: "La pizzería", en: "The pizzeria" }, sub: { es: "el empleado que toma el pedido", en: "the man taking the order" } } }
+      { key: "p", voice: "elena", tag: "brisk, businesslike", f: { name: { es: "La pizzería", en: "The pizzeria" }, sub: { es: "la empleada que toma el pedido", en: "the woman taking the order" } }, m: { name: { es: "La pizzería", en: "The pizzeria" }, sub: { es: "el empleado que toma el pedido", en: "the man taking the order" } } }
     ],
     prep: [
       { id: "v01", es: "Quería pedir [una pizza] de muzzarella.", en: "I'd like to order a mozzarella pizza.", p: "quería: más amable que quiero" },
@@ -432,8 +437,8 @@ window.VOSEA_ESCENAS = [
     adelanta: ["imperativo", "subjuntivo", "numeros"],
     ruido: { src: "ruido/medico.mp3", loop: [0.15, 56.22] },
     roles: [
-      { key: "s", voice: "elena", f: { name: { es: "La recepcionista", en: "The receptionist" }, sub: { es: "Silvia", en: "Silvia" } }, m: { name: { es: "El recepcionista", en: "The receptionist" }, sub: { es: "Sergio", en: "Sergio" } } },
-      { key: "d", voice: "tomas", f: { name: { es: "La doctora", en: "The doctor" }, sub: { es: "la médica clínica", en: "the general practitioner" } }, m: { name: { es: "El doctor", en: "The doctor" }, sub: { es: "el clínico", en: "the general practitioner" } } }
+      { key: "s", voice: "elena", tag: "efficient, polite", f: { name: { es: "La recepcionista", en: "The receptionist" }, sub: { es: "Silvia", en: "Silvia" } }, m: { name: { es: "El recepcionista", en: "The receptionist" }, sub: { es: "Sergio", en: "Sergio" } } },
+      { key: "d", voice: "tomas", tag: "calm, caring", f: { name: { es: "La doctora", en: "The doctor" }, sub: { es: "la médica clínica", en: "the general practitioner" } }, m: { name: { es: "El doctor", en: "The doctor" }, sub: { es: "el clínico", en: "the general practitioner" } } }
     ],
     prep: [
       { id: "m01", es: "Tengo [turno] a las diez.", en: "I have an appointment at ten.", p: "el turno" },
@@ -476,8 +481,8 @@ window.VOSEA_ESCENAS = [
     adelanta: ["condicional", "imperativo", "gerundio", "preterito"],
     ruido: { src: "ruido/depto.mp3", loop: [0.15, 68.92], where: { es: "Grabado en un depto de Buenos Aires, con la ventana abierta.", en: "Recorded in a Buenos Aires apartment with the window open." } },
     roles: [
-      { key: "m", voice: "elena", f: { name: { es: "Marta", en: "Marta" }, sub: { es: "la dueña", en: "the owner" } }, m: { name: { es: "Mario", en: "Mario" }, sub: { es: "el dueño", en: "the owner" } } },
-      { key: "r", voice: "tomas", f: { name: { es: "Raquel", en: "Raquel" }, sub: { es: "la encargada", en: "the building manager" } }, m: { name: { es: "Raúl", en: "Raúl" }, sub: { es: "el encargado", en: "the building manager" } } }
+      { key: "m", voice: "elena", tag: "proud, persuasive", f: { name: { es: "Marta", en: "Marta" }, sub: { es: "la dueña", en: "the owner" } }, m: { name: { es: "Mario", en: "Mario" }, sub: { es: "el dueño", en: "the owner" } } },
+      { key: "r", voice: "tomas", tag: "dry, matter-of-fact", f: { name: { es: "Raquel", en: "Raquel" }, sub: { es: "la encargada", en: "the building manager" } }, m: { name: { es: "Raúl", en: "Raúl" }, sub: { es: "el encargado", en: "the building manager" } } }
     ],
     prep: [
       { id: "d01", es: "Vengo [a ver] el departamento.", en: "I'm here to see the apartment.", p: "venir a + infinitivo" },
@@ -522,7 +527,7 @@ window.VOSEA_ESCENAS = [
     adelanta: ["objeto-indirecto", "subjuntivo"],
     ruido: { src: "ruido/farmacia.mp3", loop: [0.15, 47.84] },
     roles: [
-      { key: "v", voice: "elena", f: { name: { es: "La vendedora", en: "The salesperson" }, sub: { es: "atiende", en: "helps you" } }, m: { name: { es: "El vendedor", en: "The salesperson" }, sub: { es: "atiende", en: "helps you" } } }
+      { key: "v", voice: "elena", tag: "upbeat, helpful", f: { name: { es: "La vendedora", en: "The salesperson" }, sub: { es: "atiende", en: "helps you" } }, m: { name: { es: "El vendedor", en: "The salesperson" }, sub: { es: "atiende", en: "helps you" } } }
     ],
     prep: [
       { id: "t01", es: "¿[Me la puedo probar]?", en: "Can I try it on?", p: "la campera → la" },

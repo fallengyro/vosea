@@ -72,6 +72,14 @@
   // is likewise just a fast device-level guess used to avoid picking the
   // wrong voice before loadUserSettings() returns the real, synced value.
   var TTS_VOICES = { elena: "es-AR-ElenaNeural", tomas: "es-AR-TomasNeural" };
+  // ElevenLabs voices (2026-10-17): extra voices for Escenas roles only
+  // (not Configuración's voice, not flashcards). g: the gender the role
+  // takes with this voice; fallback: the Azure voice used for a line that
+  // hasn't been made yet. The voice ids and settings live in the tts
+  // function (ELEVEN_VOICES there); ELEVEN_VER matches its
+  // ELEVEN_CACHE_VERSION. See "ElevenLabs voices" below.
+  var ELEVEN_VOICES = { valeria: { label: "Valeria", g: "f", fallback: "elena" } };
+  var ELEVEN_VER = "e1";
   var TTS_VOICE_LOCAL_KEY = "vosea-tts-voice";
   var ttsVoiceKey = (function () {
     try {
@@ -952,6 +960,31 @@
       r2_first_error: "Primer error: {msg}",
       r2_fail: "Se cortó: {msg}",
       r2_purge_confirm: "Esto borra de Supabase solo los audios que ya están completos en Cloudflare (se comprueba uno por uno). ¿Seguir?",
+      el_title: "Voces de ElevenLabs",
+      el_loading: "Mirando ElevenLabs…",
+      el_off: "Falta la clave de ElevenLabs: poné ELEVENLABS_API_KEY en los secretos de Supabase y volvé a desplegar tts (mirá la guía de ElevenLabs).",
+      el_error: "ElevenLabs no respondió: {msg}",
+      el_credits: "Créditos de ElevenLabs",
+      el_credits_of: "{used} de {limit} usados",
+      el_left: "Quedan {left} créditos · se renuevan el {date}.",
+      el_voice: "Voz",
+      el_ready: "lista",
+      el_unit_cost: "{n} audios · {c} créditos",
+      el_todo: "Faltan {n} personajes · {c} créditos en total.",
+      el_all_done: "Todos los personajes están listos con esta voz.",
+      el_go: "Generar en orden",
+      el_stop: "Parar",
+      el_checking: "Revisando {unit}…",
+      el_progress: "Generando {unit}: {done} de {total} · {spent} créditos",
+      el_done: "Listo: {n} personajes terminados en esta tanda.",
+      el_low: "Paré antes de {unit}: hacen falta {need} créditos y quedan {left}. Seguí cuando se renueven ({date}).",
+      el_fail: "Se cortó en {unit}: {msg}",
+      el_stopped: "Parado. Lo que ya se hizo queda guardado: seguí cuando quieras.",
+      el_sql: "Falta correr pending_2026-10-17_voces.sql en Supabase.",
+      el_note: "En Escenas, una voz se ofrece para un personaje solo cuando tiene todas sus líneas. La etiqueta de ánimo cuenta como caracteres.",
+      el_retake: "Otra toma",
+      el_retake_confirm: "¿Hacer otra toma de esta línea con {voice}? Cuesta {n} créditos.",
+      el_retake_fail: "No se pudo: {msg}",
       lists_intro: "Armá una lista con los verbos, las palabras y las frases que quieras de tu colección — podés mezclarlos, por ejemplo todo lo útil para \"la cocina\" — y compartila con un enlace. Quien lo abra puede ver la lista e importarla a su propia cuenta, sin tocar el resto de tus datos.",
       lists_empty: "Todavía no creaste ninguna lista.",
       btn_create_list_toggle: "+ Crear lista",
@@ -1997,6 +2030,31 @@
       r2_first_error: "First error: {msg}",
       r2_fail: "It broke off: {msg}",
       r2_purge_confirm: "This deletes from Supabase only the clips that are already whole on Cloudflare (checked one by one). Continue?",
+      el_title: "ElevenLabs voices",
+      el_loading: "Checking ElevenLabs…",
+      el_off: "The ElevenLabs key is missing: add ELEVENLABS_API_KEY to the Supabase secrets and redeploy tts (see the ElevenLabs guide).",
+      el_error: "ElevenLabs didn't answer: {msg}",
+      el_credits: "ElevenLabs credits",
+      el_credits_of: "{used} of {limit} used",
+      el_left: "{left} credits left · they renew on {date}.",
+      el_voice: "Voice",
+      el_ready: "ready",
+      el_unit_cost: "{n} clips · {c} credits",
+      el_todo: "{n} characters to go · {c} credits in all.",
+      el_all_done: "Every character is ready in this voice.",
+      el_go: "Generate in order",
+      el_stop: "Stop",
+      el_checking: "Checking {unit}…",
+      el_progress: "Generating {unit}: {done} of {total} · {spent} credits",
+      el_done: "Done: {n} characters finished this run.",
+      el_low: "Stopped before {unit}: it needs {need} credits and {left} are left. Carry on when they renew ({date}).",
+      el_fail: "It broke off at {unit}: {msg}",
+      el_stopped: "Stopped. What's made is kept: carry on any time.",
+      el_sql: "pending_2026-10-17_voces.sql still needs to be run in Supabase.",
+      el_note: "In Escenas, a voice is offered for a character only once all of its lines exist. The mood tag counts as characters.",
+      el_retake: "Another take",
+      el_retake_confirm: "Make another take of this line with {voice}? It costs {n} credits.",
+      el_retake_fail: "Couldn't: {msg}",
       lists_intro: "Build a list out of any verbs, words, and phrases from your collection — you can mix them, for example everything useful for \"the kitchen\" — and share it with a link. Whoever opens it can see the list and import it into their own account, without touching the rest of your data.",
       lists_empty: "You haven't created any lists yet.",
       btn_create_list_toggle: "+ Create list",
@@ -2630,8 +2688,10 @@
     renderUsage();
     renderWarm();
     renderR2();
+    renderEleven();
     refreshUsage();
     refreshR2();
+    refreshEleven();
   }
   function closeUsage() { el.usageOverlay.hidden = true; }
 
@@ -3036,10 +3096,12 @@
   // each {var} set's value said in words, every pick option, and the
   // "wrong answer" replies. Each is a { text, voice } pair: a line is only
   // ever asked for in the voice of the role that says it.
-  function warmEscenaPairs() {
-    var out = [], seen = {};
+  // Every line a cast scene's people can say: each wording, each value of
+  // its {placeholders}, and the replies to wrong answers — cb(text, role).
+  // The audio warm-up and the ElevenLabs units both use it.
+  function escCastLines(sc, cb) {
     function lists(v) { return Array.isArray(v) ? [v] : (v && typeof v === "object" ? Object.keys(v).map(function (k) { return v[k]; }).filter(Array.isArray) : []); }
-    function fill(line, sc) {
+    function fill(line) {
       var names = (String(line).match(/\{(\w+)\}/g) || []).map(function (m) { return m.slice(1, -1); });
       var texts = [String(line)];
       names.forEach(function (name) {
@@ -3050,25 +3112,26 @@
       });
       return texts;
     }
+    sc.steps.forEach(function (st) {
+      if (st.r) lists(st.es).forEach(function (ls) { ls.forEach(function (line) { fill(line).forEach(function (tx) { cb(String(tx || "").trim(), st.r); }); }); });
+      if (st.you && st.wrong) {
+        var ws = Array.isArray(st.wrong) ? [st.wrong] : Object.keys(st.wrong).map(function (k) { return st.wrong[k]; });
+        ws.forEach(function (list) { (list || []).forEach(function (w) { (w.es || []).forEach(function (tx) { cb(String(tx || "").trim(), w.r); }); }); });
+      }
+    });
+  }
+  function warmEscenaPairs() {
+    var out = [], seen = {};
     ESCENAS.forEach(function (sc0) {
       var keys = sc0.roles.map(function (r) { return r.key; });
       for (var mask = 0; mask < (1 << keys.length); mask++) {
         var voices = {};
         keys.forEach(function (k, i) { voices[k] = (mask >> i) & 1 ? "tomas" : "elena"; });
-        var sc = escCast(sc0, voices);
-        var say = function (text, roleKey) {
-          text = String(text || "").trim();
+        escCastLines(escCast(sc0, voices), function (text, roleKey) {
           var v = TTS_VOICES[voices[roleKey]];
           if (!text || !v || seen[v + "\u0000" + text]) return;
           seen[v + "\u0000" + text] = true;
           out.push({ text: text, voice: v });
-        };
-        sc.steps.forEach(function (st) {
-          if (st.r) lists(st.es).forEach(function (ls) { ls.forEach(function (line) { fill(line, sc).forEach(function (tx) { say(tx, st.r); }); }); });
-          if (st.you && st.wrong) {
-            var ws = Array.isArray(st.wrong) ? [st.wrong] : Object.keys(st.wrong).map(function (k) { return st.wrong[k]; });
-            ws.forEach(function (list) { (list || []).forEach(function (w) { (w.es || []).forEach(function (tx) { say(tx, w.r); }); }); });
-          }
         });
       }
     });
@@ -3322,6 +3385,160 @@
     });
   }
 
+  // ---- ElevenLabs on the Uso page (2026-10-17) ----
+  // Credits from ElevenLabs, the units of the chosen voice in Camino order,
+  // and "Generar en orden": unit by unit, only what's missing, and only
+  // when the credits left cover the whole unit (tags included).
+  var elState = { loaded: false, status: null, vk: Object.keys(ELEVEN_VOICES)[0], run: null };
+  function elCall(body) {
+    return supabaseClient.functions.invoke("tts", { body: body }).then(function (res) {
+      if (res.error) {
+        var ctx = res.error.context;
+        return Promise.resolve(ctx && typeof ctx.json === "function" ? (ctx.clone ? ctx.clone().json() : ctx.json()) : null).catch(function () { return null; }).then(function (b) {
+          var e = new Error((b && (b.detail ? b.error + ": " + b.detail : b.error)) || ("HTTP " + ((ctx && ctx.status) || "?")));
+          e.code = b && b.error; e.status = ctx && ctx.status;
+          throw e;
+        });
+      }
+      if (!res.data) throw new Error("no_data");
+      return res.data;
+    });
+  }
+  function refreshEleven() {
+    return Promise.all([elCall({ action: "eleven_status" }).catch(function (e) { return { configured: true, error: e.message }; }), loadElevenVoices()]).then(function (r) {
+      elState.loaded = true; elState.status = r[0];
+      renderEleven();
+    });
+  }
+  function elDate(unix) {
+    if (!unix) return "";
+    return new Date(unix * 1000).toLocaleDateString(currentLang === "es" ? "es-AR" : "en-US", { day: "numeric", month: "short" });
+  }
+  function elLeft() { var st = elState.status; return st && st.limit ? Math.max(0, st.limit - st.used) : 0; }
+  function renderEleven() {
+    var box = el.usageEleven;
+    if (!box) return;
+    box.textContent = "";
+    var sec = usageSection(t("el_title"));
+    box.appendChild(sec);
+    if (!elState.loaded) { sec.appendChild(uNode("p", "usage-note", t("el_loading"))); return; }
+    var st = elState.status || {};
+    if (st.configured === false) { sec.appendChild(uNode("p", "usage-note", t("el_off"))); return; }
+    if (st.error) sec.appendChild(uNode("p", "usage-problem", t("el_error", { msg: st.error })));
+    else if (st.limit) {
+      sec.appendChild(usageMeter(t("el_credits"), t("el_credits_of", { used: progNum(st.used), limit: progNum(st.limit) }), st.used, st.limit, {}));
+      sec.appendChild(uNode("p", "usage-note", t("el_left", { left: progNum(elLeft()), date: elDate(st.reset_unix) })));
+    }
+    if (!elevenVoicesSql) sec.appendChild(uNode("p", "usage-problem", t("el_sql")));
+    var vks = Object.keys(ELEVEN_VOICES), run = elState.run, busy = !!(run && run.running);
+    if (vks.length > 1) {
+      var vt = uNode("div", "lang-toggle el-voices");
+      vks.forEach(function (vk) {
+        var b = uNode("button", "lang-option" + (elState.vk === vk ? " active" : ""), ELEVEN_VOICES[vk].label);
+        b.type = "button"; b.disabled = busy;
+        b.addEventListener("click", function () { elState.vk = vk; renderEleven(); });
+        vt.appendChild(b);
+      });
+      sec.appendChild(vt);
+    } else sec.appendChild(uNode("p", "usage-note", t("el_voice") + ": " + ELEVEN_VOICES[elState.vk].label));
+    var units = elevenUnits(elState.vk), list = uNode("ul", "el-units"), todo = 0, todoChars = 0;
+    units.forEach(function (u) {
+      var ready = !!elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] && elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] === u.sig;
+      var li = uNode("li", "el-unit" + (ready ? " is-ready" : "") + (run && run.cur === u.sc.id + "|" + u.role ? " is-now" : ""));
+      li.setAttribute("data-unit", u.sc.id + "|" + u.role);
+      li.appendChild(uNode("span", "el-unit-n", elevenUnitName(u)));
+      li.appendChild(uNode("span", "count", ready ? "✓ " + t("el_ready") : t("el_unit_cost", { n: progNum(u.texts.length), c: progNum(u.chars) })));
+      list.appendChild(li);
+      if (!ready) { todo++; todoChars += u.chars; }
+    });
+    sec.appendChild(uNode("p", "usage-note el-todo", todo ? t("el_todo", { n: progNum(todo), c: progNum(todoChars) }) : t("el_all_done")));
+    sec.appendChild(list);
+    sec.appendChild(uNode("p", "usage-note", t("el_note")));
+    var actions = uNode("div", "form-actions");
+    var go = uNode("button", "btn-primary", busy ? t("el_stop") : t("el_go"));
+    go.type = "button"; go.id = "el-go";
+    go.disabled = !busy && (!todo || !st.limit || !!st.error || !elevenVoicesSql);
+    go.addEventListener("click", function () { if (busy) { elState.run.stop = true; go.disabled = true; } else elevenRun(); });
+    actions.appendChild(go);
+    sec.appendChild(actions);
+    if (run && run.msg) sec.appendChild(uNode("p", run.bad ? "usage-problem" : "warm-progress", run.msg));
+  }
+  function elevenRun() {
+    if (elState.run && elState.run.running) return;
+    var vk = elState.vk, run = elState.run = { running: true, stop: false, msg: "", bad: false, cur: "", finished: 0 };
+    var queue = elevenUnits(vk).filter(function (u) { return elevenUnitsReady[vk + "|" + u.sc.id + "|" + u.role] !== u.sig; });
+    function say(key, vars, bad) { run.msg = t(key, vars); run.bad = !!bad; renderEleven(); }
+    function wait(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+    function have(items) {
+      var out = [], i = 0;
+      function next() {
+        if (i >= items.length) return Promise.resolve(out);
+        var chunk = items.slice(i, i + 150); i += 150;
+        return elCall({ action: "eleven_have", items: chunk }).then(function (d) { out = out.concat(d.have || []); return next(); });
+      }
+      return next();
+    }
+    function makeOne(it, tries) {
+      return elCall({ text: it.text, voice: "eleven:" + vk, tag: it.tag, take: it.take, gen: true }).then(function (d) {
+        if (d.stored === false) throw new Error("not_stored: " + (d.store_error || ""));
+        return d.chars || elevenSpoken(it.text, it.tag).length;
+      }, function (e) {
+        if (tries >= 1 || e.code === "eleven_quota" || run.stop) throw e;
+        return wait(1500).then(function () { return makeOne(it, tries + 1); });
+      });
+    }
+    function doUnit(u) {
+      var name = elevenUnitName(u);
+      run.cur = u.sc.id + "|" + u.role;
+      say("el_checking", { unit: name });
+      var items = u.texts.map(function (tx) { return { text: tx, tag: u.tag, take: elevenTakeOf(vk, u.tag, tx), voice: "eleven:" + vk }; });
+      return have(items).then(function (h) {
+        var missing = items.filter(function (it, i) { return !h[i]; });
+        var need = 0;
+        missing.forEach(function (it) { need += elevenSpoken(it.text, it.tag).length; });
+        return elCall({ action: "eleven_status" }).then(function (stt) {
+          elState.status = stt;
+          var left = stt && stt.limit ? Math.max(0, stt.limit - stt.used) : 0;
+          if (need > left) { run.stop = true; run.end = "low"; say("el_low", { unit: name, need: progNum(need), left: progNum(left), date: elDate(stt && stt.reset_unix) }); return false; }
+          var done = items.length - missing.length, spent = 0, k = 0, failed = null;
+          function worker() {
+            if (failed || run.stop || k >= missing.length) return Promise.resolve();
+            var it = missing[k++];
+            return makeOne(it, 0).then(function (c) {
+              spent += c; done++;
+              say("el_progress", { unit: name, done: progNum(done), total: progNum(items.length), spent: progNum(spent) });
+              return worker();
+            }, function (e) { failed = e; });
+          }
+          return Promise.all([worker(), worker(), worker()]).then(function () {
+            if (failed) throw failed;
+            if (run.stop) return false;
+            return elCall({ action: "eleven_unit_done", voice: vk, scene: u.sc.id, role: u.role, sig: u.sig, tag: u.tag, clips: items.length, chars: u.chars }).then(function () {
+              elevenUnitsReady[vk + "|" + u.sc.id + "|" + u.role] = u.sig;
+              run.finished++;
+              return true;
+            });
+          });
+        });
+      }).catch(function (e) {
+        run.stop = true; run.end = "fail";
+        say(e && e.code === "voices_sql_missing" ? "el_sql" : "el_fail", { unit: name, msg: (e && e.message) || "" }, true);
+        return false;
+      });
+    }
+    var i = 0;
+    function loop() {
+      if (run.stop || i >= queue.length) return Promise.resolve();
+      return doUnit(queue[i++]).then(function (ok) { if (!ok) return; return loop(); });
+    }
+    renderEleven();
+    return loop().then(function () {
+      run.running = false; run.cur = "";
+      if (!run.end) { run.end = run.stop ? "stopped" : "done"; run.bad = false; run.msg = run.end === "done" ? t("el_done", { n: progNum(run.finished) }) : t("el_stopped"); }
+      return refreshEleven();
+    });
+  }
+
   function renderR2() {
     var box = el.usageR2;
     if (!box) return;
@@ -3455,7 +3672,7 @@
   function refreshAllTranslatedViews() {
     applyGrammarLabels();
     applyI18n();
-    if (el.usageOverlay && !el.usageOverlay.hidden) { renderUsage(); renderWarm(); renderR2(); }
+    if (el.usageOverlay && !el.usageOverlay.hidden) { renderUsage(); renderWarm(); renderR2(); renderEleven(); }
     refreshListFilterUI();
     renderList();
     renderWordList();
@@ -4103,6 +4320,7 @@
     usageClose: document.getElementById("usage-close"),
     usageWarm: document.getElementById("usage-warm"),
     usageR2: document.getElementById("usage-r2"),
+    usageEleven: document.getElementById("usage-eleven"),
     acctMenuLogout: document.getElementById("acct-menu-logout"),
     settingsOverlay: document.getElementById("settings-overlay"),
     settingsMsg: document.getElementById("settings-msg"),
@@ -4604,7 +4822,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "120";
+  var VOSEA_BUILD = "121";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7569,8 +7787,13 @@
 
   // vk: an optional voice key ("elena" / "tomas"); Escenas give each role
   // its own voice. Without it, the voice from Configuración.
-  function ttsVoiceName(vk) { return TTS_VOICES[vk && TTS_VOICES[vk] ? vk : ttsVoiceKey]; }
-  function ttsKey(text, vk) { return ttsVoiceName(vk) + "\u0000" + String(text || "").trim(); }
+  function ttsVoiceName(vk) { return vk && ELEVEN_VOICES[vk] ? "eleven:" + vk : TTS_VOICES[vk && TTS_VOICES[vk] ? vk : ttsVoiceKey]; }
+  // opts (ElevenLabs only): { tag, take } — part of which clip it is
+  function ttsKey(text, vk, opts) {
+    var k = ttsVoiceName(vk) + "\u0000" + String(text || "").trim();
+    if (vk && ELEVEN_VOICES[vk]) k += "\u0000" + ((opts && opts.tag) || "") + "\u0000" + ((opts && opts.take) || 0);
+    return k;
+  }
 
   // ---- Free-month limits (2026-10-10) ----
   // tts and stt answer 429 {error: "daily_limit" | "monthly_reserve"} when
@@ -7597,14 +7820,23 @@
 
   // The clip's public URL: remembered, or asked of the Edge Function (which
   // synthesizes it first if nobody has heard this text in this voice yet).
-  function ttsResolveUrl(text, force, vk) {
-    var key = ttsKey(text, vk);
+  function ttsResolveUrl(text, force, vk, opts) {
+    var key = ttsKey(text, vk, opts);
+    var eleven = !!(vk && ELEVEN_VOICES[vk]);
     if (!force && ttsUrlMemo[key]) return Promise.resolve({ url: ttsUrlMemo[key], how: "url remembered" });
     // Over a limit (see "Free-month limits" below): don't ask again for a
-    // while; clips already known keep playing.
-    if (ttsLimitHit && Date.now() < ttsLimitHit.until) return Promise.reject(ttsLimitError(ttsLimitHit.code));
-    return supabaseClient.functions.invoke("tts", { body: { text: String(text).trim(), voice: ttsVoiceName(vk) } })
+    // while; clips already known keep playing. (ElevenLabs lines are only
+    // looked up, never made here, so they aren't held back.)
+    if (!eleven && ttsLimitHit && Date.now() < ttsLimitHit.until) return Promise.reject(ttsLimitError(ttsLimitHit.code));
+    var body = { text: String(text).trim(), voice: ttsVoiceName(vk) };
+    if (eleven) { body.tag = (opts && opts.tag) || ""; body.take = (opts && opts.take) || 0; }
+    return supabaseClient.functions.invoke("tts", { body: body })
       .then(function (res) {
+        // an ElevenLabs line that hasn't been made: the same-gender Azure
+        // voice says it (nothing is remembered for the ElevenLabs key)
+        if (eleven && res.error && res.error.context && res.error.context.status === 404) {
+          return ttsResolveUrl(text, force, ELEVEN_VOICES[vk].fallback).then(function (r) { return { url: r.url, how: r.how + " (ElevenLabs line not made yet)", fallback: true }; });
+        }
         if (res.error && res.error.context && res.error.context.status === 429) {
           return limitCodeOf(res.error).then(function (code) {
             ttsLimitHit = { code: code, until: Date.now() + 30 * 60000 };
@@ -7644,20 +7876,23 @@
   // Resolves to {src, how}: src is a blob: URL when the bytes could be
   // downloaded, or the plain public URL as a fallback (the <audio> element
   // then streams it itself).
-  function ttsLoadAudio(text, vk) {
-    var key = ttsKey(text, vk);
+  function ttsLoadAudio(text, vk, opts) {
+    if (vk && ELEVEN_VOICES[vk]) opts = { tag: (opts && opts.tag) || "", take: elevenTakeOf(vk, (opts && opts.tag) || "", text) };
+    else opts = null;
+    var key = ttsKey(text, vk, opts);
     if (ttsBlobUrls[key]) return Promise.resolve({ src: ttsBlobUrls[key], how: "already downloaded" });
     if (ttsLoading[key]) return ttsLoading[key];
-    var p = ttsResolveUrl(text, false, vk).then(function (r) {
+    var p = ttsResolveUrl(text, false, vk, opts).then(function (r) {
       return ttsFetchBlob(r.url).then(function (src) {
-        rememberTtsBlob(key, src);
+        if (!r.fallback) rememberTtsBlob(key, src); // a stand-in isn't kept: once the line is made, it plays
+
         return { src: src, how: r.how };
       }, function (err) {
         // A remembered URL that's gone (e.g. the cache bucket was cleared):
         // forget it and ask the Edge Function once more.
         if (r.how === "url remembered" && err && err.status) {
           delete ttsUrlMemo[key]; saveTtsUrlMemo();
-          return ttsResolveUrl(text, true, vk).then(function (r2) {
+          return ttsResolveUrl(text, true, vk, opts).then(function (r2) {
             return ttsFetchBlob(r2.url).then(function (src) { rememberTtsBlob(key, src); return { src: src, how: r2.how }; },
               function () { return { src: r2.url, how: r2.how }; });
           });
@@ -7670,7 +7905,7 @@
     p.then(clear, clear);
     return p;
   }
-  window.voseaTtsLoad = function (text, vk) { return ttsLoadAudio(text, vk); }; // tests
+  window.voseaTtsLoad = function (text, vk, opts) { return ttsLoadAudio(text, vk, opts); }; // tests
 
   // Powers the "Buscar en RAE" shortcut on the add-verb and add-word forms
   // (2026-09-26). Calls the dle-lookup Edge Function (see
@@ -13039,7 +13274,8 @@
   function escVoicesAll() { try { return JSON.parse(localStorage.getItem(ESC_VOICES_KEY) || "{}") || {}; } catch (e) { return {}; } }
   function escVoices(sc) {
     var saved = escVoicesAll()[sc.id] || {}, out = {};
-    sc.roles.forEach(function (r) { out[r.key] = TTS_VOICES[saved[r.key]] ? saved[r.key] : (r.voice || ttsVoiceKey); });
+    // an ElevenLabs voice only while every line of that role exists in it
+    sc.roles.forEach(function (r) { var v = saved[r.key]; out[r.key] = TTS_VOICES[v] || escElevenReady(sc, r.key, v) ? v : (r.voice || ttsVoiceKey); });
     return out;
   }
   function escSetVoice(sc, roleKey, vk) {
@@ -13056,6 +13292,7 @@
   // {key:feminine|masculine} — the cue, the lines, the best answer. A
   // scene is "cast" for the voices chosen before it's shown or played.
   var ESC_VOICE_G = { elena: "f", tomas: "m" };
+  Object.keys(ELEVEN_VOICES).forEach(function (vk) { ESC_VOICE_G[vk] = ELEVEN_VOICES[vk].g; });
   function escGenders(sc, voices) {
     var g = {};
     sc.roles.forEach(function (r) { g[r.key] = ESC_VOICE_G[voices[r.key] || r.voice] || "f"; });
@@ -13081,6 +13318,125 @@
     });
     out._base = base; out._g = g;
     return out;
+  }
+
+  // ---- ElevenLabs voices (2026-10-17, commit 100) ----
+  // mason: ElevenLabs voices join the pool next to Elena and Tomás ("a two
+  // [person] scene could be Elena & Tomás, or it could be Elena & Valeria");
+  // a role offers one only "when we have all of their lines"; they are made
+  // from the earliest scene on the Camino on, stopping when the credits
+  // can't finish the next one, and the mood tags are never trimmed to fit
+  // more in. A unit is (voice, scene, role): every line the role can say
+  // with that voice's gender, whatever the other roles are, every wording.
+  // public.voice_units says which units are finished (with a fingerprint of
+  // the lines and tag, so a changed line or tag un-finishes it);
+  // public.voice_retakes which lines were made again. Only owners make
+  // ElevenLabs clips (the warm-up on the Uso page, and "otra toma").
+  var elevenUnitsReady = {};  // "voice|scene|role" -> sig
+  var elevenTakes = {};       // "voice\0tag\0text" -> take
+  var elevenTextsMemo = {}, elevenSigMemo = {};
+  function escVoiceLabel(vk) { return vk === "elena" ? "Elena" : vk === "tomas" ? "Tomás" : (ELEVEN_VOICES[vk] ? ELEVEN_VOICES[vk].label : vk); }
+  function escRoleTag(sc, roleKey) {
+    var b = sc && (sc._base || sc);
+    var r = b && b.roles ? b.roles.find(function (x) { return x.key === roleKey; }) : null;
+    return (r && r.tag) || "";
+  }
+  function escTtsOpts(p, roleKey, vk) { return vk && ELEVEN_VOICES[vk] && p && p.sc ? { tag: escRoleTag(p.sc, roleKey) } : null; }
+  // what ElevenLabs reads and bills (same as the tts function's elevenSpoken)
+  function elevenSpoken(text, tag) {
+    var t2 = String(text).trim().split(/\s*\/\s*/).join("... ");
+    return tag ? "[" + tag + "] " + t2 : t2;
+  }
+  function escRoleTexts(sc0, roleKey, g) {
+    var mk = sc0.id + "|" + roleKey + "|" + g;
+    if (elevenTextsMemo[mk]) return elevenTextsMemo[mk];
+    var others = sc0.roles.map(function (r) { return r.key; }).filter(function (k) { return k !== roleKey; });
+    var seen = {}, out = [];
+    for (var mask = 0; mask < (1 << others.length); mask++) {
+      var voices = {};
+      voices[roleKey] = g === "m" ? "tomas" : "elena";
+      others.forEach(function (k, i) { voices[k] = (mask >> i) & 1 ? "tomas" : "elena"; });
+      escCastLines(escCast(sc0, voices), function (text, rk) {
+        if (rk !== roleKey || !text || seen[text]) return;
+        seen[text] = true; out.push(text);
+      });
+    }
+    out.sort();
+    return (elevenTextsMemo[mk] = out);
+  }
+  function elevenFnv(str) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return ("0000000" + h.toString(16)).slice(-8) + str.length.toString(36);
+  }
+  function elevenUnit(sc0, roleKey, vk) {
+    sc0 = sc0._base || sc0;
+    var v = ELEVEN_VOICES[vk], tag = escRoleTag(sc0, roleKey), texts = escRoleTexts(sc0, roleKey, v.g);
+    var mk = vk + "|" + sc0.id + "|" + roleKey;
+    if (!elevenSigMemo[mk]) {
+      var chars = 0;
+      texts.forEach(function (tx) { chars += elevenSpoken(tx, tag).length; });
+      elevenSigMemo[mk] = { chars: chars, sig: elevenFnv(ELEVEN_VER + "\n" + vk + "\n" + tag + "\n" + texts.join("\n")) };
+    }
+    return { vk: vk, sc: sc0, role: roleKey, tag: tag, texts: texts, chars: elevenSigMemo[mk].chars, sig: elevenSigMemo[mk].sig };
+  }
+  function escElevenReady(sc, roleKey, vk) {
+    if (!vk || !ELEVEN_VOICES[vk] || !sc) return false;
+    var b = sc._base || sc, have = elevenUnitsReady[vk + "|" + b.id + "|" + roleKey];
+    return !!have && have === elevenUnit(b, roleKey, vk).sig;
+  }
+  function elevenTakeOf(vk, tag, text) { return elevenTakes[vk + "\u0000" + (tag || "") + "\u0000" + String(text || "").trim()] || 0; }
+  // every unit of one voice, in Camino order
+  function elevenUnits(vk) {
+    var out = [];
+    escPathOrder().forEach(function (sc) { sc.roles.forEach(function (r) { out.push(elevenUnit(sc, r.key, vk)); }); });
+    return out;
+  }
+  function elevenUnitName(u) {
+    var g = ELEVEN_VOICES[u.vk].g, voices = escVoices(u.sc);
+    voices[u.role] = g === "m" ? "tomas" : "elena";
+    var cast = escCast(u.sc, voices), r = cast.roles.find(function (x) { return x.key === u.role; });
+    return topicText(cast.name) + " · " + topicText(r ? r.name : { es: u.role, en: u.role });
+  }
+  window.voseaElevenUnit = function (id, role, vk) { var sc = escById(id); return sc ? elevenUnit(sc, role, vk || "valeria") : null; }; // tests
+
+  var elevenVoicesSql = true;
+  function loadElevenVoices() {
+    if (!currentUser) return Promise.resolve();
+    return Promise.all([
+      Promise.resolve(supabaseClient.from("voice_units").select("voice,scene,role,sig")),
+      Promise.resolve(supabaseClient.from("voice_retakes").select("voice,tag,text,take"))
+    ]).then(function (res) {
+      var u = res[0] || {}, rt = res[1] || {};
+      elevenVoicesSql = !u.error;
+      var ready = {}, takes = {};
+      (u.data || []).forEach(function (row) { ready[row.voice + "|" + row.scene + "|" + row.role] = row.sig; });
+      (rt.data || []).forEach(function (row) { takes[row.voice + "\u0000" + (row.tag || "") + "\u0000" + row.text] = Number(row.take) || 0; });
+      elevenUnitsReady = ready; elevenTakes = takes;
+    }, function () { elevenVoicesSql = false; });
+  }
+
+  // owners: make one line again, everyone hears the new take after
+  function elevenRetake(p, roleKey, text, wrap, btn) {
+    var vk = p.voices[roleKey], tag = escRoleTag(p.sc, roleKey);
+    if (!ELEVEN_VOICES[vk]) return;
+    if (!window.confirm(t("el_retake_confirm", { voice: escVoiceLabel(vk), n: progNum(elevenSpoken(text, tag).length) }))) return;
+    btn.disabled = true;
+    supabaseClient.functions.invoke("tts", { body: { action: "eleven_retake", voice: "eleven:" + vk, text: String(text).trim(), tag: tag } }).then(function (res) {
+      if (res.error || !res.data || !res.data.take) {
+        var ctx = res.error && res.error.context;
+        return Promise.resolve(ctx && typeof ctx.json === "function" ? (ctx.clone ? ctx.clone().json() : ctx.json()) : null).catch(function () { return null; }).then(function (b) {
+          throw new Error((b && (b.detail || b.error)) || (res.error && res.error.message) || "error");
+        });
+      }
+      elevenTakes[vk + "\u0000" + tag + "\u0000" + String(text).trim()] = res.data.take;
+      btn.disabled = false;
+      return escSay(text, vk, wrap, roleKey);
+    }).catch(function (e) {
+      btn.disabled = false;
+      btn.title = t("el_retake_fail", { msg: (e && e.message) || "" });
+      btn.classList.add("is-fail");
+    });
   }
 
   // ---- picks: a choice that doesn't change the story, taken both ways ----
@@ -13247,8 +13603,10 @@
       nm.appendChild(progEl("small", null, topicText(r.sub)));
       row.appendChild(nm);
       var seg = progEl("div", "lang-toggle esc-voice");
-      Object.keys(TTS_VOICES).forEach(function (vk) {
-        var b = progEl("button", "lang-option" + (voices[r.key] === vk ? " active" : ""), vk === "elena" ? "Elena" : "Tomás");
+      var pool = Object.keys(TTS_VOICES).concat(Object.keys(ELEVEN_VOICES).filter(function (vk) { return escElevenReady(sc, r.key, vk); }));
+      if (pool.length > 2) seg.classList.add("is-wide");
+      pool.forEach(function (vk) {
+        var b = progEl("button", "lang-option" + (voices[r.key] === vk ? " active" : "") + (ELEVEN_VOICES[vk] ? " is-eleven" : ""), escVoiceLabel(vk));
         b.type = "button";
         b.setAttribute("aria-pressed", voices[r.key] === vk ? "true" : "false");
         b.setAttribute("data-role", r.key); b.setAttribute("data-voice", vk);
@@ -13429,7 +13787,7 @@
   function escSay(text, vk, bubble, roleKey) {
     escStopAudio();
     escAudioWake();
-    return ttsLoadAudio(text, vk).then(function (r) {
+    return ttsLoadAudio(text, vk, escTtsOpts(escPlay, roleKey, vk)).then(function (r) {
       escAudioWake();
       return new Promise(function (resolve) {
         if (!escAudio) escAudio = new Audio();
@@ -13477,6 +13835,15 @@
     wrap.reveal = function () { bub.classList.remove("is-hidden"); };
     wrap.classList.remove("is-playing");
     play.addEventListener("click", function () { if (escPlay) escPlay.replays = (escPlay.replays || 0) + 1; escSay(text, p.voices[roleKey], wrap, roleKey); });
+    // owners: a line in an ElevenLabs voice that sounds wrong can be made
+    // again ("otra toma"); everyone hears the new take from then on
+    if (usageRole.can_view_usage && ELEVEN_VOICES[p.voices[roleKey]]) {
+      var again = progEl("button", "esc-retake", "↻");
+      again.type = "button";
+      again.title = t("el_retake"); again.setAttribute("aria-label", t("el_retake"));
+      again.addEventListener("click", function () { elevenRetake(p, roleKey, text, wrap, again); });
+      bub.insertBefore(again, see);
+    }
     see.addEventListener("click", function () { wrap.reveal(); if (escPlay) escPlay.peeked = true; });
     el.escChat.appendChild(wrap);
     escScroll();
@@ -13530,7 +13897,7 @@
     (idxs || []).forEach(function (i) {
       var st = p.sc.steps[i];
       if (!st || !st.r) return;
-      try { ttsLoadAudio(escLine(p, i), p.voices[st.r]).catch(function () {}); } catch (e) {}
+      try { ttsLoadAudio(escLine(p, i), p.voices[st.r], escTtsOpts(p, st.r, p.voices[st.r])).catch(function () {}); } catch (e) {}
     });
   }
   function escNext() {
@@ -17841,6 +18208,7 @@
       loadRewards();
       loadGameRecords();
       loadUsageRole();
+      loadElevenVoices();
       loadAmigos().then(amigoHandlePendingInvite);
       loadRetos();
       if (el.hoyPanel && !el.hoyPanel.hidden) {
@@ -18001,7 +18369,7 @@
     if (!el.qaMenu.hidden) closeQuickAdd();
     if (!el.welcomeOverlay.hidden) closeWelcome();
   });
-  el.usageRefresh.addEventListener("click", function () { refreshUsage(); refreshR2(); });
+  el.usageRefresh.addEventListener("click", function () { refreshUsage(); refreshR2(); if (!(elState.run && elState.run.running)) refreshEleven(); });
   el.usageClose.addEventListener("click", closeUsage);
   el.acctMenuLogout.addEventListener("click", function () {
     closeAcctMenu();
