@@ -65,7 +65,12 @@ app's shared starter content — the same as adding an item by hand.
 
 Field notes:
 - `type` — one of `-ar` / `-er` / `-ir`, must match the infinitive's ending.
-- `irregularity` — one of `regular` / `cambio de raíz` / `irregular (yo)` / `irregular (total)`.
+- `irregularity` — optional. The app works it out from `forms` itself, and a verb can have several:
+  `cambio de raíz` (él/ellos change the stem vowel), `irregular (yo)` (the present yo breaks the
+  pattern beyond that: tengo, digo, conozco), `pretérito irregular` (tuve, dije, hice), or
+  `irregular (total)` alone (ser, ir, haber, ver). So "decir" is `cambio de raíz, irregular (yo),
+  pretérito irregular`. If you include it, write the tags separated by commas; when it disagrees
+  with the table, the preview warns you and the table's tags are saved.
 - `pattern` — a short free-text note on what's irregular (e.g. `"e→i en formas acentuadas"`), blank if fully regular.
 - `transitivity` — one of `transitivo` / `intransitivo` / `ambos`.
 - `preposicion` — a fixed preposition the verb idiomatically takes (`"a"`, `"de"`, `"en"`...), or `""`.
@@ -186,12 +191,12 @@ plausible and still be wrong for this app:
 - Before you confirm the import, you'll see a preview of every parsed
   verb/word/phrase. For verbs, any cell that doesn't match the app's own
   built-in *regular* conjugation pattern is highlighted — same highlight
-  used everywhere else in the app for irregular verbs. If you marked
-  something `"irregularity": "regular"` and cells still light up, that's
-  usually the LLM having made a mistake; fix it before confirming. The
-  exception is a spelling-only change (sacar → saqué, llegar → llegue,
-  empezar → empecé, surgir → surjo): those cells light up too, are
-  correct, and stay `"regular"` with the change described in `pattern`.
+  used everywhere else in the app for irregular verbs. If the file's
+  `irregularity` doesn't match what the table gives, the preview says so:
+  usually that's the LLM having made a mistake in a form; fix it before
+  confirming. Spelling-only changes (sacar → saqué, llegar → llegue,
+  empezar → empecé, surgir → surjo) light up in the table but don't make
+  a verb irregular; describe them in `pattern`.
 - Duplicates are matched by infinitive/word/phrase (case- and
   accent-insensitive), same as the existing "add to list" flow — importing
   the same file twice won't create duplicate rows.

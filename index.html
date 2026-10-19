@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="131">
+<meta name="vosea-build" content="132">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -186,6 +186,7 @@
         <button type="button" class="chip" data-facet="irregularity" data-value="regular" data-i18n-tag="regular">regular</button>
         <button type="button" class="chip" data-facet="irregularity" data-value="cambio de raíz" data-i18n-tag="cambio de raíz">cambio de raíz</button>
         <button type="button" class="chip" data-facet="irregularity" data-value="irregular (yo)" data-i18n-tag="irregular (yo)">irregular (yo)</button>
+        <button type="button" class="chip" data-facet="irregularity" data-value="pretérito irregular" data-i18n-tag="pretérito irregular">pretérito irregular</button>
         <button type="button" class="chip" data-facet="irregularity" data-value="irregular (total)" data-i18n-tag="irregular (total)">irregular (total)</button>
       </div>
       <div class="chip-group">
@@ -320,14 +321,10 @@
           <option value="-ir">-ir</option>
         </select>
       </div>
-      <div class="field field-narrow">
-        <label for="f-irregularity" data-i18n="chip_group_irregularity">Irregularidad</label>
-        <select id="f-irregularity">
-          <option value="regular" data-i18n-tag="regular">regular</option>
-          <option value="cambio de raíz" data-i18n-tag="cambio de raíz">cambio de raíz</option>
-          <option value="irregular (yo)" data-i18n-tag="irregular (yo)">irregular (yo)</option>
-          <option value="irregular (total)" data-i18n-tag="irregular (total)">irregular (total)</option>
-        </select>
+      <div class="field">
+        <label data-i18n="chip_group_irregularity">Irregularidad</label>
+        <div class="irr-auto" id="f-irregularity" aria-live="polite"></div>
+        <span class="field-hint" data-i18n="irr_auto_hint">según la tabla de conjugación</span>
       </div>
       <div class="field field-narrow">
         <label for="f-transitivity" data-i18n="chip_group_transitivity">Transitividad</label>
