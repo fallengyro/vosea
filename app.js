@@ -5189,7 +5189,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "136";
+  var VOSEA_BUILD = "137";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6836,7 +6836,7 @@
   // or something with a user initiated click that starts the first page".)
   // Opened by itself, it starts on a quiet greeting (step -1): no voice, the
   // language switch, Empezar el recorrido. That tap is also the gesture a
-  // browser wants before it plays sound. From the menu it goes straight in.
+  // browser wants before it plays sound. (From the menu too, since 2026-10-19.)
   function openWelcome(opts) {
     closeAcctMenu();
     closeQuickAdd();
@@ -18970,7 +18970,9 @@
     closeAcctMenu();
     openUsage();
   });
-  el.acctMenuWelcome.addEventListener("click", function () { openWelcome(); });
+  // (2026-10-19, mason: "please make this so that it also runs this when
+  // you launch from the settings") — the greeting from the menu too
+  el.acctMenuWelcome.addEventListener("click", function () { openWelcome({ greet: true }); });
   el.welcomeNext.addEventListener("click", welcomeNextClick);
   // (2026-10-18, mason: "at welcome we don't know if the user will be low
   // A1 and not able to navigate to the configuration… allow the user to
