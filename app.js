@@ -192,6 +192,10 @@
       welcome_next: "Siguiente",
       welcome_start: "Empezar",
       welcome_skip: "Saltar",
+      welcome_greet_title: "¡Hola! Te damos la bienvenida",
+      welcome_greet_text: "En un minuto te mostramos cómo funciona voseá, pestaña por pestaña.",
+      welcome_greet_voice: "El recorrido tiene voz: subí el volumen si querés escucharlo.",
+      welcome_greet_go: "Empezar el recorrido",
       empty_add_verbs: "Agregar un verbo",
       empty_add_words: "Agregar una palabra",
       empty_add_phrases: "Agregar una frase",
@@ -1301,6 +1305,10 @@
       welcome_next: "Next",
       welcome_start: "Get started",
       welcome_skip: "Skip",
+      welcome_greet_title: "Hi! Welcome",
+      welcome_greet_text: "In a minute we'll show you how voseá works, tab by tab.",
+      welcome_greet_voice: "The tour is narrated, so turn up the volume if you'd like to hear it.",
+      welcome_greet_go: "Start the tour",
       empty_add_verbs: "Add a verb",
       empty_add_words: "Add a word",
       empty_add_phrases: "Add a phrase",
@@ -4787,6 +4795,8 @@
     acctMenuWelcome: document.getElementById("acct-menu-welcome"),
     welcomeOverlay: document.getElementById("welcome-overlay"),
     welcomeTabs: document.getElementById("welcome-tabs"),
+    welcomeCard: document.querySelector("#welcome-overlay .welcome-card"),
+    welcomeGreetMark: document.getElementById("welcome-greet-mark"),
     welcomeLangEs: document.getElementById("welcome-lang-es"),
     welcomeLangEn: document.getElementById("welcome-lang-en"),
     welcomeListen: document.getElementById("welcome-listen"),
@@ -5179,7 +5189,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "135";
+  var VOSEA_BUILD = "136";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6763,7 +6773,7 @@
     for (var i = 0; i < tags.length; i++) if (have && have === welcomeUnit(vk, lang, tags[i]).sig) return tags[i];
     return null;
   }
-  function welcomeHasAudio(n) { return welcomeReadyTag(n) !== null; }
+  function welcomeHasAudio(n) { return n >= 0 && welcomeReadyTag(n) !== null; }
   // The welcome speaks by itself (2026-10-18, mason: "instead of having an
   // escuchar button… have them speak immediately and then change the button
   // out for a silent button"). The button mutes; muted is remembered on the
@@ -6821,10 +6831,16 @@
   var contentReady = {};
   function welcomeSeen() { try { return localStorage.getItem(WELCOME_KEY) === "1"; } catch (e) { return false; } }
   function markWelcomeSeen() { try { localStorage.setItem(WELCOME_KEY, "1"); } catch (e) {} }
-  function openWelcome() {
+  // (2026-10-19, mason: for new users the welcome "pops up and starts
+  // talking it's a little abrupt… load the screen with a welcome/bienvenido
+  // or something with a user initiated click that starts the first page".)
+  // Opened by itself, it starts on a quiet greeting (step -1): no voice, the
+  // language switch, Empezar el recorrido. That tap is also the gesture a
+  // browser wants before it plays sound. From the menu it goes straight in.
+  function openWelcome(opts) {
     closeAcctMenu();
     closeQuickAdd();
-    welcomeStep = 0;
+    welcomeStep = opts && opts.greet ? -1 : 0;
     markWelcomeSeen();
     el.welcomeOverlay.hidden = false;
     renderWelcome();
@@ -6841,6 +6857,23 @@
   function renderWelcome() {
     var n = welcomeStep, last = n === WELCOME_TABS.length - 1;
     welcomeShownLang = currentLang;
+    var greet = n === -1;
+    el.welcomeCard.classList.toggle("is-greet", greet);
+    el.welcomeGreetMark.hidden = !greet;
+    el.welcomeTabs.hidden = greet;
+    el.welcomeDots.hidden = greet;
+    if (greet) {
+      welcomeStopAudio();
+      el.welcomeListen.hidden = true;
+      el.welcomeKick.textContent = "";
+      el.welcomeTitle.textContent = t("welcome_greet_title");
+      el.welcomeText.textContent = t("welcome_greet_text") + (welcomeHasAudio(0) ? " " + t("welcome_greet_voice") : "");
+      el.welcomePack.hidden = true;
+      el.welcomeAlt.hidden = true;
+      el.welcomeSkip.hidden = false;
+      el.welcomeNext.textContent = t("welcome_greet_go");
+      return;
+    }
     el.welcomeKick.textContent = t("welcome_kick_" + n);
     el.welcomeTitle.textContent = t("welcome_title_" + n);
     richText(el.welcomeText, t("welcome_text_" + n));
@@ -6874,7 +6907,7 @@
     if (window.__voseaWelcome === false) return;
     if (!currentUser || nMine || nRows || welcomeSeen() || !el.welcomeOverlay.hidden) return;
     if (!(contentReady.verbs && contentReady.words && contentReady.phrases && topicHistoryReady())) return;
-    openWelcome();
+    openWelcome({ greet: true });
   }
 
   function wordCardRow(id, data) {
@@ -18937,7 +18970,7 @@
     closeAcctMenu();
     openUsage();
   });
-  el.acctMenuWelcome.addEventListener("click", openWelcome);
+  el.acctMenuWelcome.addEventListener("click", function () { openWelcome(); });
   el.welcomeNext.addEventListener("click", welcomeNextClick);
   // (2026-10-18, mason: "at welcome we don't know if the user will be low
   // A1 and not able to navigate to the configuration… allow the user to

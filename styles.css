@@ -2730,10 +2730,16 @@
   .welcome-actions .btn-secondary:not([hidden]) + .btn-primary { margin-left: 0; }
   .welcome-actions:has(.btn-secondary:not([hidden])) .btn-secondary { margin-left: auto; }
   #pack-toast .quiet-toast-btn[hidden] { display: none; }
+  /* the quiet greeting before the tour */
+  .welcome-greet-mark { font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 600; font-size: 44px; line-height: 1; color: var(--accent-deep, var(--accent)); text-align: center; margin: 28px 0 14px; }
+  .welcome-greet-mark[hidden], .welcome-tabs[hidden], .welcome-dots[hidden] { display: none; }
+  .welcome-card.is-greet .welcome-title { text-align: center; }
+  .welcome-card.is-greet .welcome-text { text-align: center; color: var(--ink-soft); margin-bottom: 24px; }
   /* desktop: one height for every step, so the dots and Siguiente stay put */
   @media (min-width: 601px) {
     .welcome-card { display: flex; flex-direction: column; min-height: 460px; box-sizing: border-box; }
     .welcome-card .welcome-dots { margin-top: auto; padding-top: 18px; }
+    .welcome-card.is-greet .welcome-greet-mark, .welcome-card.is-greet .welcome-actions { margin-top: auto; }
   }
   @media (max-width: 600px) {
     .welcome-overlay { align-items: flex-end; padding: 0; }
