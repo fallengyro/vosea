@@ -87,7 +87,11 @@
      page scrollbar and every internal scroll area (conj tables, the
      flashcard matrix); the -webkit- pseudo-elements need their own rule
      per element, so that one goes on the universal selector instead. */
-  html { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  /* (2026-10-19, mason: "on desktop when i switch the tabs the screen bounces
+     around a little side to side") A desktop scrollbar takes width only on
+     tabs long enough to scroll, so the centered page moved by half of it.
+     The gutter is now always reserved. */
+  html { scrollbar-width: thin; scrollbar-color: var(--line) transparent; scrollbar-gutter: stable; }
   *::-webkit-scrollbar { width: 9px; height: 9px; }
   *::-webkit-scrollbar-track { background: transparent; }
   *::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; }
@@ -2726,6 +2730,11 @@
   .welcome-actions .btn-secondary:not([hidden]) + .btn-primary { margin-left: 0; }
   .welcome-actions:has(.btn-secondary:not([hidden])) .btn-secondary { margin-left: auto; }
   #pack-toast .quiet-toast-btn[hidden] { display: none; }
+  /* desktop: one height for every step, so the dots and Siguiente stay put */
+  @media (min-width: 601px) {
+    .welcome-card { display: flex; flex-direction: column; min-height: 460px; box-sizing: border-box; }
+    .welcome-card .welcome-dots { margin-top: auto; padding-top: 18px; }
+  }
   @media (max-width: 600px) {
     .welcome-overlay { align-items: flex-end; padding: 0; }
     .welcome-card { max-width: none; border-radius: 20px 20px 0 0; padding: 22px 18px calc(16px + env(safe-area-inset-bottom)); }
