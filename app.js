@@ -1288,7 +1288,7 @@
       welcome_text_2: "Everything you add lives here. When you hear something new on the street, add it with the **+** at the top. You can filter by type or by list, make **Lists** and share them, and tap **Practice** to turn what you picked into flashcards.",
       welcome_kick_3: "The Topics tab",
       welcome_title_3: "How the Spanish here works",
-      welcome_text_3: "Each topic explains one part of the language (voseo, numbers, the past tense…) with examples you'll hear on the street. Then you practice it on flashcards three ways: **Read**, **Listen** or **Speak**. They're all open; **Path** shows them in the order of the textbooks, with the scenes along the way.",
+      welcome_text_3: "Each topic explains one part of the language (voseo, numbers, the past tense…) with examples you'll hear on the street. Then you practice it on flashcards three ways: **Read**, **Listen** or **Speak**. They're all open. **Path** shows Topics in a typical learning order from textbooks, with Escenas used as milestones to practice the Topics conversationally along the way.",
       welcome_kick_4: "The Play tab",
       welcome_title_4: "Use it out loud",
       welcome_text_4: "**Escenas** are everyday conversations (the bakery, the taxi, the doctor) where you answer out loud. The bakery is open from the start; the others open once you know their phrases. And to challenge yourself or your friends, there's **Partida** (endless), **Contrarreloj** (60 seconds) and **Te reto** (the same flashcards for both of you).",
@@ -4073,14 +4073,27 @@
     return keys;
   }
 
+  // (2026-10-18, mason added "oír": nothing in its table was highlighted
+  // and Tipo stayed -ar, because "ír" isn't "ir".) The accent on oír,
+  // reír, sonreír, freír only marks the hiatus; the verb is a plain -ir.
+  function plainInfinitive(inf) {
+    var s = String(inf || "").trim().toLowerCase();
+    return s.slice(0, -2) + s.slice(-2).normalize("NFD").replace(/[\u0301]/g, "").normalize("NFC");
+  }
   function verbClass(baseInf) {
-    var end = baseInf.slice(-2).toLowerCase();
+    var end = plainInfinitive(baseInf).slice(-2);
     return (end === "ar" || end === "er" || end === "ir") ? end : null;
+  }
+  // -ar / -er / -ir from the infinitive itself (reflexive -se dropped), or ""
+  function verbTypeOf(infinitive) {
+    var k = verbClass(String(infinitive || "").trim().toLowerCase().replace(/se$/, ""));
+    return k ? "-" + k : "";
   }
 
   function regularForm(baseInf, tenseKey, personKey) {
     var klass = verbClass(baseInf);
     if (!klass) return null;
+    baseInf = plainInfinitive(baseInf);
     var stem = baseInf.slice(0, -2);
     var inf = baseInf;
 
@@ -4137,7 +4150,10 @@
     var expected = regularForm(base, tenseKey, personKey);
     if (expected == null) return false;
     var actual = stripReflexivePronoun(actualValue, personKey, data.reflexive);
-    return actual.trim().toLowerCase() !== expected.trim().toLowerCase();
+    // the accent that only splits two vowels (oímos, sonreíste, creímos,
+    // leíste) isn't a departure from the pattern
+    function hiatus(x) { return x.trim().toLowerCase().replace(/([aeiou])í/g, "$1i"); }
+    return hiatus(actual) !== hiatus(expected);
   }
 
   // ---- Irregularity tags, worked out from the conjugation table ----
@@ -5163,7 +5179,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "132";
+  var VOSEA_BUILD = "134";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6160,7 +6176,7 @@
     return {
       infinitive: el.fInfinitive.value.trim(),
       definition: el.fDefinition.value.trim(),
-      type: el.fType.value,
+      type: verbTypeOf(el.fInfinitive.value) || el.fType.value,
       irregularity: formIrregularityText(forms),
       pattern: el.fPattern.value.trim(),
       notes: el.fNotes.value.trim(),
@@ -6184,7 +6200,7 @@
       data: {
         infinitive: row.infinitive,
         definition: row.definition || "",
-        type: row.type || "-ar",
+        type: verbTypeOf(row.infinitive) || row.type || "-ar",
         irregularity: row.irregularity || "regular",
         pattern: row.pattern || "",
         notes: row.notes || "",
@@ -8522,11 +8538,12 @@
           // -ar/-er/-ir is fully implied by the two letters already sitting
           // in f-infinitive — not RAE data at all, just the same verbClass()
           // the conjugation table itself uses, run a second time here.
-          var klass = verbClass(term);
-          if (klass) el.fType.value = "-" + klass;
+          var tyR = verbTypeOf(term);
+          if (tyR) el.fType.value = tyR;
 
           var reflexiveNow = el.fReflexive.checked;
           if (data.forms) fillConjugationCellsFromRae(data.forms, reflexiveNow);
+          renderFormIrregularity(); // the cells were filled without input events
 
           var msg = t("rae_lookup_filled");
           if (data.forms && raeFormsLookIrregular(data.forms, term, reflexiveNow)) {
@@ -19039,6 +19056,7 @@
   el.form.addEventListener("submit", handleSubmit);
   el.form.addEventListener("input", function (e) {
     var id = (e.target && e.target.id) || "";
+    if (id === "f-infinitive") { var tyI = verbTypeOf(el.fInfinitive.value); if (tyI) el.fType.value = tyI; }
     if (/^f-(presente|preterito|imperfecto|impersonal|infinitive)/.test(id) || id === "f-reflexive") renderFormIrregularity();
   });
   el.fReflexive.addEventListener("change", function () { renderFormIrregularity(); });
