@@ -5189,7 +5189,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "138";
+  var VOSEA_BUILD = "140";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -10119,34 +10119,58 @@
   // turned into letters and compared. B and V sound the same in Spanish
   // (so do I and the "y" it may write), so they count as one; a letter
   // said twice that comes back once (ele, ele → "l") still counts.
+  // (2026-10-19, mason: "there is no way to make it work and accept be
+  // larga and ve corta?") Plain "be" and "ve" sound the same, so they still
+  // count for either letter; but when you name which one ("be larga", "ve
+  // corta", "be de burro", "ve de vaca", "uve"), the recognizer writes the
+  // qualifier too and that letter has to be the right one. Same for y:
+  // "i griega" / "ye" is y, "i latina" is i, a bare "i" can be either.
   var SPOKEN_LETTERS = {
-    "a": "a", "be": "b", "be larga": "b", "be alta": "b", "ce": "c", "se": "c", "de": "d", "e": "e", "efe": "f",
-    "ge": "g", "je": "g", "hache": "h", "ache": "h", "i": "i", "i latina": "i", "jota": "j", "ka": "k", "ca": "k",
+    "a": "a", "be": "b", "ce": "c", "se": "c", "de": "d", "e": "e", "efe": "f",
+    "ge": "g", "je": "g", "hache": "h", "ache": "h", "i": "i", "jota": "j", "ka": "k", "ca": "k",
     "ele": "l", "elle": "ll", "doble ele": "ll", "eme": "m", "ene": "n", "eñe": "ñ", "enie": "ñ", "o": "o", "pe": "p",
-    "cu": "q", "erre": "r", "ere": "r", "doble erre": "rr", "ese": "s", "te": "t", "u": "u", "ve": "v", "uve": "v",
-    "ve corta": "v", "ve baja": "v", "doble ve": "w", "doble u": "w", "uve doble": "w", "doble uve": "w",
-    "equis": "x", "ye": "y", "i griega": "y", "zeta": "z", "seta": "z", "ceta": "z", "che": "ch"
+    "cu": "q", "erre": "r", "ere": "r", "doble erre": "rr", "ese": "s", "te": "t", "u": "u", "ve": "v",
+    "doble ve": "w", "doble u": "w", "uve doble": "w", "doble uve": "w",
+    "equis": "x", "zeta": "z", "seta": "z", "ceta": "z", "che": "ch"
+  };
+  // named precisely: these can't be the other letter of the pair
+  var SPOKEN_EXACT = {
+    "be larga": "b", "be alta": "b", "be grande": "b", "be de burro": "b", "b larga": "b", "b alta": "b", "b grande": "b", "b de burro": "b",
+    "ve corta": "v", "ve baja": "v", "ve chica": "v", "ve de vaca": "v", "v corta": "v", "v baja": "v", "v chica": "v", "v de vaca": "v",
+    "uve": "v", "be corta": "v", "b corta": "v",
+    "i griega": "y", "y griega": "y", "ye": "y", "i latina": "i", "y latina": "i"
   };
   function spellPlain(s) {
     return String(s || "").toLowerCase().replace(/ñ/g, "\u0001").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\u0001/g, "ñ");
   }
+  // the letters heard, each { c, exact }: exact when the speaker named which
+  // of b/v (or i/y) it is
   function lettersOfSpeech(text) {
-    var toks = spellPlain(text).replace(/[.,;:¿?¡!«»"()\-–—·\/]/g, " ").split(/\s+/).filter(Boolean), out = "";
+    var toks = spellPlain(text).replace(/[.,;:¿?¡!«»"()\-–—·\/]/g, " ").split(/\s+/).filter(Boolean), out = [];
+    function push(str, exact) { str.split("").forEach(function (ch) { out.push({ c: ch, exact: !!exact }); }); }
     for (var i = 0; i < toks.length; i++) {
+      var three = i + 2 < toks.length ? toks[i] + " " + toks[i + 1] + " " + toks[i + 2] : null;
       var two = i + 1 < toks.length ? toks[i] + " " + toks[i + 1] : null;
-      if (two && SPOKEN_LETTERS[two]) { out += SPOKEN_LETTERS[two]; i++; continue; }
-      if (SPOKEN_LETTERS[toks[i]]) { out += SPOKEN_LETTERS[toks[i]]; continue; }
-      out += toks[i].replace(/[^a-zñ]/g, ""); // letters written as letters ("s", "ll", or run together)
+      if (three && SPOKEN_EXACT[three]) { push(SPOKEN_EXACT[three], true); i += 2; continue; }
+      if (two && SPOKEN_EXACT[two]) { push(SPOKEN_EXACT[two], true); i++; continue; }
+      if (two && SPOKEN_LETTERS[two]) { push(SPOKEN_LETTERS[two]); i++; continue; }
+      if (SPOKEN_EXACT[toks[i]]) { push(SPOKEN_EXACT[toks[i]], true); continue; }
+      if (SPOKEN_LETTERS[toks[i]]) { push(SPOKEN_LETTERS[toks[i]]); continue; }
+      push(toks[i].replace(/[^a-zñ]/g, "")); // letters written as letters ("s", "ll", or run together)
     }
     return out;
   }
-  function spellFold(s) { return s.replace(/v/g, "b").replace(/y/g, "i"); }
+  function spellFold(c) { return c === "v" ? "b" : c === "y" ? "i" : c; }
+  function spellSame(want, got) { return got.exact ? got.c === want : spellFold(got.c) === spellFold(want); }
   function spellMatches(target, heard) {
-    var want = spellFold(spellPlain(target).replace(/[^a-zñ]/g, "")), got = spellFold(lettersOfSpeech(heard));
-    if (!want || !got) return false;
-    if (want === got) return true;
-    function runs(x) { return x.replace(/(.)\1+/g, "$1"); }
-    return runs(want) === runs(got);
+    var want = spellPlain(target).replace(/[^a-zñ]/g, "").split(""), got = lettersOfSpeech(heard);
+    if (!want.length || !got.length) return false;
+    function same(w, g) { return w.length === g.length && w.every(function (c, i) { return spellSame(c, g[i]); }); }
+    if (same(want, got)) return true;
+    // a doubled letter heard once (ele, ele → "l"): compare with repeats folded
+    function runsW(a) { return a.filter(function (c, i) { return i === 0 || spellFold(c) !== spellFold(a[i - 1]); }); }
+    function runsG(a) { return a.filter(function (x, i) { return i === 0 || spellFold(x.c) !== spellFold(a[i - 1].c); }); }
+    return same(runsW(want), runsG(got));
   }
   function speakCard(c) { return Object.assign({}, c, { speak: true }); }
   function buildSpeakDeck() {
@@ -11025,13 +11049,16 @@
     return { key: key, label: label, note: note, items: items, size: items.length,
       gen: function () { return topicPlain(topicPick(items).w); } };
   }
-  function W(w, sy) { return { w: w, sy: sy }; }
+  // n: this word's own note (else the range's) — 2026-10-19, mason: on the
+  // accent cards "seeing the accents with the same text over and over
+  // doesn't help understand the concept", so each one says why
+  function W(w, sy, n) { return { w: w, sy: sy, n: n }; }
   function wordCardFor(r, v) {
     var it = r.items.find(function (x) { return topicPlain(x.w) === v; });
     if (!it) return null;
-    var word = topicPlain(it.w), note = topicText(r.note);
+    var word = topicPlain(it.w), note = topicText(it.n || r.note);
     return { frontMain: word, frontRich: it.w, backMain: it.sy, backSpeak: word, answers: [word], backSub: note,
-      listenBackMain: word, listenBackRich: it.w, listenBackSub: note, wordFront: true };
+      listenBackMain: word, listenBackRich: it.w, listenBackSub: it.n ? it.sy + " — " + note : note, wordFront: true };
   }
   var LETRAS = [["a", ["a"]], ["b", ["be", "be larga"]], ["c", ["ce"]], ["d", ["de"]], ["e", ["e"]], ["f", ["efe"]], ["g", ["ge"]],
     ["h", ["hache"]], ["i", ["i", "i latina"]], ["j", ["jota"]], ["k", ["ka"]], ["l", ["ele"]], ["m", ["eme"]], ["n", ["ene"]],
@@ -11305,8 +11332,22 @@
         wordRange("juntas", L("dos juntas", "two together"), L("dos vocales juntas: se dicen las dos, rápido", "two vowels together: say both, quickly"),
           [W("b[ue]no", "BUE·no"), W("[ai]re", "AI·re"), W("c[iu]dad", "ciu·DAD"), W("c[au]sa", "CAU·sa"), W("n[ie]ve", "NIE·ve"), W("h[oy]", "HOY")]),
         wordRange("acento", L("el acento", "stress"), L("la sílaba fuerte; si rompe la regla, lleva tilde", "the strong syllable; if it breaks the rule, it gets an accent mark"),
-          [W("caf[é]", "ca·FÉ"), W("[á]rbol", "ÁR·bol"), W("cami[ó]n", "ca·MIÓN"), W("m[ú]sica", "MÚ·si·ca"), W("l[á]piz", "LÁ·piz"), W("ten[é]s", "te·NÉS"),
-           W("pap[á]", "pa·PÁ"), W("tel[é]fono", "te·LÉ·fo·no"), W("ingl[é]s", "in·GLÉS"), W("s[á]bado", "SÁ·ba·do")])
+          // the rule: ends in a vowel, n or s → the second-to-last is strong;
+          // any other consonant → the last; third from the end → always a tilde
+          [W("caf[é]", "ca·FÉ", L("Termina en vocal → lo normal sería CA·fe. Suena en la última, rompe la regla → tilde.", "Ends in a vowel → normally CA·fe. It's stressed on the last syllable, against the rule → accent mark.")),
+           W("[á]rbol", "ÁR·bol", L("Termina en l → lo normal sería ar·BOL. Suena en la penúltima, rompe la regla → tilde.", "Ends in l → normally ar·BOL. It's stressed on the second-to-last, against the rule → accent mark.")),
+           W("cami[ó]n", "ca·MIÓN", L("Termina en n → lo normal sería CA·mion. Suena en la última, rompe la regla → tilde.", "Ends in n → normally CA·mion. It's stressed on the last syllable, against the rule → accent mark.")),
+           W("m[ú]sica", "MÚ·si·ca", L("Suena en la tercera sílaba desde el final → siempre lleva tilde, termine como termine.", "Stressed on the third syllable from the end → always an accent mark, however it ends.")),
+           W("l[á]piz", "LÁ·piz", L("Termina en z → lo normal sería la·PIZ. Suena en la penúltima, rompe la regla → tilde.", "Ends in z → normally la·PIZ. It's stressed on the second-to-last, against the rule → accent mark.")),
+           W("ten[é]s", "te·NÉS", L("Termina en s → lo normal sería TE·nes. Suena en la última → tilde. Por eso el presente de vos casi siempre la lleva: podés, sabés, vivís.", "Ends in s → normally TE·nes. It's stressed on the last syllable → accent mark. That's why the vos present almost always has one: podés, sabés, vivís.")),
+           W("pap[á]", "pa·PÁ", L("Termina en vocal → lo normal sería PA·pa (eso es la papa que se come). Papá suena en la última → tilde.", "Ends in a vowel → normally PA·pa (that's papa, the potato). Papá is stressed on the last syllable → accent mark.")),
+           W("tel[é]fono", "te·LÉ·fo·no", L("Suena en la tercera sílaba desde el final → siempre lleva tilde.", "Stressed on the third syllable from the end → always an accent mark.")),
+           W("ingl[é]s", "in·GLÉS", L("Termina en s → lo normal sería IN·gles. Suena en la última → tilde. En plural, in·GLE·ses sigue la regla y no la lleva.", "Ends in s → normally IN·gles. It's stressed on the last syllable → accent mark. The plural, in·GLE·ses, follows the rule and has none.")),
+           W("s[á]bado", "SÁ·ba·do", L("Suena en la tercera sílaba desde el final → siempre lleva tilde.", "Stressed on the third syllable from the end → always an accent mark.")),
+           W("c[a]sa", "CA·sa", L("Termina en vocal y suena en la penúltima: sigue la regla → sin tilde.", "Ends in a vowel and is stressed on the second-to-last: it follows the rule → no accent mark.")),
+           W("rel[o]j", "re·LOJ", L("Termina en j y suena en la última: sigue la regla → sin tilde.", "Ends in j and is stressed on the last syllable: it follows the rule → no accent mark.")),
+           W("j[o]ven", "JO·ven", L("Termina en n y suena en la penúltima: sigue la regla → sin tilde. En plural, JÓ·ve·nes ya es la tercera desde el final → tilde.", "Ends in n and is stressed on the second-to-last: it follows the rule → no accent mark. The plural, JÓ·ve·nes, is third from the end → accent mark.")),
+           W("ciud[a]d", "ciu·DAD", L("Termina en d y suena en la última: sigue la regla → sin tilde.", "Ends in d and is stressed on the last syllable: it follows the rule → no accent mark."))])
       ],
       defaults: ["a", "e", "i", "o", "u"],
       lesson: [
