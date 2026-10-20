@@ -5189,7 +5189,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "137";
+  var VOSEA_BUILD = "138";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -10086,7 +10086,67 @@
   // answers ("me gusta / me gustan").
   function speakAnswers(card) {
     if (card.answers && card.answers.length) return card.answers.slice(); // topics: every accepted way to say it
-    return String(card.backMain || "").split(/\s*\/\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
+    var out = String(card.backMain || "").split(/\s*\/\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
+    // (2026-10-19, mason: "bonito vs bonita. Either should count as the
+    // correct answer since they are not attached to a noun") — an adjective
+    // on its own card is right in either gender
+    if (card.kind === "word" && card.data && card.data.partOfSpeech === "adjetivo") {
+      out.slice().forEach(function (a) { adjGenderForms(a).forEach(function (f) { if (out.indexOf(f) === -1) out.push(f); }); });
+    }
+    return out;
+  }
+  // the other gender of an adjective (and its plural pair): bonito ↔ bonita,
+  // trabajador → trabajadora, dormilón → dormilona, inglés → inglesa
+  function adjGenderForms(w) {
+    var x = String(w || "").trim(), m;
+    if (!x || /\s/.test(x)) return [];
+    if ((m = x.match(/^(.*)os$/))) return [m[1] + "as"];
+    if ((m = x.match(/^(.*)as$/))) return [m[1] + "os"];
+    if ((m = x.match(/^(.*)o$/))) return [m[1] + "a"];
+    if ((m = x.match(/^(.*)a$/))) return [m[1] + "o"];
+    if ((m = x.match(/^(.*)(or)$/))) return [x + "a"];
+    if ((m = x.match(/^(.*)ón$/))) return [m[1] + "ona"];
+    if ((m = x.match(/^(.*)án$/))) return [m[1] + "ana"];
+    if ((m = x.match(/^(.*)és$/))) return [m[1] + "esa"];
+    return [];
+  }
+
+  // ---- spelling out loud (El abecedario) ----
+  // (2026-10-19, mason: "I don't think I have gotten a single spelling
+  // hablar card correct… unless it's a longer letter like equis".) The
+  // card expected the letter NAMES ("ese u be te e") but the recognizer
+  // writes what it hears as letters ("s u b t e", "x"). Both sides are now
+  // turned into letters and compared. B and V sound the same in Spanish
+  // (so do I and the "y" it may write), so they count as one; a letter
+  // said twice that comes back once (ele, ele → "l") still counts.
+  var SPOKEN_LETTERS = {
+    "a": "a", "be": "b", "be larga": "b", "be alta": "b", "ce": "c", "se": "c", "de": "d", "e": "e", "efe": "f",
+    "ge": "g", "je": "g", "hache": "h", "ache": "h", "i": "i", "i latina": "i", "jota": "j", "ka": "k", "ca": "k",
+    "ele": "l", "elle": "ll", "doble ele": "ll", "eme": "m", "ene": "n", "eñe": "ñ", "enie": "ñ", "o": "o", "pe": "p",
+    "cu": "q", "erre": "r", "ere": "r", "doble erre": "rr", "ese": "s", "te": "t", "u": "u", "ve": "v", "uve": "v",
+    "ve corta": "v", "ve baja": "v", "doble ve": "w", "doble u": "w", "uve doble": "w", "doble uve": "w",
+    "equis": "x", "ye": "y", "i griega": "y", "zeta": "z", "seta": "z", "ceta": "z", "che": "ch"
+  };
+  function spellPlain(s) {
+    return String(s || "").toLowerCase().replace(/ñ/g, "\u0001").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\u0001/g, "ñ");
+  }
+  function lettersOfSpeech(text) {
+    var toks = spellPlain(text).replace(/[.,;:¿?¡!«»"()\-–—·\/]/g, " ").split(/\s+/).filter(Boolean), out = "";
+    for (var i = 0; i < toks.length; i++) {
+      var two = i + 1 < toks.length ? toks[i] + " " + toks[i + 1] : null;
+      if (two && SPOKEN_LETTERS[two]) { out += SPOKEN_LETTERS[two]; i++; continue; }
+      if (SPOKEN_LETTERS[toks[i]]) { out += SPOKEN_LETTERS[toks[i]]; continue; }
+      out += toks[i].replace(/[^a-zñ]/g, ""); // letters written as letters ("s", "ll", or run together)
+    }
+    return out;
+  }
+  function spellFold(s) { return s.replace(/v/g, "b").replace(/y/g, "i"); }
+  function spellMatches(target, heard) {
+    var want = spellFold(spellPlain(target).replace(/[^a-zñ]/g, "")), got = spellFold(lettersOfSpeech(heard));
+    if (!want || !got) return false;
+    if (want === got) return true;
+    function runs(x) { return x.replace(/(.)\1+/g, "$1"); }
+    return runs(want) === runs(got);
   }
   function speakCard(c) { return Object.assign({}, c, { speak: true }); }
   function buildSpeakDeck() {
@@ -10102,6 +10162,8 @@
     return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
       .replace(/[¿?¡!.,;:«»"()]/g, " ").replace(/\s+/g, " ").trim();
   }
+  window.voseaSpellMatches = function (t, h) { return spellMatches(t, h); }; // tests
+  window.voseaSpeakAnswers = function (c) { return speakAnswers(c); }; // tests
   function speechMatches(expected, heard) {
     var e = speechNorm(expected), h = speechNorm(heard);
     if (!e || !h) return false;
@@ -10133,7 +10195,8 @@
     };
     // A number can come back written in digits ("4372"): compare digits.
     var heardDigits = card.digits ? String(h.display || "").replace(/\D/g, "") : "";
-    if ((heard && speakAnswers(card).some(function (ans) { return speechMatches(ans, heard); })) || (heardDigits && heardDigits === card.digits)) {
+    var spelled = card.spell && [heard, h.display || ""].some(function (x) { return x && spellMatches(card.spell, x); });
+    if ((heard && speakAnswers(card).some(function (ans) { return speechMatches(ans, heard); })) || (heardDigits && heardDigits === card.digits) || spelled) {
       res.auto_grade = "bien"; res.rule = "transcript";
     } else if (scored && res.accuracy >= HABLAR_MIN_ACCURACY && (minPh === null || minPh >= HABLAR_MIN_PHONEME) && !wordErr) {
       res.auto_grade = "bien"; res.rule = "score";
@@ -11208,12 +11271,12 @@
       card: function (range, v) {
         if (range === "letras") {
           var names = letraNames(v);
-          return { frontMain: v.toUpperCase(), backMain: names[0], backSpeak: names[0], answers: names,
+          return { frontMain: v.toUpperCase(), backMain: names[0], backSpeak: names[0], answers: names, spell: v,
             backSub: names.length > 1 ? t("topic_also", { x: names.slice(1).join(", ") }) : "",
             listenBackMain: v.toUpperCase(), listenBackSub: names[0] };
         }
         var letters = spellWord(v);
-        return { frontMain: v, backMain: letters.join(" · "), backSpeak: letters.join(", "), answers: [letters.join(" ")],
+        return { frontMain: v, backMain: letters.join(" · "), backSpeak: letters.join(", "), answers: [letters.join(" ")], spell: v,
           listenBackMain: v, listenBackSub: letters.join(" · "), wordFront: true };
       },
       lesson: [
