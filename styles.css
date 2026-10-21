@@ -2756,7 +2756,9 @@
 
   /* Temas: how many cards, next to Practicar (2026-10-17) */
   .flash-start-row .topic-limit { display: inline-flex; flex: none; }
-  .topic-limit .lang-option { min-width: 44px; min-height: 40px; padding: 0 10px; }
+  /* (2026-10-19, mason: "todas" fit awkwardly, right-aligned and squished)
+     each button takes its own width instead of a third of a too-narrow box */
+  .topic-limit .lang-option { flex: 0 0 auto; white-space: nowrap; min-width: 48px; min-height: 40px; padding: 0 14px; text-align: center; }
 
 
 /* Opening cover (2026-10-18): shown until the app has your things, then
