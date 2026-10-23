@@ -2636,6 +2636,13 @@
   .col-seg .lang-option.active.has-filter::after { background: currentColor; }
   .col-bar { position: sticky; bottom: max(12px, env(safe-area-inset-bottom)); margin: 18px 0 0; z-index: 40; box-sizing: border-box; width: 100%; background: var(--accent-deep); color: var(--accent-ink); border-radius: 16px; padding: 8px 8px 8px 16px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px var(--shadow); }
   .col-bar[hidden] { display: none; }
+  /* touch screens: while you type, the keyboard covers this instead of
+     pushing it up over the fields (2026-10-23); and every text field is
+     16 px so the phone doesn't zoom the page in when you tap one */
+  @media (pointer: coarse) {
+    html.is-typing .col-bar { display: none; }
+    input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="url"], input:not([type]), select, textarea { font-size: 16px !important; }
+  }
   .col-bar-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .col-bar-text b { font-size: 15px; }
   .col-bar-text span { font-size: 12.5px; opacity: .88; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

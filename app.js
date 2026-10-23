@@ -289,6 +289,7 @@
       seed_verbs_btn: "Cargar verbos de ejemplo",
       btn_add_filtered_to_list: "Agregar filtrados a una lista",
       form_title_add_verb: "Agregar verbo",
+      form_title_edit_verb: "Editar verbo",
       label_infinitivo: "Infinitivo",
       label_definicion: "Definición",
       label_patron: "Patrón de irregularidad",
@@ -313,6 +314,7 @@
       btn_add_word_toggle: "+ Agregar palabra",
       seed_words_btn: "Cargar palabras de ejemplo",
       form_title_add_word: "Agregar palabra",
+      form_title_edit_word: "Editar palabra",
       label_palabra: "Palabra",
       label_categoria_gramatical: "Categoría gramatical",
       label_notas: "Notas / excepciones",
@@ -1396,6 +1398,7 @@
       seed_verbs_btn: "Load example verbs",
       btn_add_filtered_to_list: "Add filtered to a list",
       form_title_add_verb: "Add verb",
+      form_title_edit_verb: "Edit verb",
       label_infinitivo: "Infinitive",
       label_definicion: "Definition",
       label_patron: "Irregularity pattern",
@@ -1420,6 +1423,7 @@
       btn_add_word_toggle: "+ Add word",
       seed_words_btn: "Load example words",
       form_title_add_word: "Add word",
+      form_title_edit_word: "Edit word",
       label_palabra: "Word",
       label_categoria_gramatical: "Part of speech",
       label_notas: "Notes / exceptions",
@@ -5189,7 +5193,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "142";
+  var VOSEA_BUILD = "143";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6114,7 +6118,7 @@
 
   function openForm(mode, data) {
     editingId = mode === "edit" ? selectedId : null;
-    el.formTitle.textContent = mode === "edit" ? "Editar verbo" : "Agregar verbo";
+    el.formTitle.textContent = mode === "edit" ? t("form_title_edit_verb") : t("form_title_add_verb");
     el.formMsg.textContent = "";
     if (mode === "edit" && data) fillForm(data); else clearForm();
     renderFormIrregularity();
@@ -7040,7 +7044,7 @@
 
   function openWordForm(mode, data) {
     editingWordId = mode === "edit" ? selectedWordId : null;
-    el.wordFormTitle.textContent = mode === "edit" ? "Editar palabra" : "Agregar palabra";
+    el.wordFormTitle.textContent = mode === "edit" ? t("form_title_edit_word") : t("form_title_add_word");
     el.wordFormMsg.textContent = "";
     if (mode === "edit" && data) fillWordForm(data); else clearWordForm();
     el.wordForm.hidden = false;
@@ -19210,6 +19214,27 @@
   el.phraseDetailClose.addEventListener("click", function () { deselectPhrase(); renderPhraseList(); });
   el.seedToolbarBtn.addEventListener("click", seedStarterVerbs);
   el.formCancel.addEventListener("click", closeForm);
+  // (2026-10-23, mason: "on mobile the floating practicar gets pushed up
+  // when the keyboard opens… let the keyboard cover the practice card,
+  // since otherwise you can't see the text entry fields") — while a text
+  // field has focus the page is marked typing, and on touch screens the
+  // Practicar bar steps aside (styles.css). It comes back when the focus
+  // leaves every field, a moment later so hopping between fields doesn't
+  // make it flicker.
+  (function () {
+    var root = document.documentElement, off = null;
+    function isField(n) {
+      if (!n || !n.tagName) return false;
+      if (n.isContentEditable || n.tagName === "TEXTAREA" || n.tagName === "SELECT") return true;
+      if (n.tagName !== "INPUT") return false;
+      return !/^(checkbox|radio|button|submit|reset|file|range|color|image|hidden)$/i.test(n.type || "text");
+    }
+    document.addEventListener("focusin", function (e) { if (isField(e.target)) { clearTimeout(off); root.classList.add("is-typing"); } });
+    document.addEventListener("focusout", function () {
+      clearTimeout(off);
+      off = setTimeout(function () { if (!isField(document.activeElement)) root.classList.remove("is-typing"); }, 120);
+    });
+  })();
   el.form.addEventListener("submit", handleSubmit);
   el.form.addEventListener("input", function (e) {
     var id = (e.target && e.target.id) || "";
