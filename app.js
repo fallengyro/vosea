@@ -179,7 +179,7 @@
       welcome_text_2: "Acá vive todo lo que vas sumando. Cuando escuchás algo nuevo en la calle, lo agregás con el **+** de arriba. Podés filtrar por tipo o por lista, armar **Listas** y compartirlas, y tocar **Practicar** para convertir lo que elegiste en tarjetas.",
       welcome_kick_3: "Pestaña Temas",
       welcome_title_3: "Cómo funciona el castellano de acá",
-      welcome_text_3: "Cada tema explica una parte del idioma (el voseo, los números, el pretérito…) con ejemplos que vas a escuchar en la calle. Después lo practicás en tarjetas de tres maneras: **Leer**, **Escuchar** o **Hablar**. Están todos abiertos; en **Camino** los ves en el orden de los libros, con las escenas en el medio.",
+      welcome_text_3: "Cada tema explica una parte del idioma (el voseo, los números, el pretérito…) con ejemplos que vas a escuchar en la calle. Después lo practicás en tarjetas de tres maneras: **Leer**, **Escuchar** o **Hablar**. Están todos abiertos. **Camino** te muestra los Temas en el orden típico de los libros de texto, con las Escenas como hitos para practicar los Temas conversando.",
       welcome_kick_4: "Pestaña Jugar",
       welcome_title_4: "Usalo en voz alta",
       welcome_text_4: "Las **Escenas** son charlas de todos los días (la panadería, el taxi, el médico) en las que respondés hablando. La panadería está abierta desde el principio; las demás se abren cuando ya sabés sus frases. Y para desafiarte a vos o a tus amigos tenés **Partida** (sin fin), **Contrarreloj** (60 segundos) y **Te reto** (las mismas tarjetas para los dos).",
@@ -5189,7 +5189,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "141";
+  var VOSEA_BUILD = "142";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -11067,7 +11067,11 @@
   var DELETREAR = ["hola", "calle", "queso", "vaso", "llave", "jugo", "zapato", "año", "hielo", "kiosco", "taxi", "boca",
     "Palermo", "Belgrano", "Recoleta", "subte", "yerba", "cerveza", "guitarra", "Juan"];
   function letraNames(ch) { var e = LETRAS.find(function (x) { return x[0] === ch; }); return e ? e[1] : [ch]; }
-  function spellWord(word) { return word.toLowerCase().split("").map(function (ch) { return letraNames(ch)[0]; }); }
+  // Spelling a word says which b or v it is (2026-10-22, mason: rebuild the
+  // spelling card backs "for be larga y ve corta"): that's how it's spelled
+  // out loud here, and saying it is what lets Hablar check it.
+  var SPELL_SAY = { b: "be larga", v: "ve corta" };
+  function spellWord(word) { return word.toLowerCase().split("").map(function (ch) { return SPELL_SAY[ch] || letraNames(ch)[0]; }); }
 
   // ---- Los irregulares (2026-10-17, mason: "a topic to introduce what
   // makes irregular verbs irregular"; mockup irregulares_mockup.png) ----
