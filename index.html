@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="154">
+<meta name="vosea-build" content="155">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -982,37 +982,7 @@
           <ul class="am-list" id="rt-done" hidden></ul>
           <button type="button" class="btn-primary rt-new-btn" id="rt-new" data-i18n="rt_new">Retar a alguien</button>
         </div>
-        <p class="flash-group-label" id="am-in-lab" data-i18n="am_in" hidden>Te quieren agregar</p>
-        <ul class="am-list" id="am-in" hidden></ul>
-        <p class="flash-group-label" id="am-friends-lab" data-i18n="am_friends">Tus amigos</p>
-        <ul class="am-list" id="am-friends" hidden></ul>
-        <p class="play-fine" id="am-none" data-i18n="am_none"></p>
-        <p class="flash-group-label" id="am-out-lab" data-i18n="am_out" hidden>Esperando respuesta</p>
-        <ul class="am-list" id="am-out" hidden></ul>
-        <div class="am-me">
-          <label class="am-lab" for="am-name" data-i18n="am_you">Tu nombre</label>
-          <div class="am-inline">
-            <input type="text" id="am-name" maxlength="24" autocomplete="nickname" />
-            <button type="button" class="btn-secondary" id="am-name-save" data-i18n="am_save">Guardar</button>
-          </div>
-          <p class="play-fine am-help" data-i18n="am_name_help"></p>
-          <p class="am-lab" data-i18n="am_your_code">Tu código</p>
-          <div class="am-inline am-code-row">
-            <span class="am-code" id="am-code-shown"></span>
-            <button type="button" class="btn-secondary" id="am-copy" data-i18n="am_copy">Copiar enlace</button>
-            <button type="button" class="btn-secondary" id="am-share" data-i18n="am_share" hidden>Compartir</button>
-          </div>
-          <p class="play-fine am-help" id="am-link-note"></p>
-          <button type="button" class="icon-btn am-new-link" id="am-new-link" hidden data-i18n="btn_am_new_link">Nuevo enlace</button>
-        </div>
-        <div class="am-add">
-          <label class="am-lab" for="am-code" data-i18n="am_add_label">Agregar a alguien</label>
-          <div class="am-inline">
-            <input type="text" id="am-code" maxlength="120" autocapitalize="none" autocomplete="off" spellcheck="false" data-i18n-placeholder="am_code_ph" />
-            <button type="button" class="btn-primary" id="am-add" data-i18n="am_add">Agregar</button>
-          </div>
-          <p class="form-msg am-msg" id="am-msg" aria-live="polite"></p>
-        </div>
+        <button type="button" class="icon-btn rt-friends-link" id="rt-friends" data-i18n="rt_friends_link">Tus amigos ›</button>
       </div>
     </section>
     <!-- Te reto: a new challenge (who + what). -->
@@ -1159,6 +1129,52 @@
     <button type="button" class="btn-primary" id="col-bar-btn" data-i18n="col_bar_btn">Practicar</button>
   </div>
 
+</div>
+
+<!-- Amigos (2026-10-24, commit 137): its own window from the account menu.
+     mason: "friends are now used throughout the app and have their own
+     access point in the settings". Te reto links here. -->
+<div class="modal-overlay" id="amigos-overlay" hidden>
+  <div class="modal-card amigos-card">
+    <h3 data-i18n="amo_title">Amigos</h3>
+    <p class="flash-setup-note" data-i18n="amo_intro">Con tus amigos podés compartir listas y retarse en Te reto.</p>
+    <p class="form-msg is-warn" id="amo-missing" data-i18n="am_missing" hidden></p>
+    <div id="amo-body">
+    <p class="flash-group-label" id="am-in-lab" data-i18n="am_in" hidden>Te quieren agregar</p>
+    <ul class="am-list" id="am-in" hidden></ul>
+    <p class="flash-group-label" id="am-friends-lab" data-i18n="am_friends">Tus amigos</p>
+    <ul class="am-list" id="am-friends" hidden></ul>
+    <p class="play-fine" id="am-none" data-i18n="am_none"></p>
+    <p class="flash-group-label" id="am-out-lab" data-i18n="am_out" hidden>Esperando respuesta</p>
+    <ul class="am-list" id="am-out" hidden></ul>
+    <div class="am-me">
+      <label class="am-lab" for="am-name" data-i18n="am_you">Tu nombre</label>
+      <div class="am-inline">
+        <input type="text" id="am-name" maxlength="24" autocomplete="nickname" />
+        <button type="button" class="btn-secondary" id="am-name-save" data-i18n="am_save">Guardar</button>
+      </div>
+      <p class="play-fine am-help" data-i18n="am_name_help"></p>
+      <p class="am-lab" data-i18n="am_your_link">Tu enlace de invitación</p>
+      <div class="am-inline am-code-row">
+        <button type="button" class="btn-secondary" id="am-copy" data-i18n="am_copy">Copiar enlace</button>
+        <button type="button" class="btn-secondary" id="am-share" data-i18n="am_share" hidden>Compartir</button>
+      </div>
+      <p class="play-fine am-help" id="am-link-note"></p>
+      <button type="button" class="icon-btn am-new-link" id="am-new-link" hidden data-i18n="btn_am_new_link">Nuevo enlace</button>
+    </div>
+    <div class="am-add">
+      <label class="am-lab" for="am-code" data-i18n="am_add_label">Agregar por email</label>
+      <div class="am-inline">
+        <input type="text" id="am-code" maxlength="120" autocapitalize="none" autocomplete="off" spellcheck="false" data-i18n-placeholder="am_code_ph" />
+        <button type="button" class="btn-primary" id="am-add" data-i18n="am_add">Agregar</button>
+      </div>
+      <p class="form-msg am-msg" id="am-msg" aria-live="polite"></p>
+    </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" id="amo-close" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="library-overlay" hidden>

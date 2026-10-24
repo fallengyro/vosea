@@ -455,19 +455,23 @@
       play_kick_reto: "¡Ganaste un reto!",
       play_rule_reto: "Ganar un reto (una vez por día con cada amigo)",
       am_title: "Te reto",
-      am_desc: "La misma tanda de tarjetas para los dos, en Hablar. Gana quien tenga más Bien; si empatan, quien terminó más rápido. Más abajo: tus amigos, tu nombre y tu código.",
+      am_desc: "La misma tanda de tarjetas para los dos, en Hablar. Gana quien tenga más Bien; si empatan, quien terminó más rápido.",
       am_missing: "Amigos todavía no está listo: falta correr la SQL nueva (pending_2026-10-06_amigos.sql).",
       am_you: "Tu nombre",
       am_name_help: "Lo ven tus amigos, y aparece en tus listas compartidas.",
       am_save: "Guardar",
       am_your_code: "Tu código",
+      am_your_link: "Tu enlace de invitación",
+      amo_title: "Amigos",
+      amo_intro: "Con tus amigos podés compartir listas y retarse en Te reto.",
+      rt_friends_link: "Tus amigos ›",
       am_copy: "Copiar enlace",
       am_share: "Compartir",
       am_add: "Agregar",
       am_in: "Te quieren agregar",
       am_out: "Esperando respuesta",
       am_friends: "Tus amigos",
-      am_none: "Todavía no tenés amigos acá. Mandale tu enlace a alguien.",
+      am_none: "Todavía no tenés amigos acá. Mandale tu enlace de invitación a alguien.",
       am_soon: "Te reto llega pronto: la misma tanda de 20 tarjetas para los dos, en Hablar.",
       am_wants: "quiere ser tu amigo",
       am_waiting: "todavía no aceptó",
@@ -1102,8 +1106,8 @@
       gone_keep: "Quedarme con los {n}",
       gone_keep_1: "Quedármelo",
       gone_skip: "No, gracias",
-      am_code_ph: "Su código (ABCD-1234) o email",
-      am_add_label: "Agregar con código o email",
+      am_code_ph: "Su email",
+      am_add_label: "Agregar por email",
       am_link_note: "Quien abra tu enlace y toque Agregar queda como tu amigo, sin más pasos.",
       am_link_note_old: "Quien abra tu enlace te manda una solicitud.",
       btn_am_new_link: "Nuevo enlace",
@@ -1738,19 +1742,23 @@
       play_kick_reto: "You won a challenge!",
       play_rule_reto: "Win a challenge (once a day with each friend)",
       am_title: "Te reto",
-      am_desc: "The same cards for both of you, spoken. Whoever gets more right wins; on a tie, whoever finished faster. Further down: your friends, your name, and your code.",
+      am_desc: "The same cards for both of you, spoken. Whoever gets more right wins; on a tie, whoever finished faster.",
       am_missing: "Friends isn't ready yet: the new SQL (pending_2026-10-06_amigos.sql) still needs to be run.",
       am_you: "Your name",
       am_name_help: "Your friends see it, and it shows on your shared lists.",
       am_save: "Save",
       am_your_code: "Your code",
+      am_your_link: "Your invite link",
+      amo_title: "Friends",
+      amo_intro: "Share lists with your friends and challenge each other in Te reto.",
+      rt_friends_link: "Your friends ›",
       am_copy: "Copy link",
       am_share: "Share",
       am_add: "Add",
       am_in: "Want to add you",
       am_out: "Waiting for an answer",
       am_friends: "Your friends",
-      am_none: "No friends here yet. Send someone your link.",
+      am_none: "No friends here yet. Send someone your invite link.",
       am_soon: "Te reto is coming: the same 20 cards for both of you, spoken.",
       am_wants: "wants to be friends",
       am_waiting: "hasn't accepted yet",
@@ -2385,8 +2393,8 @@
       gone_keep: "Keep all {n}",
       gone_keep_1: "Keep it",
       gone_skip: "No, thanks",
-      am_code_ph: "Their code (ABCD-1234) or email",
-      am_add_label: "Add with a code or email",
+      am_code_ph: "Their email",
+      am_add_label: "Add by email",
       am_link_note: "Anyone who opens your link and taps Add becomes your friend, no more steps.",
       am_link_note_old: "Anyone who opens your link sends you a request.",
       btn_am_new_link: "New link",
@@ -5629,7 +5637,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "154";
+  var VOSEA_BUILD = "155";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -16170,6 +16178,7 @@
     return amigos.loading;
   }
   function renderAmigosEverywhere() {
+    if (amigosWindowOpen()) drawAmigos();
     if (!el.playPanel || el.playPanel.hidden) return;
     if (amigosOpen && rtNewOpen) drawRtNew(); else if (amigosOpen) drawAmigos(); else if (!albumOpen && !cronoOpen) drawPlayModes();
   }
@@ -16193,7 +16202,7 @@
     var byEmail = raw.indexOf("@") !== -1;
     var code = amigoCodeClean(raw);
     if (byEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) { amigoMsg(t("am_email_bad"), true); return; }
-    if (!byEmail && code.length !== 8) { amigoMsg(t("am_code_bad"), true); return; }
+    if (!byEmail && code.length !== 8) { amigoMsg(t("am_email_bad"), true); return; }
     el.amAdd.disabled = true;
     var call = byEmail ? supabaseClient.rpc("friend_request_email", { p_email: raw }) : supabaseClient.rpc("friend_request", { p_code: code });
     call.then(function (res) {
@@ -16261,10 +16270,12 @@
     var p = amigos.profile;
     el.amMissing.hidden = !amigos.missing;
     el.amBody.hidden = amigos.missing || !p;
+    var om = document.getElementById("amo-missing"), ob = document.getElementById("amo-body");
+    if (om) om.hidden = !amigos.missing;
+    if (ob) ob.hidden = amigos.missing || !p;
     if (!p) return;
     drawRetos();
     if (document.activeElement !== el.amName) el.amName.value = p.display_name;
-    el.amCodeShown.textContent = amigoCodeShown(p.friend_code);
     el.amShare.hidden = !navigator.share;
     el.amLinkNote.textContent = t(p.invite_token ? "am_link_note" : "am_link_note_old");
     el.amNewLink.hidden = !p.invite_token;
@@ -16301,7 +16312,7 @@
       var wk = week[f.other_id];
       var li = line(f, retos.loaded && !retos.missing ? t("rt_week_short", { w: wk ? wk.w : 0, l: wk ? wk.l : 0 }) : "");
       if (retos.loaded && !retos.missing) {
-        var rb = progButton(t("rt_challenge"), false, function () { openRtNew(f.other_id); });
+        var rb = progButton(t("rt_challenge"), false, function () { closeAmigosWindow(); setMainTab("play"); openAmigos(true); openRtNew(f.other_id); });
         rb.disabled = !crCanSpeak();
         li.appendChild(rb);
       }
@@ -16346,8 +16357,7 @@
     if (!code || !currentUser) return;
     try { localStorage.removeItem(AMIGO_PENDING_KEY); } catch (e) {} // opens once
     if (code.slice(0, 2) === "t:") { openAmigoInvite(code.slice(2)); return; }
-    setMainTab("play");
-    openAmigos(true);
+    openAmigosPage();
     el.amCode.value = amigoCodeShown(code);
     amigoMsg(t("am_invited"));
   }
@@ -16421,7 +16431,7 @@
     var done = amInvite && amInvite.done;
     amInvite = null;
     el.amInviteOverlay.hidden = true;
-    if (done) { setMainTab("play"); openAmigos(true); }
+    if (done) openAmigosPage();
   }
 
   // ---- requests come to you ----
@@ -16476,11 +16486,32 @@
     else supabaseClient.from("friendships").delete().eq("id", f.id).then(done);
   }
   function amigoToastSee() { el.amToast.hidden = true; openAmigosPage(); }
+  // Amigos is its own window now (commit 137); Te reto keeps the challenges
+  // and links here ("Tus amigos ›").
+  function amigosWindowOpen() { var o = document.getElementById("amigos-overlay"); return !!(o && !o.hidden); }
   function openAmigosPage() {
     closeAcctMenu();
-    setMainTab("play");
-    openAmigos(true);
+    var o = document.getElementById("amigos-overlay");
+    if (!o) return;
+    amigoConfirm = null;
+    amigoMsg("");
+    o.hidden = false;
+    drawAmigos();
+    loadAmigos(true);
+    loadRetos(true);
   }
+  function closeAmigosWindow() {
+    var o = document.getElementById("amigos-overlay");
+    if (o) o.hidden = true;
+  }
+  // Te reto (Jugar), without the friends parts
+  function openTeReto() { closeAmigosWindow(); setMainTab("play"); openAmigos(true); }
+  (function wireAmigosWindow() {
+    var c = document.getElementById("amo-close"), o = document.getElementById("amigos-overlay"), l = document.getElementById("rt-friends");
+    if (c) c.addEventListener("click", closeAmigosWindow);
+    if (o) o.addEventListener("click", function (e) { if (e.target === o) closeAmigosWindow(); });
+    if (l) l.addEventListener("click", openAmigosPage);
+  })();
 
   // ---- inviting someone new, from a list ----
   function inviteSomeone(msgEl) {
@@ -16786,9 +16817,11 @@
     if (what.open === "list" && /^[0-9a-f-]{8,40}$/i.test(what.id)) {
       setMainTab("lists");
       loadLists(true).then(function () { selectListRow(what.id); });
-    } else if (what.open === "amigos" || what.open === "retos") {
+    } else if (what.open === "amigos") {
       openAmigosPage();
-      if (what.open === "retos") loadRetos(true).then(function () {
+    } else if (what.open === "retos") {
+      openTeReto();
+      loadRetos(true).then(function () {
         var a = document.getElementById("rt-area");
         if (a && !a.hidden && a.scrollIntoView) try { a.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {}
       });
