@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="146">
+<meta name="vosea-build" content="147">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1075,13 +1075,23 @@
           <h2 id="ld-name"></h2>
           <p class="definition" id="ld-meta"></p>
           <p class="ld-role" id="ld-role"></p>
+          <p class="ld-published" id="ld-published" hidden></p>
         </div>
       </div>
       <div class="ld-onoff" id="ld-onoff" hidden></div>
-      <div class="share-link-row" id="ld-share-row" hidden>
-        <input type="text" id="ld-share-link" readonly />
-        <button type="button" class="icon-btn" id="ld-copy-link" data-i18n="btn_copy_link">Copiar enlace</button>
-        <button type="button" class="icon-btn" id="ld-native-share" hidden data-i18n="btn_native_share">Compartir…</button>
+      <!-- Compartir: the link, and (commit 128) its on/off switch and a new
+           link, kept together with the link itself. -->
+      <div class="ld-share-box" id="ld-share-row" hidden>
+        <div class="share-link-row">
+          <input type="text" id="ld-share-link" readonly />
+          <button type="button" class="icon-btn" id="ld-copy-link" data-i18n="btn_copy_link">Copiar enlace</button>
+          <button type="button" class="icon-btn" id="ld-native-share" hidden data-i18n="btn_native_share">Compartir…</button>
+        </div>
+        <div class="ld-link-wrap" id="ld-link-wrap">
+          <button type="button" class="list-onoff" id="ld-link-on" aria-pressed="true" data-i18n-aria-label="ld_link_aria" aria-label="Enlace activo"><span class="knob"></span></button>
+          <span class="ld-link-text" id="ld-link-text"></span>
+          <button type="button" class="icon-btn" id="ld-new-link" data-i18n="btn_new_link">Nuevo enlace</button>
+        </div>
       </div>
       <p class="form-msg" id="ld-share-msg"></p>
       <div class="list-detail-group" id="ld-verbs-group" hidden>
@@ -1117,19 +1127,12 @@
           </div>
           <p class="flash-setup-note" id="ld-invite-none" hidden data-i18n="ld_invite_none">Agregá amigos en Jugar → Amigos para compartirles la lista.</p>
         </div>
-        <div class="ld-visibility" id="ld-visibility" hidden>
-          <div class="ld-link-wrap" id="ld-link-wrap">
-            <label class="ld-check"><input type="checkbox" id="ld-link-on" /> <span data-i18n="ld_link_on">Enlace activo: quien lo abra puede agregar la lista (como Lector)</span></label>
-            <button type="button" class="icon-btn" id="ld-new-link" data-i18n="btn_new_link">Nuevo enlace</button>
-          </div>
-          <label class="ld-check"><input type="checkbox" id="ld-friends-see" /> <span data-i18n="ld_friends_see">Visible para tus amigos (en su Biblioteca)</span></label>
-          <label class="ld-check" id="ld-app-wide-wrap" hidden><input type="checkbox" id="ld-app-wide" /> <span data-i18n="ld_app_wide">En la Biblioteca de todos</span></label>
-        </div>
         <p class="form-msg" id="ld-people-msg"></p>
       </div>
       <div class="detail-actions-footer">
         <button class="btn-primary ld-practice" id="ld-practice" type="button" data-i18n="btn_list_practice">Practicar</button>
         <button class="icon-btn" id="ld-select-btn" type="button" data-i18n="btn_list_select">Elegir</button>
+        <button class="icon-btn" id="ld-publish" type="button" hidden data-i18n="btn_publish">Publicar…</button>
         <button class="icon-btn" id="ld-share-btn" type="button" data-i18n="btn_share">Compartir</button>
         <button class="icon-btn" id="ld-rename" type="button" data-i18n="btn_list_rename">Renombrar</button>
         <button class="icon-btn danger" id="ld-leave" type="button" hidden data-i18n="btn_list_leave">Salir de la lista</button>
@@ -1156,6 +1159,24 @@
     <ul class="card-list library-list" id="library-list"></ul>
     <div class="form-actions">
       <button type="button" class="btn-secondary" id="library-close" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Publicar (commit 128): who finds the list in their Biblioteca. -->
+<div class="modal-overlay" id="publish-overlay" hidden>
+  <div class="modal-card">
+    <h3 data-i18n="publish_title">Publicar en la Biblioteca</h3>
+    <p class="flash-setup-note" data-i18n="publish_intro">Quien la vea en su Biblioteca puede agregarla como Lector. Las personas que ya están en la lista siguen igual.</p>
+    <div class="publish-options" role="radiogroup">
+      <label class="publish-opt"><input type="radio" name="publish-level" value="none" /> <span><b data-i18n="publish_none">No publicada</b><small data-i18n="publish_none_sub">Solo entran quienes agregues o a quienes les mandes el enlace.</small></span></label>
+      <label class="publish-opt"><input type="radio" name="publish-level" value="friends" /> <span><b data-i18n="publish_friends">Tus amigos</b><small data-i18n="publish_friends_sub">La ven en su Biblioteca.</small></span></label>
+      <label class="publish-opt" id="publish-all-wrap"><input type="radio" name="publish-level" value="all" /> <span><b data-i18n="publish_all">Todos</b><small data-i18n="publish_all_sub">En la Biblioteca de todos los que usan voseá.</small></span></label>
+    </div>
+    <p class="form-msg" id="publish-msg"></p>
+    <div class="form-actions">
+      <button type="button" class="btn-primary" id="publish-save" data-i18n="publish_save">Listo</button>
+      <button type="button" class="btn-secondary" id="publish-cancel" data-i18n="btn_cancel">Cancelar</button>
     </div>
   </div>
 </div>

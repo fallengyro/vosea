@@ -1080,8 +1080,6 @@
       ld_invite_added: "Listo: {person} ya tiene la lista.",
       ld_invite_updated: "Listo: cambió el rol de {person}.",
       ld_invite_not_friend: "Solo podés agregar a tus amigos.",
-      ld_friends_see: "Visible para tus amigos (en su Biblioteca)",
-      ld_app_wide: "En la Biblioteca de todos",
       btn_library: "Biblioteca",
       library_title: "Biblioteca",
       library_intro: "Listas que tus amigos hacen visibles y listas para todos. Al agregar una, sus ítems pasan a tu colección mientras la tengas activa.",
@@ -1105,19 +1103,35 @@
       gone_keep: "Quedarme con los {n}",
       gone_keep_1: "Quedármelo",
       gone_skip: "No, gracias",
+      rae_lookup_writer_failed: " Ojo: no se pudo escribir la entrada al estilo de voseá; la definición es la primera del diccionario, traducida, y falta el ejemplo.",
+      lookup_writer_reason: " (motivo: {why})",
+      btn_publish: "Publicar…",
+      publish_title: "Publicar en la Biblioteca",
+      publish_intro: "Quien la vea en su Biblioteca puede agregarla como Lector. Las personas que ya están en la lista siguen igual.",
+      publish_none: "No publicada",
+      publish_none_sub: "Solo entran quienes agregues o a quienes les mandes el enlace.",
+      publish_friends: "Tus amigos",
+      publish_friends_sub: "La ven en su Biblioteca.",
+      publish_all: "Todos",
+      publish_all_sub: "En la Biblioteca de todos los que usan voseá.",
+      publish_save: "Listo",
+      publish_done_none: "Listo: la lista ya no está publicada.",
+      publish_done_friends: "Listo: tus amigos la ven en su Biblioteca.",
+      publish_done_all: "Listo: está en la Biblioteca de todos.",
+      ld_published_friends: "Publicada para tus amigos",
+      ld_published_all: "Publicada para todos",
+      ld_link_aria: "Enlace activo",
+      ld_link_state_on: "Enlace activo: quien lo abra puede agregar la lista como Lector.",
+      ld_link_state_off: "Enlace apagado: nadie nuevo puede entrar con él. Los que ya están, siguen.",
       btn_list_practice: "Practicar",
       list_notice_added: "{owner} te agregó a «{name}» como {role}.",
       list_notice_role: "Ahora sos {role} en «{name}».",
       list_notice_owner: "Ahora sos el dueño de «{name}».",
       list_notice_many: "Hay cambios en {n} listas compartidas con vos.",
       list_toast_btn: "Ver",
-      ld_link_on: "Enlace activo: quien lo abra puede agregar la lista (como Lector)",
-      ld_link_on_msg: "Listo: el enlace funciona.",
-      ld_link_off_msg: "Listo: el enlace ya no sirve para entrar. Los que ya están siguen.",
       btn_new_link: "Nuevo enlace",
       confirm_new_link: "¿Hacer un enlace nuevo? El de ahora deja de funcionar; los que ya están en la lista siguen.",
       ld_new_link_done: "Listo: hay un enlace nuevo. Tocá Compartir para mandarlo.",
-      share_link_off_note: "El enlace está apagado. Activalo en «Personas» para compartirla.",
       backup_unit_shared: "lista compartida|listas compartidas",
       backup_restored_shared: " Volviste a {n} listas compartidas (como Lector).",
       backup_restored_shared_1: " Volviste a 1 lista compartida (como Lector).",
@@ -2286,8 +2300,6 @@
       ld_invite_added: "Done: {person} has the list now.",
       ld_invite_updated: "Done: {person}'s role changed.",
       ld_invite_not_friend: "You can only add your friends.",
-      ld_friends_see: "Visible to your friends (in their Library)",
-      ld_app_wide: "In everyone's Library",
       btn_library: "Library",
       library_title: "Library",
       library_intro: "Lists your friends make visible, and lists for everyone. When you add one, its items join your collection while it's on.",
@@ -2311,19 +2323,35 @@
       gone_keep: "Keep all {n}",
       gone_keep_1: "Keep it",
       gone_skip: "No, thanks",
+      rae_lookup_writer_failed: " Heads up: the voseá-style entry couldn't be written, so the definition is the dictionary's first one, translated, with no example.",
+      lookup_writer_reason: " (reason: {why})",
+      btn_publish: "Publish…",
+      publish_title: "Publish to the Library",
+      publish_intro: "Anyone who sees it in their Library can add it as a Reader. People already in the list stay as they are.",
+      publish_none: "Not published",
+      publish_none_sub: "Only people you add, or send the link to, can join.",
+      publish_friends: "Your friends",
+      publish_friends_sub: "They see it in their Library.",
+      publish_all: "Everyone",
+      publish_all_sub: "In the Library of everyone who uses voseá.",
+      publish_save: "Done",
+      publish_done_none: "Done: the list isn't published anymore.",
+      publish_done_friends: "Done: your friends see it in their Library.",
+      publish_done_all: "Done: it's in everyone's Library.",
+      ld_published_friends: "Published for your friends",
+      ld_published_all: "Published for everyone",
+      ld_link_aria: "Link on",
+      ld_link_state_on: "Link on: anyone who opens it can add the list as a Reader.",
+      ld_link_state_off: "Link off: nobody new can join with it. People already in stay.",
       btn_list_practice: "Practice",
       list_notice_added: "{owner} added you to “{name}” as {role}.",
       list_notice_role: "You're now {role} in “{name}”.",
       list_notice_owner: "You're now the owner of “{name}”.",
       list_notice_many: "{n} lists shared with you have changes.",
       list_toast_btn: "View",
-      ld_link_on: "Link on: anyone who opens it can add the list (as a Reader)",
-      ld_link_on_msg: "Done: the link works.",
-      ld_link_off_msg: "Done: the link no longer lets anyone in. People already in stay.",
       btn_new_link: "New link",
       confirm_new_link: "Make a new link? The current one stops working; people already in the list stay.",
       ld_new_link_done: "Done: there's a new link. Tap Share to send it.",
-      share_link_off_note: "The link is off. Turn it on under “People” to share the list.",
       backup_unit_shared: "shared list|shared lists",
       backup_restored_shared: " You're back in {n} shared lists (as a Reader).",
       backup_restored_shared_1: " You're back in 1 shared list (as a Reader).",
@@ -5362,10 +5390,13 @@
     ldInviteFriend: document.getElementById("ld-invite-friend"),
     ldInviteRole: document.getElementById("ld-invite-role"),
     ldInviteBtn: document.getElementById("ld-invite-btn"),
-    ldVisibility: document.getElementById("ld-visibility"),
-    ldFriendsSee: document.getElementById("ld-friends-see"),
-    ldAppWideWrap: document.getElementById("ld-app-wide-wrap"),
-    ldAppWide: document.getElementById("ld-app-wide"),
+    ldPublished: document.getElementById("ld-published"),
+    ldPublish: document.getElementById("ld-publish"),
+    publishOverlay: document.getElementById("publish-overlay"),
+    publishAllWrap: document.getElementById("publish-all-wrap"),
+    publishMsg: document.getElementById("publish-msg"),
+    publishSave: document.getElementById("publish-save"),
+    publishCancel: document.getElementById("publish-cancel"),
     openLibraryBtn: document.getElementById("open-library"),
     libraryOverlay: document.getElementById("library-overlay"),
     libraryList: document.getElementById("library-list"),
@@ -5383,6 +5414,7 @@
     ldPractice: document.getElementById("ld-practice"),
     ldLinkWrap: document.getElementById("ld-link-wrap"),
     ldLinkOn: document.getElementById("ld-link-on"),
+    ldLinkText: document.getElementById("ld-link-text"),
     ldNewLink: document.getElementById("ld-new-link"),
     listToast: document.getElementById("list-toast"),
     listToastText: document.getElementById("list-toast-text"),
@@ -5453,7 +5485,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "146";
+  var VOSEA_BUILD = "147";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -8893,8 +8925,10 @@
       .then(function (res) {
         if (res.error) throw res.error;
         var data = res.data || {};
+        if (data.writerError) console.warn("[dle-lookup] the writer failed: " + data.writerError);
         if (!data.found) {
-          msgEl.textContent = t(data.error === "writer_unavailable" ? "lookup_error_retry" : isPhrase ? "phrase_lookup_not_found" : "rae_lookup_not_found");
+          msgEl.textContent = t(data.error === "writer_unavailable" ? "lookup_error_retry" : isPhrase ? "phrase_lookup_not_found" : "rae_lookup_not_found") +
+            (data.writerError ? t("lookup_writer_reason", { why: data.writerError }) : "");
           return;
         }
         var msg = t("rae_lookup_filled");
@@ -8941,7 +8975,9 @@
 
         // A word or verb RAE doesn't list (lots of lunfardo) is still written up.
         if (!isPhrase && data.fromRae === false) msg += t("rae_lookup_not_in_rae");
-        // Claude unreachable: the definition is RAE's own, translated (or not).
+        // Claude unreachable: the definition is RAE's own first sense,
+        // translated (or not). Say so, with the reason (commit 128).
+        if (data.written === false) msg += t("rae_lookup_writer_failed") + (data.writerError ? t("lookup_writer_reason", { why: data.writerError }) : "");
         if (data.definition && data.definitionTranslated === false) msg += t("rae_lookup_translation_unavailable");
         msgEl.textContent = msg;
       })
@@ -18431,12 +18467,6 @@
     el.ldPeopleMsg.textContent = "";
     el.ldPeople.innerHTML = "";
     el.ldInvite.hidden = true;
-    el.ldVisibility.hidden = l.data.role !== "owner";
-    el.ldFriendsSee.checked = !!l.data.friendsCanSee;
-    el.ldAppWideWrap.hidden = !(l.data.role === "owner" && usageRole && usageRole.can_view_usage);
-    el.ldAppWide.checked = !!l.data.appWide;
-    el.ldLinkOn.checked = !!l.data.shareEnabled;
-    el.ldLinkWrap.hidden = l.data.role !== "owner";
     if (!liveListsOk) return;
     var listId = l.id;
     Promise.all([
@@ -18547,22 +18577,57 @@
     renderListPeople(l);
     el.ldPeopleMsg.textContent = msg;
   }
-  function handleFriendsSeeChange() {
+  // ---- Publicar (commit 128) ----
+  // mason: "a publish button and then a setting for what level to publish
+  // at: public or friends". One choice instead of two checkboxes:
+  //   none    — not in anyone's Biblioteca (friends_can_see off, app_wide off)
+  //   friends — in your friends' Biblioteca (friends_can_see on)
+  //   all     — in everyone's (app_wide on; only app owners: Todos is hidden
+  //             for everyone else, and list_set_app_wide() checks it too)
+  // Publishing never touches the share link or the people already in it.
+  function publishLevel(l) { return l.data.appWide ? "all" : l.data.friendsCanSee ? "friends" : "none"; }
+  function canPublishAll() { return !!(usageRole && usageRole.can_view_usage); }
+  function openPublish() {
     var l = allLists.find(function (x) { return x.id === selectedListId; });
-    if (!l) return;
-    var on = el.ldFriendsSee.checked;
-    supabaseClient.from("lists").update({ friends_can_see: on }).eq("id", l.id).then(function (res) {
-      if (res.error) { el.ldFriendsSee.checked = !on; el.ldPeopleMsg.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
-      l.data.friendsCanSee = on;
-    });
+    if (!l || l.data.role !== "owner") return;
+    var level = publishLevel(l);
+    el.publishAllWrap.hidden = !canPublishAll() && level !== "all";
+    el.publishOverlay.querySelectorAll('input[name="publish-level"]').forEach(function (r) { r.checked = r.value === level; });
+    el.publishMsg.textContent = "";
+    el.publishSave.disabled = false;
+    el.publishOverlay.hidden = false;
   }
-  function handleAppWideChange() {
+  function closePublish() { el.publishOverlay.hidden = true; }
+  function savePublish() {
     var l = allLists.find(function (x) { return x.id === selectedListId; });
-    if (!l) return;
-    var on = el.ldAppWide.checked;
-    supabaseClient.rpc("list_set_app_wide", { p_list: l.id, p_on: on }).then(function (res) {
-      if (res.error || res.data === false) { el.ldAppWide.checked = !on; el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
-      l.data.appWide = on;
+    var picked = el.publishOverlay.querySelector('input[name="publish-level"]:checked');
+    if (!l || !picked) return;
+    var level = picked.value, from = publishLevel(l);
+    if (level === from) { closePublish(); return; }
+    el.publishSave.disabled = true;
+    el.publishMsg.textContent = t("msg_guardando");
+    var friends = level !== "none", all = level === "all";
+    var steps = [];
+    if (friends !== l.data.friendsCanSee) steps.push(function () {
+      return Promise.resolve(supabaseClient.from("lists").update({ friends_can_see: friends }).eq("id", l.id)).then(function (res) {
+        if (res.error) throw res.error;
+        l.data.friendsCanSee = friends;
+      });
+    });
+    if (all !== l.data.appWide) steps.push(function () {
+      return Promise.resolve(supabaseClient.rpc("list_set_app_wide", { p_list: l.id, p_on: all })).then(function (res) {
+        if (res.error || res.data === false) throw (res.error || new Error("?"));
+        l.data.appWide = all;
+      });
+    });
+    steps.reduce(function (p, step) { return p.then(step); }, Promise.resolve()).then(function () {
+      closePublish();
+      renderListHead(l);
+      el.ldShareMsg.textContent = t("publish_done_" + level);
+    }).catch(function (err) {
+      el.publishSave.disabled = false;
+      el.publishMsg.textContent = t("msg_error_guardar", { msg: (err && err.message) || err });
+      renderListHead(l);
     });
   }
 
@@ -18621,24 +18686,40 @@
   }
 
   // ---- the share link: on/off and a new one (commit 127) ----
+  // The switch sits under the link in Compartir (commit 128).
+  function renderLinkControls(l) {
+    var on = !!l.data.shareEnabled;
+    el.ldLinkOn.classList.toggle("is-on", on);
+    el.ldLinkOn.setAttribute("aria-pressed", on ? "true" : "false");
+    el.ldLinkText.textContent = t(on ? "ld_link_state_on" : "ld_link_state_off");
+    el.ldShareLink.disabled = !on;
+    el.ldCopyLink.disabled = !on;
+    el.ldNativeShare.disabled = !on;
+    el.ldShareRow.classList.toggle("is-off", !on);
+  }
   function handleLinkOnChange() {
     var l = allLists.find(function (x) { return x.id === selectedListId; });
     if (!l) return;
-    var on = el.ldLinkOn.checked;
+    var on = !l.data.shareEnabled;
+    l.data.shareEnabled = on;
+    renderLinkControls(l);
     supabaseClient.from("lists").update({ share_enabled: on }).eq("id", l.id).then(function (res) {
-      if (res.error) { el.ldLinkOn.checked = !on; el.ldPeopleMsg.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
-      l.data.shareEnabled = on;
-      if (!on) el.ldShareRow.hidden = true;
-      el.ldPeopleMsg.textContent = t(on ? "ld_link_on_msg" : "ld_link_off_msg");
+      if (res.error) {
+        l.data.shareEnabled = !on;
+        renderLinkControls(l);
+        el.ldShareMsg.textContent = t("msg_error_guardar", { msg: res.error.message });
+        return;
+      }
+      el.ldShareMsg.textContent = "";
     });
   }
   function handleNewLink() {
     var l = allLists.find(function (x) { return x.id === selectedListId; });
     if (!l || !window.confirm(t("confirm_new_link"))) return;
     supabaseClient.rpc("list_new_token", { p_list: l.id }).then(function (res) {
-      if (res.error || !res.data) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+      if (res.error || !res.data) { el.ldShareMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
       l.data.shareToken = res.data;
-      el.ldPeopleMsg.textContent = t("ld_new_link_done");
+      el.ldShareMsg.textContent = t("ld_new_link_done");
       if (!el.ldShareRow.hidden) el.ldShareLink.value = location.origin + location.pathname + "?share=" + res.data;
     });
   }
@@ -19148,6 +19229,10 @@
       el.ldOnoffWrap.appendChild(progEl("span", "ld-onoff-text", t(l.data.enabled ? "list_onoff_hint_on" : "list_onoff_hint_off")));
     }
     el.ldShareBtn.hidden = !owner;
+    el.ldPublish.hidden = !owner || !liveListsOk;
+    var level = publishLevel(l);
+    el.ldPublished.hidden = !liveListsOk || level === "none";
+    el.ldPublished.textContent = level === "all" ? t("ld_published_all") : level === "friends" ? t("ld_published_friends") : "";
     el.ldDelete.hidden = !owner;
     el.ldRename.hidden = !owner;
     el.ldLeave.hidden = owner || !liveListsOk;
@@ -19240,16 +19325,15 @@
     if (!selectedListId) return;
     var entry = allLists.find(function (l) { return l.id === selectedListId; });
     if (!entry) return;
-    if (!entry.data.shareEnabled) {
-      // The link is off (commit 127): say so instead of handing out a dead link.
-      el.ldShareRow.hidden = true;
-      el.ldShareMsg.textContent = t("share_link_off_note");
-      return;
-    }
     var link = location.origin + location.pathname + "?share=" + entry.data.shareToken;
     el.ldShareLink.value = link;
     el.ldShareRow.hidden = false;
     el.ldShareMsg.textContent = "";
+    // its on/off switch and "Nuevo enlace" sit right under it (commit 128);
+    // the switch needs the live-lists SQL, so it's hidden before that
+    el.ldLinkWrap.hidden = !liveListsOk;
+    renderLinkControls(entry);
+    if (!entry.data.shareEnabled) return;
     // The native share sheet (Messages, Mail, WhatsApp, AirDrop, whatever
     // the OS offers) is only there to offer when the browser actually
     // supports it — mostly phones, not desktop — so it stays hidden
@@ -20898,15 +20982,16 @@
   el.ldSelectBtn.addEventListener("click", toggleListSelectMode);
   el.ldKeepSelected.addEventListener("click", keepSelectedListItems);
   el.ldInviteBtn.addEventListener("click", handleListInvite);
-  el.ldFriendsSee.addEventListener("change", handleFriendsSeeChange);
-  el.ldAppWide.addEventListener("change", handleAppWideChange);
+  el.ldPublish.addEventListener("click", openPublish);
+  el.publishSave.addEventListener("click", savePublish);
+  el.publishCancel.addEventListener("click", closePublish);
   el.openLibraryBtn.addEventListener("click", openLibrary);
   el.libraryClose.addEventListener("click", closeLibrary);
   el.goneKeep.addEventListener("click", goneKeepClick);
   el.goneSkip.addEventListener("click", showNextGone);
   el.flashKeep.addEventListener("click", flashKeepClick);
   el.ldPractice.addEventListener("click", practiceList);
-  el.ldLinkOn.addEventListener("change", handleLinkOnChange);
+  el.ldLinkOn.addEventListener("click", handleLinkOnChange);
   el.ldNewLink.addEventListener("click", handleNewLink);
   el.listToastBtn.addEventListener("click", listToastOpen);
 

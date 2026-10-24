@@ -2881,5 +2881,23 @@
   .detail-actions-footer .ld-practice { margin-right: auto; }
   .ld-link-wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
   .ld-link-wrap[hidden] { display: none; }
-  .ld-link-wrap .ld-check { flex: 1 1 16em; }
+  .ld-link-text { flex: 1 1 14em; font-size: 13px; color: var(--ink-soft); }
   #list-detail .detail-actions-footer { flex-wrap: wrap; }
+
+  /* Publicar + Compartir (2026-10-23, commit 128) */
+  .ld-published { font-size: 13px; color: var(--accent-deep); margin: -2px 0 6px; }
+  .ld-published[hidden] { display: none; }
+  .ld-share-box { margin: 4px 0 8px; display: flex; flex-direction: column; gap: 8px; }
+  .ld-share-box[hidden] { display: none; }
+  .ld-share-box .ld-link-wrap { gap: 8px 10px; }
+  .ld-share-box.is-off #ld-share-link { opacity: 0.5; }
+  .publish-options { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 8px; }
+  .publish-opt {
+    display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--paper-sunken);
+  }
+  .publish-opt[hidden] { display: none; }
+  .publish-opt:has(input:checked) { border-color: var(--accent); background: var(--paper-raised); }
+  .publish-opt input { margin-top: 3px; accent-color: var(--accent); width: 18px; height: 18px; flex-shrink: 0; }
+  .publish-opt b { display: block; font-size: 15px; }
+  .publish-opt small { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
