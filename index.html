@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="147">
+<meta name="vosea-build" content="148">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -124,6 +124,13 @@
         <button type="button" class="acct-menu-item" id="acct-menu-settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
           <span data-i18n="settings_title">Configuración</span>
+        </button>
+        <!-- Amigos (2026-10-23, commit 130): one tap from anywhere, with the
+             number of requests waiting. -->
+        <button type="button" class="acct-menu-item" id="acct-menu-amigos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16 14.2c3 .2 5 2.6 5 5.8"/></svg>
+          <span data-i18n="acct_menu_amigos">Amigos</span>
+          <span class="acct-menu-count" id="acct-menu-amigos-count" hidden></span>
         </button>
         <!-- Uso (2026-10-10): only for accounts in app_owners with
              can_view_usage; app.js shows it after vosea_my_role(). -->
@@ -995,11 +1002,13 @@
             <button type="button" class="btn-secondary" id="am-copy" data-i18n="am_copy">Copiar enlace</button>
             <button type="button" class="btn-secondary" id="am-share" data-i18n="am_share" hidden>Compartir</button>
           </div>
+          <p class="play-fine am-help" id="am-link-note"></p>
+          <button type="button" class="icon-btn am-new-link" id="am-new-link" hidden data-i18n="btn_am_new_link">Nuevo enlace</button>
         </div>
         <div class="am-add">
           <label class="am-lab" for="am-code" data-i18n="am_add_label">Agregar a alguien</label>
           <div class="am-inline">
-            <input type="text" id="am-code" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" data-i18n-placeholder="am_code_ph" />
+            <input type="text" id="am-code" maxlength="120" autocapitalize="none" autocomplete="off" spellcheck="false" data-i18n-placeholder="am_code_ph" />
             <button type="button" class="btn-primary" id="am-add" data-i18n="am_add">Agregar</button>
           </div>
           <p class="form-msg am-msg" id="am-msg" aria-live="polite"></p>
@@ -1125,7 +1134,8 @@
             </select>
             <button type="button" class="icon-btn" id="ld-invite-btn" data-i18n="btn_invite">Agregar</button>
           </div>
-          <p class="flash-setup-note" id="ld-invite-none" hidden data-i18n="ld_invite_none">Agregá amigos en Jugar → Amigos para compartirles la lista.</p>
+          <p class="flash-setup-note" id="ld-invite-none" hidden data-i18n="ld_invite_none">Todavía no tenés amigos en voseá. Invitá a alguien con tu enlace y después agregalo acá.</p>
+          <button type="button" class="icon-btn ld-invite-new" id="ld-invite-new" data-i18n="btn_invite_someone">Invitar a alguien</button>
         </div>
         <p class="form-msg" id="ld-people-msg"></p>
       </div>
@@ -1583,6 +1593,25 @@
       <button type="button" class="btn-primary" id="welcome-next"></button>
     </div>
   </div>
+</div>
+
+<div class="modal-overlay" id="am-invite-overlay" hidden>
+  <div class="modal-card">
+    <h3 id="am-invite-title"></h3>
+    <p class="flash-setup-note" id="am-invite-text"></p>
+    <p class="form-msg" id="am-invite-msg"></p>
+    <div class="form-actions">
+      <button type="button" class="btn-primary" id="am-invite-add" hidden></button>
+      <button type="button" class="btn-secondary" id="am-invite-skip"></button>
+    </div>
+  </div>
+</div>
+
+<div class="quiet-toast am-toast" id="am-toast" role="status" aria-live="polite" hidden>
+  <span id="am-toast-text"></span>
+  <button type="button" class="quiet-toast-btn" id="am-toast-decline" data-i18n="am_decline">Rechazar</button>
+  <button type="button" class="quiet-toast-btn" id="am-toast-accept" data-i18n="am_accept">Aceptar</button>
+  <button type="button" class="quiet-toast-btn" id="am-toast-see" hidden data-i18n="am_toast_see">Ver</button>
 </div>
 
 <div class="quiet-toast" id="list-toast" role="status" aria-live="polite" hidden>

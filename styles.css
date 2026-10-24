@@ -2901,3 +2901,19 @@
   .publish-opt input { margin-top: 3px; accent-color: var(--accent); width: 18px; height: 18px; flex-shrink: 0; }
   .publish-opt b { display: block; font-size: 15px; }
   .publish-opt small { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+
+  /* Amigos, easier (2026-10-23, commit 130) */
+  .acct-trigger.has-dot { position: relative; }
+  .acct-trigger.has-dot::after {
+    content: ""; position: absolute; top: 4px; right: 4px; width: 9px; height: 9px;
+    border-radius: 50%; background: var(--danger); border: 2px solid var(--paper);
+  }
+  .acct-menu-count {
+    margin-left: auto; min-width: 20px; padding: 0 6px; border-radius: 999px;
+    background: var(--danger); color: var(--paper); font-size: 12px; font-weight: 700; line-height: 20px; text-align: center;
+  }
+  .acct-menu-count[hidden] { display: none; }
+  .am-new-link { margin: 2px 0 10px; }
+  .am-new-link[hidden] { display: none; }
+  .ld-invite-new { margin-top: 8px; }
+  .am-toast { flex-wrap: wrap; }

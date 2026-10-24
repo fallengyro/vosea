@@ -3069,3 +3069,123 @@ begin
 end $$;
 revoke execute on function public.vosea_restore_lists(text) from public, anon;
 grant execute on function public.vosea_restore_lists(text) to authenticated;
+
+-- ===========================================================================
+-- 2026-10-23 — easier friends (commit 130)
+-- ===========================================================================
+-- mason: "i've twice now tried to add people with the share link request
+-- code ping pong that we do and it's resulted in confusion and stalled out
+-- the process." He picked:
+--   1. The invite link counts as your yes: whoever opens it and taps
+--      Agregar is your friend right away, with no accept step. The link has
+--      its own token (profiles.invite_token), separate from the friend code,
+--      and you can make a new one (the old link stops working). A typed
+--      friend code still sends a request to accept, as before.
+--   2. Requests come to you (in the app; no SQL needed).
+--   3. Amigos in the account menu and in a list's "Agregar a un amigo" (no
+--      SQL needed).
+--   4. Add by exact email: sends a request, which they accept. There's
+--      still no directory or name search; at most 20 email lookups a day
+--      per person (api_usage, like the paid functions), so emails can't be
+--      tried in bulk. An unknown email answers not_found.
+-- Safe to run twice.
+-- ===========================================================================
+
+-- 1. invite tokens ------------------------------------------------------------
+alter table public.profiles add column if not exists invite_token text;
+update public.profiles set invite_token = encode(gen_random_bytes(12), 'hex') where invite_token is null;
+alter table public.profiles alter column invite_token set default encode(gen_random_bytes(12), 'hex');
+alter table public.profiles alter column invite_token set not null;
+create unique index if not exists profiles_invite_token_idx on public.profiles (invite_token);
+
+-- Who an invite link is from (shown as "Agregar a mason"). { name } or null.
+create or replace function public.friend_invite_info(p_token text)
+returns json language sql stable security definer set search_path = public as $$
+  select case when p.user_id is null then null
+    else json_build_object('name', p.display_name, 'self', p.user_id = auth.uid()) end
+  from (select 1) one
+  left join public.profiles p on p.invite_token = lower(btrim(coalesce(p_token, '')));
+$$;
+
+-- Accept an invite link: you're friends right away. { result, name }:
+--   friends   you're now friends
+--   already   you already were
+--   self      it's your own link
+--   not_found no such link (or it was replaced by a new one)
+create or replace function public.friend_accept_invite(p_token text)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  me uuid := auth.uid();
+  other public.profiles;
+  f public.friendships;
+begin
+  if me is null then raise exception 'sign_in_required'; end if;
+  select * into other from public.profiles where invite_token = lower(btrim(coalesce(p_token, '')));
+  if not found then return json_build_object('result', 'not_found'); end if;
+  if other.user_id = me then return json_build_object('result', 'self'); end if;
+  select * into f from public.friendships
+    where least(requester, addressee) = least(me, other.user_id) and greatest(requester, addressee) = greatest(me, other.user_id);
+  if found then
+    if f.status = 'accepted' then return json_build_object('result', 'already', 'name', other.display_name); end if;
+    update public.friendships set status = 'accepted', responded_at = now() where id = f.id;
+    return json_build_object('result', 'friends', 'name', other.display_name);
+  end if;
+  insert into public.friendships (requester, addressee, status, responded_at) values (other.user_id, me, 'accepted', now());
+  return json_build_object('result', 'friends', 'name', other.display_name);
+end $$;
+
+-- A new invite link for you; the old one stops working. Returns the token.
+create or replace function public.friend_new_invite()
+returns text language plpgsql security definer set search_path = public as $$
+declare tok text;
+begin
+  if auth.uid() is null then raise exception 'sign_in_required'; end if;
+  loop
+    tok := encode(gen_random_bytes(12), 'hex');
+    exit when not exists (select 1 from public.profiles where invite_token = tok);
+  end loop;
+  update public.profiles set invite_token = tok where user_id = auth.uid();
+  return tok;
+end $$;
+
+-- 4. a request by exact email --------------------------------------------------
+-- { result, name } like friend_request(): sent / accepted (they had asked
+-- you) / already / self / not_found / too_many (20 waiting) / daily_limit.
+create or replace function public.friend_request_email(p_email text)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  me uuid := auth.uid();
+  them uuid;
+  nm text;
+  f public.friendships;
+begin
+  if me is null then raise exception 'sign_in_required'; end if;
+  if not public.api_usage_bump(me, 'friend-email', 20) then return json_build_object('result', 'daily_limit'); end if;
+  select u.id into them from auth.users u where lower(u.email) = lower(btrim(coalesce(p_email, ''))) limit 1;
+  if them is null then return json_build_object('result', 'not_found'); end if;
+  if them = me then return json_build_object('result', 'self'); end if;
+  nm := coalesce((select display_name from public.profiles where user_id = them), split_part(btrim(p_email), '@', 1));
+  select * into f from public.friendships
+    where least(requester, addressee) = least(me, them) and greatest(requester, addressee) = greatest(me, them);
+  if found then
+    if f.status = 'pending' and f.addressee = me then
+      update public.friendships set status = 'accepted', responded_at = now() where id = f.id;
+      return json_build_object('result', 'accepted', 'name', nm);
+    end if;
+    return json_build_object('result', 'already', 'name', nm);
+  end if;
+  if (select count(*) from public.friendships where requester = me and status = 'pending') >= 20 then
+    return json_build_object('result', 'too_many');
+  end if;
+  insert into public.friendships (requester, addressee) values (me, them);
+  return json_build_object('result', 'sent', 'name', nm);
+end $$;
+
+revoke execute on function public.friend_invite_info(text) from public, anon;
+revoke execute on function public.friend_accept_invite(text) from public, anon;
+revoke execute on function public.friend_new_invite() from public, anon;
+revoke execute on function public.friend_request_email(text) from public, anon;
+grant execute on function public.friend_invite_info(text) to authenticated;
+grant execute on function public.friend_accept_invite(text) to authenticated;
+grant execute on function public.friend_new_invite() to authenticated;
+grant execute on function public.friend_request_email(text) to authenticated;

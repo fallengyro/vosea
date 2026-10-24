@@ -463,8 +463,6 @@
       am_your_code: "Tu código",
       am_copy: "Copiar enlace",
       am_share: "Compartir",
-      am_add_label: "Agregar a alguien",
-      am_code_ph: "Su código (ABCD-1234)",
       am_add: "Agregar",
       am_in: "Te quieren agregar",
       am_out: "Esperando respuesta",
@@ -1075,7 +1073,6 @@
       confirm_remove_member: "¿Sacar a {person} de la lista?",
       ld_invite_label: "Agregar a un amigo",
       ld_invite_role_aria: "Rol",
-      ld_invite_none: "Agregá amigos en Jugar → Amigos para compartirles la lista.",
       btn_invite: "Agregar",
       ld_invite_added: "Listo: {person} ya tiene la lista.",
       ld_invite_updated: "Listo: cambió el rol de {person}.",
@@ -1103,6 +1100,41 @@
       gone_keep: "Quedarme con los {n}",
       gone_keep_1: "Quedármelo",
       gone_skip: "No, gracias",
+      am_code_ph: "Su código (ABCD-1234) o email",
+      am_add_label: "Agregar con código o email",
+      am_link_note: "Quien abra tu enlace y toque Agregar queda como tu amigo, sin más pasos.",
+      am_link_note_old: "Quien abra tu enlace te manda una solicitud.",
+      btn_am_new_link: "Nuevo enlace",
+      am_new_link_confirm: "¿Hacer un enlace nuevo? El de ahora deja de funcionar; tus amigos siguen siéndolo.",
+      am_new_link_done: "Listo: tenés un enlace nuevo.",
+      am_email_bad: "Escribí el email completo (nombre@ejemplo.com).",
+      am_not_found_email: "No hay nadie en voseá con ese email.",
+      am_self_email: "Ese es tu propio email.",
+      am_email_limit: "Ya buscaste muchos emails hoy. Probá mañana, o mandale tu enlace.",
+      am_email_unavailable: "Agregar por email todavía no está listo (falta la SQL nueva). Usá el código o el enlace.",
+      am_invite_loading: "Abriendo la invitación…",
+      am_invite_title: "Agregar a {name}",
+      am_invite_text: "{name} te invitó a voseá. Si lo agregás, quedan como amigos: pueden compartir listas y retarse.",
+      am_invite_add: "Agregar a {name}",
+      am_invite_skip: "Ahora no",
+      am_invite_done: "Listo: vos y {name} ya son amigos",
+      am_invite_already: "Vos y {name} ya eran amigos",
+      am_invite_done_text: "Lo vas a encontrar en Amigos.",
+      am_invite_see: "Ver Amigos",
+      am_invite_bad_title: "Esta invitación no sirve",
+      am_invite_bad: "El enlace ya no funciona: pedile uno nuevo.",
+      am_invite_unavailable: "Las invitaciones con un toque todavía no están listas (falta la SQL nueva).",
+      am_invite_self_title: "Es tu propia invitación",
+      am_invite_self: "Mandásela a quien quieras agregar.",
+      am_toast_wants: "{name} quiere agregarte como amigo.",
+      am_toast_many: "{name} y {n} más quieren agregarte como amigos.",
+      am_toast_accepted: "{name} aceptó: ya son amigos.",
+      am_toast_see: "Ver",
+      acct_menu_amigos: "Amigos",
+      btn_invite_someone: "Invitar a alguien",
+      btn_invite_new: "Invitar a alguien nuevo",
+      am_link_copied_list: "Enlace copiado: cuando lo abra y toque Agregar, ya va a estar en esta lista de amigos para sumarlo.",
+      ld_invite_none: "Todavía no tenés amigos en voseá. Invitá a alguien con tu enlace y después agregalo acá.",
       rae_lookup_writer_failed: " Ojo: no se pudo escribir la entrada al estilo de voseá; la definición es la primera del diccionario, traducida, y falta el ejemplo.",
       lookup_writer_reason: " (motivo: {why})",
       btn_publish: "Publicar…",
@@ -1683,8 +1715,6 @@
       am_your_code: "Your code",
       am_copy: "Copy link",
       am_share: "Share",
-      am_add_label: "Add someone",
-      am_code_ph: "Their code (ABCD-1234)",
       am_add: "Add",
       am_in: "Want to add you",
       am_out: "Waiting for an answer",
@@ -2295,7 +2325,6 @@
       confirm_remove_member: "Remove {person} from the list?",
       ld_invite_label: "Add a friend",
       ld_invite_role_aria: "Role",
-      ld_invite_none: "Add friends in Jugar → Amigos to share the list with them.",
       btn_invite: "Add",
       ld_invite_added: "Done: {person} has the list now.",
       ld_invite_updated: "Done: {person}'s role changed.",
@@ -2323,6 +2352,41 @@
       gone_keep: "Keep all {n}",
       gone_keep_1: "Keep it",
       gone_skip: "No, thanks",
+      am_code_ph: "Their code (ABCD-1234) or email",
+      am_add_label: "Add with a code or email",
+      am_link_note: "Anyone who opens your link and taps Add becomes your friend, no more steps.",
+      am_link_note_old: "Anyone who opens your link sends you a request.",
+      btn_am_new_link: "New link",
+      am_new_link_confirm: "Make a new link? The current one stops working; your friends stay your friends.",
+      am_new_link_done: "Done: you have a new link.",
+      am_email_bad: "Type the whole email (name@example.com).",
+      am_not_found_email: "Nobody on voseá has that email.",
+      am_self_email: "That's your own email.",
+      am_email_limit: "You've looked up a lot of emails today. Try tomorrow, or send them your link.",
+      am_email_unavailable: "Adding by email isn't ready yet (the new SQL still needs to run). Use the code or the link.",
+      am_invite_loading: "Opening the invite…",
+      am_invite_title: "Add {name}",
+      am_invite_text: "{name} invited you to voseá. Add them and you're friends: you can share lists and challenge each other.",
+      am_invite_add: "Add {name}",
+      am_invite_skip: "Not now",
+      am_invite_done: "Done: you and {name} are friends",
+      am_invite_already: "You and {name} were already friends",
+      am_invite_done_text: "You'll find them in Friends.",
+      am_invite_see: "See Friends",
+      am_invite_bad_title: "This invite doesn't work",
+      am_invite_bad: "The link no longer works: ask for a new one.",
+      am_invite_unavailable: "One-tap invites aren't ready yet (the new SQL still needs to run).",
+      am_invite_self_title: "It's your own invite",
+      am_invite_self: "Send it to whoever you want to add.",
+      am_toast_wants: "{name} wants to be your friend.",
+      am_toast_many: "{name} and {n} more want to be your friends.",
+      am_toast_accepted: "{name} accepted: you're friends now.",
+      am_toast_see: "See",
+      acct_menu_amigos: "Friends",
+      btn_invite_someone: "Invite someone",
+      btn_invite_new: "Invite someone new",
+      am_link_copied_list: "Link copied: once they open it and tap Add, they'll be in your friends to add here.",
+      ld_invite_none: "You don't have friends on voseá yet. Invite someone with your link, then add them here.",
       rae_lookup_writer_failed: " Heads up: the voseá-style entry couldn't be written, so the definition is the dictionary's first one, translated, with no example.",
       lookup_writer_reason: " (reason: {why})",
       btn_publish: "Publish…",
@@ -5417,6 +5481,22 @@
     ldLinkText: document.getElementById("ld-link-text"),
     ldNewLink: document.getElementById("ld-new-link"),
     listToast: document.getElementById("list-toast"),
+    ldInviteNew: document.getElementById("ld-invite-new"),
+    amLinkNote: document.getElementById("am-link-note"),
+    amNewLink: document.getElementById("am-new-link"),
+    amInviteOverlay: document.getElementById("am-invite-overlay"),
+    amInviteTitle: document.getElementById("am-invite-title"),
+    amInviteText: document.getElementById("am-invite-text"),
+    amInviteMsg: document.getElementById("am-invite-msg"),
+    amInviteAdd: document.getElementById("am-invite-add"),
+    amInviteSkip: document.getElementById("am-invite-skip"),
+    amToast: document.getElementById("am-toast"),
+    amToastText: document.getElementById("am-toast-text"),
+    amToastAccept: document.getElementById("am-toast-accept"),
+    amToastDecline: document.getElementById("am-toast-decline"),
+    amToastSee: document.getElementById("am-toast-see"),
+    acctMenuAmigos: document.getElementById("acct-menu-amigos"),
+    acctMenuAmigosCount: document.getElementById("acct-menu-amigos-count"),
     listToastText: document.getElementById("list-toast-text"),
     listToastBtn: document.getElementById("list-toast-btn"),
 
@@ -5485,7 +5565,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "147";
+  var VOSEA_BUILD = "148";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -15989,6 +16069,14 @@
   function amigoCodeShown(code) { code = String(code || ""); return code.length === 8 ? code.slice(0, 4) + "-" + code.slice(4) : code; }
   function amigoCodeClean(s) { return String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); }
   function amigoInviteLink(code) { return location.origin + location.pathname + "?amigo=" + encodeURIComponent(code); }
+  // Your invite link (commit 130): your invite token when there is one (a
+  // one-tap link: whoever opens it and taps Agregar is your friend), else
+  // the old link with your code (a request to accept).
+  function amigoMyLink() {
+    var p = amigos.profile;
+    if (!p) return "";
+    return amigoInviteLink(p.invite_token || p.friend_code);
+  }
   function amigoNameClean(s) { return String(s || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 24); }
 
   function loadAmigos(force) {
@@ -16009,6 +16097,7 @@
     }).then(function () {
       amigos.loading = null; amigos.loaded = true; amigos.missing = false;
       renderAmigosEverywhere();
+      amigoNotices();
     }, function (err) {
       amigos.loading = null; amigos.loaded = true; amigos.missing = true;
       console.warn("[amigos] not available yet:", err && err.message);
@@ -16035,15 +16124,25 @@
   // ---- actions ----
   function amigoMsg(text, warn) { el.amMsg.textContent = text || ""; el.amMsg.classList.toggle("is-warn", !!warn); }
   function amigoAdd() {
-    var code = amigoCodeClean(el.amCode.value);
-    if (code.length !== 8) { amigoMsg(t("am_code_bad"), true); return; }
+    // A code or (commit 130) an exact email.
+    var raw = String(el.amCode.value || "").trim();
+    var byEmail = raw.indexOf("@") !== -1;
+    var code = amigoCodeClean(raw);
+    if (byEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) { amigoMsg(t("am_email_bad"), true); return; }
+    if (!byEmail && code.length !== 8) { amigoMsg(t("am_code_bad"), true); return; }
     el.amAdd.disabled = true;
-    supabaseClient.rpc("friend_request", { p_code: code }).then(function (res) {
+    var call = byEmail ? supabaseClient.rpc("friend_request_email", { p_email: raw }) : supabaseClient.rpc("friend_request", { p_code: code });
+    call.then(function (res) {
       el.amAdd.disabled = false;
-      if (res.error) { amigoMsg(t("am_error", { msg: res.error.message }), true); return; }
+      if (res.error) {
+        var missing = byEmail && /friend_request_email|function/i.test(res.error.message || "");
+        amigoMsg(missing ? t("am_email_unavailable") : t("am_error", { msg: res.error.message }), true);
+        return;
+      }
       var d = res.data || {};
       var name = d.name || "";
-      var key = { sent: "am_sent", accepted: "am_accepted_now", already: "am_already", self: "am_self", not_found: "am_not_found", too_many: "am_too_many" }[d.result] || "am_not_found";
+      var key = { sent: "am_sent", accepted: "am_accepted_now", already: "am_already", self: byEmail ? "am_self_email" : "am_self",
+        not_found: byEmail ? "am_not_found_email" : "am_not_found", too_many: "am_too_many", daily_limit: "am_email_limit" }[d.result] || "am_not_found";
       amigoMsg(t(key, { name: name }), !(d.result === "sent" || d.result === "accepted"));
       if (d.result === "sent" || d.result === "accepted") { el.amCode.value = ""; try { localStorage.removeItem(AMIGO_PENDING_KEY); } catch (e) {} }
       loadAmigos(true);
@@ -16081,14 +16180,14 @@
   }
   function amigoCopyLink() {
     if (!amigos.profile) return;
-    var link = amigoInviteLink(amigos.profile.friend_code);
+    var link = amigoMyLink();
     function done() { amigoMsg(t("am_link_copied")); }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, function () { amigoMsg(link); });
     else amigoMsg(link);
   }
   function amigoShareLink() {
     if (!amigos.profile || !navigator.share) return;
-    navigator.share({ title: "voseá", text: t("am_share_text", { name: amigos.profile.display_name }), url: amigoInviteLink(amigos.profile.friend_code) }).catch(function () {});
+    navigator.share({ title: "voseá", text: t("am_share_text", { name: amigos.profile.display_name }), url: amigoMyLink() }).catch(function () {});
   }
 
   // ---- the page ----
@@ -16101,6 +16200,8 @@
     if (document.activeElement !== el.amName) el.amName.value = p.display_name;
     el.amCodeShown.textContent = amigoCodeShown(p.friend_code);
     el.amShare.hidden = !navigator.share;
+    el.amLinkNote.textContent = t(p.invite_token ? "am_link_note" : "am_link_note_old");
+    el.amNewLink.hidden = !p.invite_token;
     function section(box, rows, build) {
       box.innerHTML = "";
       box.hidden = !rows.length;
@@ -16164,8 +16265,12 @@
   (function readInviteLink() {
     var code = null;
     try { code = new URLSearchParams(window.location.search).get("amigo"); } catch (e) {}
-    code = amigoCodeClean(code);
-    if (code.length !== 8) return;
+    var token = String(code || "").trim().toLowerCase();
+    if (/^[0-9a-f]{24}$/.test(token)) code = "t:" + token; // a one-tap invite (commit 130)
+    else {
+      code = amigoCodeClean(code);
+      if (code.length !== 8) return;
+    }
     try { localStorage.setItem(AMIGO_PENDING_KEY, code); } catch (e) {}
     try { var u = new URL(window.location.href); u.searchParams.delete("amigo"); history.replaceState(null, "", u.pathname + u.search + u.hash); } catch (e) {}
   })();
@@ -16174,10 +16279,165 @@
     try { code = localStorage.getItem(AMIGO_PENDING_KEY); } catch (e) {}
     if (!code || !currentUser) return;
     try { localStorage.removeItem(AMIGO_PENDING_KEY); } catch (e) {} // opens once
+    if (code.slice(0, 2) === "t:") { openAmigoInvite(code.slice(2)); return; }
     setMainTab("play");
     openAmigos(true);
     el.amCode.value = amigoCodeShown(code);
     amigoMsg(t("am_invited"));
+  }
+
+
+  // ================= Amigos, easier (2026-10-23, commit 130) =================
+  // mason: adding friends with "the share link request code ping pong…
+  // resulted in confusion and stalled out the process". He picked:
+  //   1. One-tap invite links: ?amigo=<invite token> opens "Agregar a mason";
+  //      Agregar makes you friends right away (friend_accept_invite). The
+  //      old ?amigo=<code> links still open Amigos with the code filled in.
+  //   2. Requests come to you: a toast with Aceptar / Rechazar when someone
+  //      asks, "X aceptó" when someone accepts yours, and a dot on the
+  //      account menu while a request waits.
+  //   3. Amigos in the account menu, and "Invitar a alguien" in a list's
+  //      "Agregar a un amigo".
+  //   4. Add by exact email (friend_request_email; a request to accept).
+  // SQL: pending_2026-10-23_amigos_links.sql.
+  var amInvite = null; // { token, name } while the invite card is open
+  function openAmigoInvite(token) {
+    amInvite = { token: token, name: "" };
+    el.amInviteTitle.textContent = t("am_invite_loading");
+    el.amInviteText.textContent = "";
+    el.amInviteMsg.textContent = "";
+    el.amInviteAdd.hidden = true;
+    el.amInviteAdd.disabled = false;
+    el.amInviteSkip.textContent = t("am_invite_skip");
+    el.amInviteOverlay.hidden = false;
+    supabaseClient.rpc("friend_invite_info", { p_token: token }).then(function (res) {
+      if (!amInvite || amInvite.token !== token) return;
+      var d = res && !res.error && res.data;
+      if (!d || !d.name) {
+        el.amInviteTitle.textContent = t("am_invite_bad_title");
+        el.amInviteText.textContent = t(res && res.error ? "am_invite_unavailable" : "am_invite_bad");
+        el.amInviteSkip.textContent = t("close");
+        return;
+      }
+      if (d.self) {
+        el.amInviteTitle.textContent = t("am_invite_self_title");
+        el.amInviteText.textContent = t("am_invite_self");
+        el.amInviteSkip.textContent = t("close");
+        return;
+      }
+      amInvite.name = d.name;
+      el.amInviteTitle.textContent = t("am_invite_title", { name: d.name });
+      el.amInviteText.textContent = t("am_invite_text", { name: d.name });
+      el.amInviteAdd.textContent = t("am_invite_add", { name: d.name });
+      el.amInviteAdd.hidden = false;
+    });
+  }
+  function amigoInviteAccept() {
+    if (!amInvite) return;
+    el.amInviteAdd.disabled = true;
+    supabaseClient.rpc("friend_accept_invite", { p_token: amInvite.token }).then(function (res) {
+      var d = (res && !res.error && res.data) || {};
+      if (res.error || d.result === "not_found") {
+        el.amInviteAdd.disabled = false;
+        el.amInviteMsg.textContent = res.error ? t("am_error", { msg: res.error.message }) : t("am_invite_bad");
+        return;
+      }
+      el.amInviteTitle.textContent = t(d.result === "already" ? "am_invite_already" : "am_invite_done", { name: d.name || amInvite.name });
+      el.amInviteText.textContent = t("am_invite_done_text");
+      el.amInviteAdd.hidden = true;
+      el.amInviteSkip.textContent = t("am_invite_see");
+      amInvite.done = true;
+      loadAmigos(true);
+    });
+  }
+  function closeAmigoInvite() {
+    var done = amInvite && amInvite.done;
+    amInvite = null;
+    el.amInviteOverlay.hidden = true;
+    if (done) { setMainTab("play"); openAmigos(true); }
+  }
+
+  // ---- requests come to you ----
+  function amigoSeenKey() { return "vosea-amigo-seen:" + (currentUser ? currentUser.id : ""); }
+  var amToastReq = null;
+  function amigoNotices() {
+    if (!currentUser || !amigos.loaded || amigos.missing) return;
+    var incoming = amigosIncoming();
+    el.acctTrigger.classList.toggle("has-dot", incoming.length > 0);
+    el.acctMenuAmigosCount.textContent = incoming.length ? String(incoming.length) : "";
+    el.acctMenuAmigosCount.hidden = !incoming.length;
+    var raw = null, seen = {};
+    try { raw = localStorage.getItem(amigoSeenKey()); seen = JSON.parse(raw || "{}") || {}; } catch (e) { seen = {}; }
+    var now = { inc: {}, out: {} };
+    var newIn = incoming.filter(function (f) { now.inc[f.id] = true; return !(seen.inc || {})[f.id]; });
+    var accepted = [];
+    amigos.list.forEach(function (f) {
+      if (f.status === "pending" && !f.incoming) now.out[f.id] = true;
+      if (f.status === "accepted" && !f.incoming && (seen.out || {})[f.id]) accepted.push(f);
+    });
+    try { localStorage.setItem(amigoSeenKey(), JSON.stringify(now)); } catch (e) {}
+    if (newIn.length) showAmigoToast(newIn[0], newIn.length);
+    else if (accepted.length && raw !== null) showAmigoToast(null, 0, accepted[0]);
+  }
+  function showAmigoToast(req, n, acceptedBy) {
+    amToastReq = req;
+    if (req) {
+      el.amToastText.textContent = n > 1 ? t("am_toast_many", { name: req.display_name, n: n - 1 }) : t("am_toast_wants", { name: req.display_name });
+      el.amToastAccept.hidden = n > 1;
+      el.amToastDecline.hidden = n > 1;
+      el.amToastSee.hidden = n <= 1;
+    } else {
+      el.amToastText.textContent = t("am_toast_accepted", { name: acceptedBy.display_name });
+      el.amToastAccept.hidden = true;
+      el.amToastDecline.hidden = true;
+      el.amToastSee.hidden = true;
+    }
+    el.amToast.hidden = false;
+    clearTimeout(showAmigoToast.timer);
+    showAmigoToast.timer = setTimeout(function () { el.amToast.hidden = true; }, req ? 15000 : 7000);
+  }
+  function amigoToastAnswer(accept) {
+    var f = amToastReq;
+    el.amToast.hidden = true;
+    if (!f) return;
+    var done = function (res) {
+      if (res && res.error) { showBanner(t("am_error", { msg: res.error.message })); return; }
+      if (accept) showBanner(t("am_now_friends", { name: f.display_name }));
+      loadAmigos(true);
+    };
+    if (accept) supabaseClient.rpc("friend_accept", { p_id: f.id }).then(done);
+    else supabaseClient.from("friendships").delete().eq("id", f.id).then(done);
+  }
+  function amigoToastSee() { el.amToast.hidden = true; openAmigosPage(); }
+  function openAmigosPage() {
+    closeAcctMenu();
+    setMainTab("play");
+    openAmigos(true);
+  }
+
+  // ---- inviting someone new, from a list ----
+  function inviteSomeone(msgEl) {
+    var go = function () {
+      var link = amigoMyLink();
+      if (!link) { msgEl.textContent = t("am_missing"); return; }
+      if (navigator.share) {
+        navigator.share({ title: "voseá", text: t("am_share_text", { name: amigos.profile.display_name }), url: link }).catch(function () {});
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(function () { msgEl.textContent = t("am_link_copied_list"); }, function () { msgEl.textContent = link; });
+      } else {
+        msgEl.textContent = link;
+      }
+    };
+    if (amigos.profile) go(); else loadAmigos().then(go);
+  }
+  function amigoNewLink() {
+    if (!window.confirm(t("am_new_link_confirm"))) return;
+    supabaseClient.rpc("friend_new_invite").then(function (res) {
+      if (res.error || !res.data) { amigoMsg(t("am_error", { msg: (res.error && res.error.message) || "?" }), true); return; }
+      if (amigos.profile) amigos.profile.invite_token = res.data;
+      amigoMsg(t("am_new_link_done"));
+      drawAmigos();
+    });
   }
 
   // ================= Te reto (2026-10-06) =================
@@ -18552,6 +18812,7 @@
     el.ldInviteFriend.innerHTML = "";
     el.ldInviteNone.hidden = friends.length > 0;
     el.ldInviteRow.hidden = friends.length === 0;
+    el.ldInviteNew.textContent = t(friends.length ? "btn_invite_new" : "btn_invite_someone");
     friends.forEach(function (f) {
       var o = document.createElement("option");
       o.value = f.other_id; o.textContent = f.display_name;
@@ -20994,6 +21255,14 @@
   el.ldLinkOn.addEventListener("click", handleLinkOnChange);
   el.ldNewLink.addEventListener("click", handleNewLink);
   el.listToastBtn.addEventListener("click", listToastOpen);
+  el.ldInviteNew.addEventListener("click", function () { inviteSomeone(el.ldPeopleMsg); });
+  el.amNewLink.addEventListener("click", amigoNewLink);
+  el.amInviteAdd.addEventListener("click", amigoInviteAccept);
+  el.amInviteSkip.addEventListener("click", closeAmigoInvite);
+  el.amToastAccept.addEventListener("click", function () { amigoToastAnswer(true); });
+  el.amToastDecline.addEventListener("click", function () { amigoToastAnswer(false); });
+  el.amToastSee.addEventListener("click", amigoToastSee);
+  el.acctMenuAmigos.addEventListener("click", openAmigosPage);
 
   el.listPickerClose.addEventListener("click", closeListPicker);
   el.listPickerCreateBtn.addEventListener("click", handleListPickerCreate);
