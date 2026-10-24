@@ -1178,6 +1178,8 @@
       lists_empty: "Todavía no creaste ninguna lista.",
       btn_create_list_toggle: "+ Crear lista",
       list_form_title: "Nueva lista",
+      list_form_alt: "¿Ya la tenés en un archivo?",
+      list_form_import: "Importar desde un archivo (JSON)",
       label_nombre: "Nombre",
       placeholder_list_name: "ej. La cocina",
       btn_create: "Crear",
@@ -2465,6 +2467,8 @@
       lists_empty: "You haven't created any lists yet.",
       btn_create_list_toggle: "+ Create list",
       list_form_title: "New list",
+      list_form_alt: "Already have it in a file?",
+      list_form_import: "Import from a file (JSON)",
       label_nombre: "Name",
       placeholder_list_name: "e.g., The kitchen",
       btn_create: "Create",
@@ -5637,7 +5641,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "155";
+  var VOSEA_BUILD = "156";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21905,6 +21909,13 @@
   el.shareCopyBtn.addEventListener("click", function () { el.shareCopyBtn.disabled = true; handleShareImport(); });
 
   el.toggleImportJson.addEventListener("click", openImportJsonModal);
+  // Importing is a way to create a list (2026-10-24, commit 138): mason
+  // found the Listas toolbar's separate "Importar contenido (JSON)" button
+  // inconsistent with the other tabs, so it lives inside "+ Crear lista".
+  (function () {
+    var b = document.getElementById("list-form-import");
+    if (b) b.addEventListener("click", function () { closeListForm(); openImportJsonModal(); });
+  })();
   el.importJsonCancelBtn.addEventListener("click", closeImportJsonModal);
   el.importJsonFile.addEventListener("change", handleImportJsonFile);
   el.importJsonValidateBtn.addEventListener("click", handleImportJsonValidate);

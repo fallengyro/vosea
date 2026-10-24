@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="155">
+<meta name="vosea-build" content="156">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1030,7 +1030,6 @@
     <div class="toolbar-row">
       <button class="add-toggle" id="toggle-add-list" type="button" data-i18n="btn_create_list_toggle">+ Crear lista</button>
       <button class="seed-btn" id="open-library" type="button" data-i18n="btn_library">Biblioteca</button>
-      <button class="seed-btn" id="toggle-import-json" type="button" data-i18n="btn_import_json_toggle">Importar contenido (JSON)</button>
     </div>
 
     <form id="list-form" hidden>
@@ -1041,6 +1040,7 @@
           <input type="text" id="lf-name" required data-i18n-placeholder="placeholder_list_name" placeholder="ej. La cocina" />
         </div>
       </div>
+      <p class="list-form-alt"><span data-i18n="list_form_alt">¿Ya la tenés en un archivo?</span> <button type="button" class="list-form-import" id="list-form-import" data-i18n="list_form_import">Importar desde un archivo (JSON)</button></p>
       <div class="form-actions">
         <button type="submit" class="btn-primary" id="list-form-save" data-i18n="btn_create">Crear</button>
         <button type="button" class="btn-secondary" id="list-form-cancel" data-i18n="btn_cancel">Cancelar</button>
