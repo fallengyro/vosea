@@ -2876,3 +2876,10 @@
   .keep-toggle:disabled { cursor: default; border-style: solid; color: var(--accent-deep); }
   .keep-toggle[hidden] { display: none; }
   .share-actions .btn-secondary { margin: 8px 0 0; display: block; }
+
+  /* list extras (2026-10-23, commit 127) */
+  .detail-actions-footer .ld-practice { margin-right: auto; }
+  .ld-link-wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+  .ld-link-wrap[hidden] { display: none; }
+  .ld-link-wrap .ld-check { flex: 1 1 16em; }
+  #list-detail .detail-actions-footer { flex-wrap: wrap; }

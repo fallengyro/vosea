@@ -1105,6 +1105,22 @@
       gone_keep: "Quedarme con los {n}",
       gone_keep_1: "Quedármelo",
       gone_skip: "No, gracias",
+      btn_list_practice: "Practicar",
+      list_notice_added: "{owner} te agregó a «{name}» como {role}.",
+      list_notice_role: "Ahora sos {role} en «{name}».",
+      list_notice_owner: "Ahora sos el dueño de «{name}».",
+      list_notice_many: "Hay cambios en {n} listas compartidas con vos.",
+      list_toast_btn: "Ver",
+      ld_link_on: "Enlace activo: quien lo abra puede agregar la lista (como Lector)",
+      ld_link_on_msg: "Listo: el enlace funciona.",
+      ld_link_off_msg: "Listo: el enlace ya no sirve para entrar. Los que ya están siguen.",
+      btn_new_link: "Nuevo enlace",
+      confirm_new_link: "¿Hacer un enlace nuevo? El de ahora deja de funcionar; los que ya están en la lista siguen.",
+      ld_new_link_done: "Listo: hay un enlace nuevo. Tocá Compartir para mandarlo.",
+      share_link_off_note: "El enlace está apagado. Activalo en «Personas» para compartirla.",
+      backup_unit_shared: "lista compartida|listas compartidas",
+      backup_restored_shared: " Volviste a {n} listas compartidas (como Lector).",
+      backup_restored_shared_1: " Volviste a 1 lista compartida (como Lector).",
       list_version_differs: "La lista «{name}» tiene otra versión",
       btn_use_list_version: "Usar esa",
       lists_empty: "Todavía no creaste ninguna lista.",
@@ -2295,6 +2311,22 @@
       gone_keep: "Keep all {n}",
       gone_keep_1: "Keep it",
       gone_skip: "No, thanks",
+      btn_list_practice: "Practice",
+      list_notice_added: "{owner} added you to “{name}” as {role}.",
+      list_notice_role: "You're now {role} in “{name}”.",
+      list_notice_owner: "You're now the owner of “{name}”.",
+      list_notice_many: "{n} lists shared with you have changes.",
+      list_toast_btn: "View",
+      ld_link_on: "Link on: anyone who opens it can add the list (as a Reader)",
+      ld_link_on_msg: "Done: the link works.",
+      ld_link_off_msg: "Done: the link no longer lets anyone in. People already in stay.",
+      btn_new_link: "New link",
+      confirm_new_link: "Make a new link? The current one stops working; people already in the list stay.",
+      ld_new_link_done: "Done: there's a new link. Tap Share to send it.",
+      share_link_off_note: "The link is off. Turn it on under “People” to share the list.",
+      backup_unit_shared: "shared list|shared lists",
+      backup_restored_shared: " You're back in {n} shared lists (as a Reader).",
+      backup_restored_shared_1: " You're back in 1 shared list (as a Reader).",
       list_version_differs: "The list “{name}” has a different version",
       btn_use_list_version: "Use that one",
       lists_empty: "You haven't created any lists yet.",
@@ -2678,7 +2710,7 @@
   // "2 verbos, 15 palabras y 1 frase" — zeros left out, singular/plural.
   function backupCountsText(c) {
     c = c || {};
-    var parts = [["verbs", "backup_unit_verb"], ["words", "backup_unit_word"], ["phrases", "backup_unit_phrase"], ["lists", "backup_unit_list"], ["practice", "backup_unit_practice"]]
+    var parts = [["verbs", "backup_unit_verb"], ["words", "backup_unit_word"], ["phrases", "backup_unit_phrase"], ["lists", "backup_unit_list"], ["shared", "backup_unit_shared"], ["practice", "backup_unit_practice"]]
       .filter(function (x) { return (c[x[0]] || 0) > 0; })
       .map(function (x) { var n = c[x[0]]; var u = t(x[1]).split("|"); return progNum(n) + " " + (n === 1 ? u[0] : u[1]); });
     if (!parts.length) return t("backup_nothing");
@@ -2689,7 +2721,8 @@
   // contenido doesn't touch them, so its warning leaves them out).
   function currentContentCounts(withHistory) {
     var c = { verbs: ownVerbs.length, words: ownWords.length, phrases: ownPhrases.length,
-      lists: allLists.filter(function (l) { return l.data.role === "owner"; }).length };
+      lists: allLists.filter(function (l) { return l.data.role === "owner"; }).length,
+      shared: allLists.filter(function (l) { return l.data.role !== "owner"; }).length };
     if (withHistory) c.practice = practiceHistory.rows ? practiceAllRows().length : 0;
     return c;
   }
@@ -2823,7 +2856,7 @@
   function onBackupCreateClick() {
     if (!backupInfo || backupBusy) return;
     var c = currentContentCounts(true);
-    if (!(c.verbs + c.words + c.phrases + c.lists + c.practice)) { closeBackupPanel(); setBackupMsg(t("backup_err_empty"), true); return; }
+    if (!(c.verbs + c.words + c.phrases + c.lists + c.practice + (c.shared || 0))) { closeBackupPanel(); setBackupMsg(t("backup_err_empty"), true); return; }
     if (backupInfo.exists) openBackupPanel("backup"); else doBackupCreate();
   }
   function onBackupRestoreClick() {
@@ -2846,9 +2879,18 @@
       var picked = el.backupChoice.querySelector("input:checked");
       var prefer = backupConflictTotal() > 0 && picked ? picked.value : "active";
       runBackupOp(supabaseClient.rpc("vosea_restore_content", { p_prefer: prefer }), function (d) {
-        reloadAllContentAfterBackupOp();
-        setBackupMsg(t("backup_restored", { ins: d.inserted || 0, ovw: d.overwritten || 0, kept: d.kept || 0 }) +
-          (d.practice_added ? t("backup_restored_practice", { n: progNum(d.practice_added) }) : ""));
+        var msg = t("backup_restored", { ins: d.inserted || 0, ovw: d.overwritten || 0, kept: d.kept || 0 }) +
+          (d.practice_added ? t("backup_restored_practice", { n: progNum(d.practice_added) }) : "");
+        setBackupMsg(msg);
+        // Then the shared lists you were in and your marks on their items
+        // (commit 127; skipped quietly before that SQL has run).
+        Promise.resolve(supabaseClient.rpc("vosea_restore_lists", { p_prefer: prefer })).then(function (r2) {
+          var x = (r2 && !r2.error && r2.data) || {};
+          if (x.lists_joined) setBackupMsg(msg + t(x.lists_joined === 1 ? "backup_restored_shared_1" : "backup_restored_shared", { n: x.lists_joined }));
+        }, function () {}).then(function () {
+          reloadAllContentAfterBackupOp();
+          loadItemProgress();
+        });
       });
     }
   }
@@ -5338,6 +5380,13 @@
     shareCopyBtn: document.getElementById("share-copy-btn"),
     shareJoinNote: document.getElementById("share-join-note"),
     flashKeep: document.getElementById("flash-keep"),
+    ldPractice: document.getElementById("ld-practice"),
+    ldLinkWrap: document.getElementById("ld-link-wrap"),
+    ldLinkOn: document.getElementById("ld-link-on"),
+    ldNewLink: document.getElementById("ld-new-link"),
+    listToast: document.getElementById("list-toast"),
+    listToastText: document.getElementById("list-toast-text"),
+    listToastBtn: document.getElementById("list-toast-btn"),
 
     dAddToList: document.getElementById("d-add-to-list"),
     wdAddToList: document.getElementById("wd-add-to-list"),
@@ -5404,7 +5453,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "145";
+  var VOSEA_BUILD = "146";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -17802,6 +17851,7 @@
         shareEnabled: !!row.share_enabled,
         role: role,
         enabled: liveListsOk && mine ? mine.enabled !== false : true,
+        addedBy: (liveListsOk && mine && mine.added_by) || null, // who put you in it (list extras SQL)
         friendsCanSee: !!row.friends_can_see,
         appWide: !!row.app_wide,
         itemCount: 0
@@ -18227,21 +18277,62 @@
 
   // ---- lists that disappeared (unshared, deleted, or you were removed) ----
   function joinedKey() { return "vosea-joined-lists:" + (currentUser ? currentUser.id : ""); }
+  // Also says when someone else put you in a list, changed your role, or
+  // handed you a list (commit 127). The first run on a device only records
+  // what's there.
   function trackGoneLists() {
     if (!liveListsOk || !currentUser) return;
-    var prev = {};
-    try { prev = JSON.parse(localStorage.getItem(joinedKey()) || "{}") || {}; } catch (e) { prev = {}; }
-    var now = {};
+    var raw = null, prev = {};
+    try { raw = localStorage.getItem(joinedKey()); prev = JSON.parse(raw || "{}") || {}; } catch (e) { prev = {}; }
+    var now = {}, present = {}, notices = [];
+    var me = currentUser.id;
     allLists.forEach(function (l) {
+      present[l.id] = true;
+      var p = prev[l.id];
+      if (raw !== null) {
+        if (l.data.role === "owner") {
+          if (p && p.role && p.role !== "owner") notices.push({ list: l, kind: "owner" });
+        } else if (!p) {
+          if (l.data.addedBy && l.data.addedBy !== me) notices.push({ list: l, kind: "added" });
+        } else if (p.role && p.role !== l.data.role) {
+          notices.push({ list: l, kind: "role" });
+        }
+      }
       if (l.data.role === "owner") return;
-      now[l.id] = { name: l.data.name, items: (l.data.rawItems || []).map(function (it) { return { item_type: it.item_type, data: it.data }; }) };
+      now[l.id] = { name: l.data.name, role: l.data.role,
+        items: (l.data.rawItems || []).map(function (it) { return { item_type: it.item_type, data: it.data }; }) };
     });
     try { localStorage.setItem(joinedKey(), JSON.stringify(now)); } catch (e) {}
     Object.keys(prev).forEach(function (id) {
-      if (now[id] || leftListIds[id] || !prev[id]) return;
+      // still here (also: handed to you, so it's yours now), or you left it
+      if (now[id] || present[id] || leftListIds[id] || !prev[id]) return;
       goneQueue.push(prev[id]);
     });
+    if (notices.length) showListNotices(notices);
     if (goneQueue.length && el.goneOverlay && el.goneOverlay.hidden) showNextGone();
+  }
+  var listToastTimer = 0, listToastTarget = null;
+  function showListNotices(notices) {
+    var n = notices[0], l = n.list, msg;
+    if (notices.length > 1) {
+      msg = t("list_notice_many", { n: notices.length });
+      listToastTarget = null;
+    } else {
+      msg = n.kind === "owner" ? t("list_notice_owner", { name: l.data.name })
+        : n.kind === "role" ? t("list_notice_role", { name: l.data.name, role: listRoleLabel(l.data.role) })
+        : t("list_notice_added", { owner: l.data.ownerLabel || "?", name: l.data.name, role: listRoleLabel(l.data.role) });
+      listToastTarget = l.id;
+    }
+    el.listToastText.textContent = msg;
+    el.listToast.hidden = false;
+    clearTimeout(listToastTimer);
+    listToastTimer = setTimeout(function () { el.listToast.hidden = true; }, 9000);
+  }
+  function listToastOpen() {
+    el.listToast.hidden = true;
+    var id = listToastTarget;
+    setMainTab("lists");
+    if (id) loadLists().then(function () { selectListRow(id); });
   }
   var goneCurrent = null;
   function showNextGone() {
@@ -18344,6 +18435,8 @@
     el.ldFriendsSee.checked = !!l.data.friendsCanSee;
     el.ldAppWideWrap.hidden = !(l.data.role === "owner" && usageRole && usageRole.can_view_usage);
     el.ldAppWide.checked = !!l.data.appWide;
+    el.ldLinkOn.checked = !!l.data.shareEnabled;
+    el.ldLinkWrap.hidden = l.data.role !== "owner";
     if (!liveListsOk) return;
     var listId = l.id;
     Promise.all([
@@ -18498,6 +18591,55 @@
       if (res.error) { msgEl.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
       closeFn();
       loadLists().then(function () { setMainTab("lists"); selectListRow(li.listId); });
+    });
+  }
+
+  // ---- practicing one list (commit 127) ----
+  // Every item in the list, in the mode last used (Leer / Escuchar /
+  // Hablar). Items you have use your own copy; an item of a list that's off
+  // is practiced from the list's version.
+  function cardsForListRows(rows) {
+    var idx = progContentIndex();
+    var dir = progModeDirection();
+    var cards = [];
+    (rows || []).forEach(function (it) {
+      var kind = it.item_type;
+      if (kind !== "verb" && kind !== "word" && kind !== "phrase") return;
+      var entry = (idx[kind] || {})[practiceNorm(kindText(kind, it.data))];
+      var data = entry ? entry.data : snapshotToData(kind, it.data);
+      if (!entry) applyProgress(kind, data);
+      if (kind === "verb") Array.prototype.push.apply(cards, verbCards(data, setupVerbWant));
+      else if (kind === "word") cards.push(wordCard(data, dir));
+      else cards.push(phraseCard(data, dir));
+    });
+    return progModeCards(cards);
+  }
+  function practiceList() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    if (!l) return;
+    startPracticeDeck(cardsForListRows(l.data.rawItems));
+  }
+
+  // ---- the share link: on/off and a new one (commit 127) ----
+  function handleLinkOnChange() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    if (!l) return;
+    var on = el.ldLinkOn.checked;
+    supabaseClient.from("lists").update({ share_enabled: on }).eq("id", l.id).then(function (res) {
+      if (res.error) { el.ldLinkOn.checked = !on; el.ldPeopleMsg.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
+      l.data.shareEnabled = on;
+      if (!on) el.ldShareRow.hidden = true;
+      el.ldPeopleMsg.textContent = t(on ? "ld_link_on_msg" : "ld_link_off_msg");
+    });
+  }
+  function handleNewLink() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    if (!l || !window.confirm(t("confirm_new_link"))) return;
+    supabaseClient.rpc("list_new_token", { p_list: l.id }).then(function (res) {
+      if (res.error || !res.data) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+      l.data.shareToken = res.data;
+      el.ldPeopleMsg.textContent = t("ld_new_link_done");
+      if (!el.ldShareRow.hidden) el.ldShareLink.value = location.origin + location.pathname + "?share=" + res.data;
     });
   }
 
@@ -18754,20 +18896,29 @@
   // is used for the rest of the session.
   function liveListsMissing(err) {
     var m = String((err && (err.message || "") + " " + (err.details || "") + " " + (err.hint || "")) || "");
-    return /list_members|edited_by_name|edited_at|relationship/i.test(m) || (err && (err.code === "PGRST200" || err.code === "42703"));
+    return /list_members|edited_by_name|edited_at|added_by|relationship/i.test(m) || (err && (err.code === "PGRST200" || err.code === "42703"));
   }
+  // Newest first; each step down is for a database where the next SQL file
+  // hasn't run yet (live lists: 2026-10-23; list extras with added_by: 127).
+  var LISTS_SELECT = [
+    "*, list_items(id, item_type, data)",
+    "*, list_items(id, item_type, data, edited_by_name, edited_at), list_members(user_id, role, enabled)",
+    "*, list_items(id, item_type, data, edited_by_name, edited_at), list_members(user_id, role, enabled, added_by)"
+  ];
+  var listsQueryLevel = LISTS_SELECT.length - 1;
   function listsQuery() {
     return supabaseClient
       .from("lists")
-      .select(liveListsOk ? "*, list_items(id, item_type, data, edited_by_name, edited_at), list_members(user_id, role, enabled)" : "*, list_items(id, item_type, data)")
+      .select(LISTS_SELECT[listsQueryLevel])
       .order("created_at", { ascending: false });
   }
   function loadLists() {
     return Promise.resolve(listsQuery())
-      .then(function (res) {
-        if (res.error && liveListsOk && liveListsMissing(res.error)) {
-          liveListsOk = false;
-          return listsQuery();
+      .then(function retry(res) {
+        if (res.error && listsQueryLevel > 0 && liveListsMissing(res.error)) {
+          listsQueryLevel--;
+          liveListsOk = listsQueryLevel > 0;
+          return Promise.resolve(listsQuery()).then(retry);
         }
         return res;
       })
@@ -19035,6 +19186,7 @@
       verbRows.forEach(function (row) { el.ldVerbsItems.appendChild(listItemRow(row, entry)); });
       wordRows.forEach(function (row) { el.ldWordsItems.appendChild(listItemRow(row, entry)); });
       phraseRows.forEach(function (row) { el.ldPhrasesItems.appendChild(listItemRow(row, entry)); });
+      el.ldPractice.hidden = rows.length === 0;
       var keepable = rows.some(function (r) { return !ownHas(r.item_type, r.data); });
       el.ldSelectBtn.hidden = !keepable && !listSelectMode;
     });
@@ -19088,6 +19240,12 @@
     if (!selectedListId) return;
     var entry = allLists.find(function (l) { return l.id === selectedListId; });
     if (!entry) return;
+    if (!entry.data.shareEnabled) {
+      // The link is off (commit 127): say so instead of handing out a dead link.
+      el.ldShareRow.hidden = true;
+      el.ldShareMsg.textContent = t("share_link_off_note");
+      return;
+    }
     var link = location.origin + location.pathname + "?share=" + entry.data.shareToken;
     el.ldShareLink.value = link;
     el.ldShareRow.hidden = false;
@@ -20168,7 +20326,7 @@
       allVerbs = [];
       ownVerbs = []; ownWords = []; ownPhrases = [];
       borrowedCache = {}; borrowedSrc = {}; itemProgress = {};
-      liveListsOk = true; itemProgressOk = true;
+      liveListsOk = true; itemProgressOk = true; listsQueryLevel = LISTS_SELECT.length - 1;
       goneQueue = []; leftListIds = {};
       formOrigin = { verb: null, word: null, phrase: null };
       selectedId = null;
@@ -20747,6 +20905,10 @@
   el.goneKeep.addEventListener("click", goneKeepClick);
   el.goneSkip.addEventListener("click", showNextGone);
   el.flashKeep.addEventListener("click", flashKeepClick);
+  el.ldPractice.addEventListener("click", practiceList);
+  el.ldLinkOn.addEventListener("change", handleLinkOnChange);
+  el.ldNewLink.addEventListener("click", handleNewLink);
+  el.listToastBtn.addEventListener("click", listToastOpen);
 
   el.listPickerClose.addEventListener("click", closeListPicker);
   el.listPickerCreateBtn.addEventListener("click", handleListPickerCreate);

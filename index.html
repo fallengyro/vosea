@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="145">
+<meta name="vosea-build" content="146">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1118,12 +1118,17 @@
           <p class="flash-setup-note" id="ld-invite-none" hidden data-i18n="ld_invite_none">Agregá amigos en Jugar → Amigos para compartirles la lista.</p>
         </div>
         <div class="ld-visibility" id="ld-visibility" hidden>
+          <div class="ld-link-wrap" id="ld-link-wrap">
+            <label class="ld-check"><input type="checkbox" id="ld-link-on" /> <span data-i18n="ld_link_on">Enlace activo: quien lo abra puede agregar la lista (como Lector)</span></label>
+            <button type="button" class="icon-btn" id="ld-new-link" data-i18n="btn_new_link">Nuevo enlace</button>
+          </div>
           <label class="ld-check"><input type="checkbox" id="ld-friends-see" /> <span data-i18n="ld_friends_see">Visible para tus amigos (en su Biblioteca)</span></label>
           <label class="ld-check" id="ld-app-wide-wrap" hidden><input type="checkbox" id="ld-app-wide" /> <span data-i18n="ld_app_wide">En la Biblioteca de todos</span></label>
         </div>
         <p class="form-msg" id="ld-people-msg"></p>
       </div>
       <div class="detail-actions-footer">
+        <button class="btn-primary ld-practice" id="ld-practice" type="button" data-i18n="btn_list_practice">Practicar</button>
         <button class="icon-btn" id="ld-select-btn" type="button" data-i18n="btn_list_select">Elegir</button>
         <button class="icon-btn" id="ld-share-btn" type="button" data-i18n="btn_share">Compartir</button>
         <button class="icon-btn" id="ld-rename" type="button" data-i18n="btn_list_rename">Renombrar</button>
@@ -1557,6 +1562,11 @@
       <button type="button" class="btn-primary" id="welcome-next"></button>
     </div>
   </div>
+</div>
+
+<div class="quiet-toast" id="list-toast" role="status" aria-live="polite" hidden>
+  <span id="list-toast-text"></span>
+  <button type="button" class="quiet-toast-btn" id="list-toast-btn" data-i18n="list_toast_btn">Ver</button>
 </div>
 
 <div class="quiet-toast" id="pack-toast" role="status" aria-live="polite" hidden>

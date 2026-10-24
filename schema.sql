@@ -2932,3 +2932,140 @@ begin
   return jsonb_build_object('verbs', nv, 'words', nw, 'phrases', np, 'lists', nl);
 end;
 $$;
+
+-- ===========================================================================
+-- 2026-10-23 — list extras (commit 127)
+-- ===========================================================================
+-- Follow-ups to live lists (mason: "implement all of the small build
+-- suggestions"). Run after pending_2026-10-23_live_lists.sql.
+--   1. list_members.added_by: who put you in a list (you, when you join by
+--      link or from the Biblioteca; the owner, when they add you). The app
+--      uses it to say "Laura te agregó a «Cocina»". It fills itself in from
+--      whoever is signed in, so no function had to change. Existing rows
+--      stay empty (no notice for them).
+--   2. list_new_token(): the owner gives a list a new share link; the old
+--      link stops working. People already in the list stay in.
+--      (Turning the link off and on is plain lists.share_enabled, which the
+--      owner could already change.)
+--   3. Backups also keep the shared lists you're in and your Sabido marks
+--      on their items (item_progress). vosea_restore_lists() brings them
+--      back after a restore. A backup is the person's own data, so it
+--      can't grant a role: a list comes back with you as Lector, and only
+--      if its link still works or it's in your Biblioteca. An owner can
+--      make you Editor again.
+-- Safe to run twice.
+-- ===========================================================================
+
+-- 1. who added you ------------------------------------------------------------
+alter table public.list_members add column if not exists added_by uuid default auth.uid()
+  references auth.users(id) on delete set null;
+
+-- 2. a new share link -----------------------------------------------------------
+create or replace function public.list_new_token(p_list uuid)
+returns text language plpgsql security definer set search_path = public as $$
+declare tok text;
+begin
+  if public.vosea_list_role(p_list) is distinct from 'owner' then return null; end if;
+  loop
+    tok := encode(gen_random_bytes(16), 'hex');
+    exit when not exists (select 1 from public.lists where share_token = tok);
+  end loop;
+  update public.lists set share_token = tok where id = p_list;
+  return tok;
+end $$;
+revoke execute on function public.list_new_token(uuid) from public, anon;
+grant execute on function public.list_new_token(uuid) to authenticated;
+
+-- 3. backups -----------------------------------------------------------------------
+create or replace function public.vosea_backup_content()
+returns jsonb
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  v jsonb; w jsonb; p jsonb; l jsonb; c jsonb; pr jsonb; rw jsonb; gr jsonb; ms jsonb; ip jsonb;
+begin
+  if uid is null then raise exception 'not_signed_in'; end if;
+  select coalesce(jsonb_agg(to_jsonb(x) - 'id' - 'user_id' - 'created_at' order by x.created_at), '[]') into v from public.verbs x where x.user_id = uid;
+  select coalesce(jsonb_agg(to_jsonb(x) - 'id' - 'user_id' - 'created_at' order by x.created_at), '[]') into w from public.words x where x.user_id = uid;
+  select coalesce(jsonb_agg(to_jsonb(x) - 'id' - 'user_id' - 'created_at' order by x.created_at), '[]') into p from public.phrases x where x.user_id = uid;
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'name', x.name, 'owner_label', x.owner_label, 'share_token', x.share_token, 'share_enabled', x.share_enabled,
+      'items', coalesce((select jsonb_agg(jsonb_build_object('item_type', i.item_type, 'data', i.data) order by i.created_at)
+                         from public.list_items i where i.list_id = x.id), '[]'))
+      order by x.created_at), '[]') into l from public.lists x where x.user_id = uid;
+  -- progress (2026-10-10): the practice history, the album rewards and the
+  -- game records, with their ids so a restore never duplicates a row
+  select coalesce(jsonb_agg(to_jsonb(x) - 'user_id' order by x.shown_at), '[]') into pr from public.practice_log x where x.user_id = uid;
+  select coalesce(jsonb_agg(to_jsonb(x) - 'user_id' order by x.earned_at), '[]') into rw from public.rewards x where x.user_id = uid;
+  select coalesce(jsonb_agg(to_jsonb(x) - 'user_id' order by x.started_at), '[]') into gr from public.game_records x where x.user_id = uid;
+  -- live lists (2026-10-23): the lists shared with you, and your Sabido marks
+  -- on items you have through them
+  select coalesce(jsonb_agg(jsonb_build_object('list_id', m.list_id, 'name', x.name, 'share_token', x.share_token,
+      'role', m.role, 'enabled', m.enabled) order by m.added_at), '[]') into ms
+    from public.list_members m join public.lists x on x.id = m.list_id
+    where m.user_id = uid and m.role <> 'owner' and x.user_id <> uid;
+  select coalesce(jsonb_agg(to_jsonb(x) - 'user_id' order by x.updated_at), '[]') into ip from public.item_progress x where x.user_id = uid;
+  c := jsonb_build_object('verbs', jsonb_array_length(v), 'words', jsonb_array_length(w),
+                          'phrases', jsonb_array_length(p), 'lists', jsonb_array_length(l),
+                          'practice', jsonb_array_length(pr), 'rewards', jsonb_array_length(rw), 'records', jsonb_array_length(gr),
+                          'shared', jsonb_array_length(ms), 'progress', jsonb_array_length(ip));
+  -- Never replace a backup with an empty one (e.g. backing up right after
+  -- deleting everything would otherwise wipe out the only copy).
+  if (c->>'verbs')::int + (c->>'words')::int + (c->>'phrases')::int + (c->>'lists')::int + (c->>'practice')::int
+     + (c->>'shared')::int = 0 then
+    raise exception 'nothing_to_backup';
+  end if;
+  insert into public.content_backups (user_id, data, counts, created_at)
+  values (uid, jsonb_build_object('version', 3, 'verbs', v, 'words', w, 'phrases', p, 'lists', l, 'practice', pr, 'rewards', rw,
+                                  'records', gr, 'memberships', ms, 'item_progress', ip), c, now())
+  on conflict (user_id) do update set data = excluded.data, counts = excluded.counts, created_at = excluded.created_at;
+  return c || jsonb_build_object('created_at', now());
+end;
+$$;
+
+-- After vosea_restore_content(): the shared lists you were in, and your
+-- Sabido marks on their items. p_prefer as in vosea_restore_content():
+-- 'backup' replaces marks you have now, 'active' keeps them.
+-- Result: { lists_joined, progress_added }.
+create or replace function public.vosea_restore_lists(p_prefer text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  b record; r jsonb; l public.lists;
+  nj int := 0; np int := 0; n int;
+begin
+  if uid is null then raise exception 'not_signed_in'; end if;
+  select * into b from public.content_backups where user_id = uid;
+  if not found then return jsonb_build_object('lists_joined', 0, 'progress_added', 0); end if;
+  for r in select * from jsonb_array_elements(coalesce(b.data->'memberships', '[]'::jsonb)) loop
+    begin
+      select * into l from public.lists where id = (r->>'list_id')::uuid;
+      if not found or l.user_id = uid then continue; end if;
+      if exists (select 1 from public.list_members m where m.list_id = l.id and m.user_id = uid) then continue; end if;
+      if not ((l.share_enabled and l.share_token = r->>'share_token') or public.vosea_list_visible(l.id)) then continue; end if;
+      insert into public.list_members (list_id, user_id, role, enabled, added_by)
+      values (l.id, uid, 'reader', coalesce((r->>'enabled')::boolean, true), uid);
+      nj := nj + 1;
+    exception when others then null; -- a malformed entry is skipped
+    end;
+  end loop;
+  for r in select * from jsonb_array_elements(coalesce(b.data->'item_progress', '[]'::jsonb)) loop
+    begin
+      insert into public.item_progress (user_id, item_kind, item_key, known, known_forms, updated_at)
+      values (uid, r->>'item_kind', r->>'item_key', coalesce((r->>'known')::boolean, false),
+              coalesce(r->'known_forms', '{}'::jsonb), coalesce((r->>'updated_at')::timestamptz, now()))
+      on conflict (user_id, item_kind, item_key) do update
+        set known = excluded.known, known_forms = excluded.known_forms, updated_at = excluded.updated_at
+        where p_prefer = 'backup';
+      get diagnostics n = row_count;
+      np := np + n;
+    exception when others then null;
+    end;
+  end loop;
+  return jsonb_build_object('lists_joined', nj, 'progress_added', np);
+end $$;
+revoke execute on function public.vosea_restore_lists(text) from public, anon;
+grant execute on function public.vosea_restore_lists(text) to authenticated;
