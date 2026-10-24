@@ -1349,6 +1349,7 @@
       import_spec_summary: "Ver / copiar la especificación del formato",
       btn_copy_spec: "Copiar especificación",
       import_json_file_label: "Elegir archivo .json",
+      import_json_no_file: "Ningún archivo elegido",
       import_json_textarea_label: "O pegá el JSON acá",
       import_json_placeholder: "Pegá acá el JSON con tus verbos y palabras…",
       btn_validate_import: "Validar",
@@ -2622,6 +2623,7 @@
       import_spec_summary: "View / copy the format specification",
       btn_copy_spec: "Copy specification",
       import_json_file_label: "Choose a .json file",
+      import_json_no_file: "No file chosen",
       import_json_textarea_label: "Or paste the JSON here",
       import_json_placeholder: "Paste the JSON with your verbs and words here…",
       btn_validate_import: "Validate",
@@ -5609,7 +5611,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "150";
+  var VOSEA_BUILD = "151";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -20355,6 +20357,7 @@
 
   function resetImportJsonModal() {
     el.importJsonFile.value = "";
+    importFileName("");
     el.importJsonTextarea.value = "";
     el.importJsonParseMsg.textContent = "";
     el.importJsonPreview.hidden = true;
@@ -20423,8 +20426,17 @@
     try { return document.execCommand("copy"); } catch (e) { return false; }
   }
 
+  // The chosen file's name next to the button (2026-10-24: the browser's own
+  // file control looked out of place, so it's hidden behind a styled label).
+  function importFileName(name) {
+    var n = document.getElementById("import-json-file-name");
+    if (!n) return;
+    n.textContent = name || t("import_json_no_file");
+    n.classList.toggle("has-file", !!name);
+  }
   function handleImportJsonFile() {
     var file = el.importJsonFile.files && el.importJsonFile.files[0];
+    importFileName(file ? file.name : "");
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function () {

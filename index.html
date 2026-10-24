@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="150">
+<meta name="vosea-build" content="151">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1371,9 +1371,10 @@
       </div>
     </details>
 
-    <div class="field">
-      <label for="import-json-file" data-i18n="import_json_file_label">Elegir archivo .json</label>
-      <input type="file" id="import-json-file" accept=".json,application/json" />
+    <div class="field import-file-field">
+      <input type="file" id="import-json-file" class="import-file-input" accept=".json,application/json" />
+      <label for="import-json-file" class="btn-secondary import-file-btn" data-i18n="import_json_file_label">Elegir archivo .json</label>
+      <span class="import-file-name" id="import-json-file-name" data-i18n="import_json_no_file">Ningún archivo elegido</span>
     </div>
     <div class="field">
       <label for="import-json-textarea" data-i18n="import_json_textarea_label">O pegá el JSON acá</label>

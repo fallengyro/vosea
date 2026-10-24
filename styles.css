@@ -2928,3 +2928,12 @@
 /* Import: Solo en la lista (2026-10-24, commit 132) */
 .import-list-only { margin: 12px 0 4px; }
 .import-list-only input { margin-top: 3px; accent-color: var(--accent); }
+
+/* Import: a styled file button instead of the browser's own control (2026-10-24, commit 133) */
+.import-file-field { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 8px 12px; position: relative; margin-bottom: 18px; }
+.import-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+.field label.import-file-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; text-transform: none; letter-spacing: 0; color: var(--ink); font-weight: 600; cursor: pointer; }
+.import-file-btn:hover { border-color: var(--accent); }
+.import-file-input:focus-visible + .import-file-btn { outline: 2px solid var(--accent); outline-offset: 2px; }
+.import-file-name { font-size: 13px; color: var(--ink-soft); font-style: italic; min-width: 0; overflow-wrap: anywhere; }
+.import-file-name.has-file { font-style: normal; color: var(--ink); }
