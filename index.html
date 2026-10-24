@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="149">
+<meta name="vosea-build" content="150">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1403,6 +1403,8 @@
         <ul class="card-list" id="import-json-preview-list"></ul>
       </div>
     </div>
+
+    <label class="backup-choice-opt import-list-only" id="import-list-only-wrap" hidden><input type="checkbox" id="import-list-only" /> <span><strong data-i18n="import_list_only">Solo en la lista</strong> <span class="backup-choice-sub" data-i18n="import_list_only_sub">no se agrega a tu colección; lo ves mientras la lista esté encendida</span></span></label>
 
     <p class="form-msg" id="import-json-result-msg"></p>
 

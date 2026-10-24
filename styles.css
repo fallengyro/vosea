@@ -2924,3 +2924,7 @@
 .push-msg { margin-top: 8px; }
 .push-msg:empty { display: none; }
 .push-msg.is-warn { color: var(--danger); }
+
+/* Import: Solo en la lista (2026-10-24, commit 132) */
+.import-list-only { margin: 12px 0 4px; }
+.import-list-only input { margin-top: 3px; accent-color: var(--accent); }

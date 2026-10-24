@@ -1384,6 +1384,9 @@
       import_json_result_summary: "Se importaron {vIns} verbo(s), {wIns} palabra(s) y {pIns} frase(s) nueva(s); se omitieron {vSkip} verbo(s), {wSkip} palabra(s) y {pSkip} frase(s) que ya tenías.",
       import_json_result_list_created: " Se creó la lista “{name}”.",
       import_json_result_list_added: " Se agregaron a la lista “{name}”: {added} ítem(s) ({already} ya estaban).",
+      import_json_result_list_only: "Lista “{name}”: se agregaron {added} ítem(s) ({already} ya estaban). Tu colección no cambió.",
+      import_list_only: "Solo en la lista",
+      import_list_only_sub: "no se agrega a tu colección; lo ves mientras la lista esté encendida",
       import_json_result_list_error: " No se pudo procesar la lista: {msg}"
     },
     en: {
@@ -2654,6 +2657,9 @@
       import_json_result_summary: "Imported {vIns} new verb(s), {wIns} new word(s), and {pIns} new phrase(s); skipped {vSkip} verb(s), {wSkip} word(s), and {pSkip} phrase(s) you already had.",
       import_json_result_list_created: " Created the list “{name}.”",
       import_json_result_list_added: " Added to the list “{name}”: {added} item(s) ({already} already there).",
+      import_json_result_list_only: "List “{name}”: {added} item(s) added ({already} already there). Your collection didn't change.",
+      import_list_only: "Only in the list",
+      import_list_only_sub: "not added to your collection; you see it while the list is on",
       import_json_result_list_error: " Couldn't process the list: {msg}"
     }
   };
@@ -5603,7 +5609,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "149";
+  var VOSEA_BUILD = "150";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -20363,6 +20369,10 @@
     el.importJsonConfirmBtn.hidden = true;
     el.importJsonConfirmBtn.disabled = true;
     el.importSpecCopyMsg.textContent = "";
+    var lo = document.getElementById("import-list-only");
+    if (lo) lo.checked = false;
+    var loWrap = document.getElementById("import-list-only-wrap");
+    if (loWrap) loWrap.hidden = true;
     importParsed = null;
   }
 
@@ -20759,6 +20769,8 @@
 
     if (errors.length === 0) {
       importParsed = { verbs: verbsToImport, words: wordsToImport, phrases: phrasesToImport, listName: listName };
+      var loWrap = document.getElementById("import-list-only-wrap");
+      if (loWrap) loWrap.hidden = !listName;
       el.importJsonConfirmBtn.hidden = false;
       el.importJsonConfirmBtn.disabled = false;
     }
@@ -20816,6 +20828,8 @@
     if (!importParsed || !currentUser) return;
     el.importJsonConfirmBtn.disabled = true;
     el.importJsonResultMsg.textContent = t("msg_importando");
+    var lo = document.getElementById("import-list-only");
+    importParsed.listOnly = !!(lo && lo.checked && importParsed.listName);
     runImport(importParsed, function (msg) { el.importJsonResultMsg.textContent = msg; }).then(function (r) {
       if (!r.ok) el.importJsonConfirmBtn.disabled = false;
     });
@@ -20825,6 +20839,7 @@
   // (2026-10-12: split out of handleImportJsonConfirm so the starter pack
   // can use it too). say(msg) shows the final message; resolves { ok, msg }.
   function runImport(ip, say) {
+    if (ip.listOnly && ip.listName) return runImportListOnly(ip, say);
 
     // Fetch the account's CURRENT verbs/words fresh (rather than trusting
     // whatever allVerbs/allWords happen to hold in memory) so the
@@ -20949,6 +20964,47 @@
             return { ok: true, msg: msg };
           });
         });
+      });
+    }).catch(function (e) {
+      say(t("msg_error_importar", { msg: (e && e.message) || String(e) }));
+      return { ok: false };
+    });
+  }
+
+  // "Solo en la lista" (2026-10-24, commit 132): mason wanted lists for the
+  // Biblioteca without putting their content in his own collection. The
+  // items go only into the list (list_items snapshots, shaped the way the
+  // app reads them back); while the list is on they show in Colección as
+  // list items (borrowedFor() covers your own lists too), and turning it
+  // off hides them. Nothing is written to verbs / words / phrases.
+  function runImportListOnly(ip, say) {
+    var verbs = ip.verbs.map(function (v) { return snapshotToData("verb", v); });
+    var words = ip.words.map(function (w) { return snapshotToData("word", w); });
+    var phrases = ip.phrases.map(function (p) { return snapshotToData("phrase", p); });
+    return findOrCreateListByName(ip.listName).then(function (listResult) {
+      if (listResult.error) {
+        var m0 = t("msg_error_importar", { msg: listResult.error.message });
+        say(m0);
+        return { ok: false, msg: m0 };
+      }
+      return Promise.all([
+        addImportSnapshotsToList(listResult.id, "verb", verbs),
+        addImportSnapshotsToList(listResult.id, "word", words),
+        addImportSnapshotsToList(listResult.id, "phrase", phrases)
+      ]).then(function (r) {
+        var err = r[0].error || r[1].error || r[2].error;
+        if (err) {
+          var m1 = t("msg_error_importar", { msg: err.message });
+          say(m1);
+          loadLists();
+          return { ok: false, msg: m1 };
+        }
+        var added = r[0].added + r[1].added + r[2].added, already = r[0].already + r[1].already + r[2].already;
+        var msg = t("import_json_result_list_only", { name: ip.listName, added: added, already: already })
+          + (listResult.created ? t("import_json_result_list_created", { name: ip.listName }) : "");
+        say(msg);
+        loadLists();
+        return { ok: true, msg: msg };
       });
     }).catch(function (e) {
       say(t("msg_error_importar", { msg: (e && e.message) || String(e) }));
