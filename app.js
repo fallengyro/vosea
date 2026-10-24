@@ -1084,6 +1084,8 @@
       library_by: "de {name}",
       library_app: "para todos",
       library_section_app: "Para todos",
+      library_mine: "publicada por vos",
+      library_yours: "Es tuya",
       library_section_friends: "De tus amigos",
       btn_library_add: "Agregar",
       library_added: "✓ Agregada",
@@ -2358,6 +2360,8 @@
       library_by: "by {name}",
       library_app: "for everyone",
       library_section_app: "For everyone",
+      library_mine: "published by you",
+      library_yours: "It's yours",
       library_section_friends: "From your friends",
       btn_library_add: "Add",
       library_added: "✓ Added",
@@ -5611,7 +5615,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "151";
+  var VOSEA_BUILD = "153";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -19358,6 +19362,23 @@
     supabaseClient.rpc("library_lists").then(function (res) {
       if (res.error) { el.libraryMsg.textContent = t("library_unavailable"); return; }
       var rows = res.data || [];
+      // Your own published lists (2026-10-24, commits 134–135): library_lists()
+      // leaves them out (you can't join your own list), so publishing looked
+      // like it did nothing. mason: "published just means it goes to the
+      // library", with an acknowledgment for the publisher. So they're merged
+      // into the same sections, marked "publicada por vos" / "Es tuya".
+      allLists.forEach(function (l) {
+        var lv = l.data.role === "owner" ? publishLevel(l) : "none";
+        if (lv === "none" || rows.some(function (r) { return r.list_id === l.id; })) return;
+        var c = { verb: 0, word: 0, phrase: 0 };
+        (l.data.rawItems || []).forEach(function (it) { if (c[it.item_type] !== undefined) c[it.item_type]++; });
+        rows.push({ list_id: l.id, name: l.data.name, source: lv === "all" ? "app" : "friend", mine: true,
+          n_verbs: c.verb, n_words: c.word, n_phrases: c.phrase, joined: true });
+      });
+      rows.sort(function (a, b) {
+        if (a.source !== b.source) return a.source === "app" ? -1 : 1;
+        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+      });
       el.libraryMsg.textContent = rows.length ? "" : t("library_empty");
       var lastSource = null;
       rows.forEach(function (r) {
@@ -19384,12 +19405,12 @@
     meta.className = "def";
     var n = (r.n_verbs || 0) + (r.n_words || 0) + (r.n_phrases || 0);
     meta.textContent = listMetaText(n, r.n_verbs || 0, r.n_words || 0, r.n_phrases || 0) + " · " +
-      (r.source === "app" ? t("library_app") : t("library_by", { name: r.owner_name }));
+      (r.mine ? t("library_mine") : r.source === "app" ? t("library_app") : t("library_by", { name: r.owner_name }));
     row.appendChild(meta);
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "icon-btn";
-    btn.textContent = r.joined ? t("library_have") : t("btn_library_add");
+    btn.textContent = r.mine ? t("library_yours") : r.joined ? t("library_have") : t("btn_library_add");
     btn.disabled = !!r.joined;
     btn.addEventListener("click", function () {
       btn.disabled = true;
