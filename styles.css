@@ -2783,3 +2783,96 @@
 .boot-dots i:nth-child(3) { animation-delay: .36s; }
 @keyframes boot-dot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
 @media (prefers-reduced-motion: reduce) { .boot-dots i { animation: none; opacity: .6; } .boot-screen, .boot-mark, .boot-tag { transition: none; } }
+
+  /* ---------------------------------------------------------------------
+     Listas vivas (2026-10-23, commit 126): items you have through a list,
+     the on/off switch on each list, the people in a list, the Biblioteca.
+     --------------------------------------------------------------------- */
+  /* the list an item comes from, on its row (a quiet dashed tag) */
+  .badge.borrowed {
+    background: transparent; color: var(--ink-soft); border: 1px dashed var(--line);
+    max-width: 10em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-transform: none; letter-spacing: 0; font-weight: 500;
+  }
+  .badge.list-role { background: var(--paper-sunken); color: var(--ink-soft); border: 1px solid var(--line); }
+  .borrowed-note {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px;
+    font-size: 13px; color: var(--ink-soft);
+    background: var(--paper-sunken); border: 1px dashed var(--line); border-radius: 8px;
+    padding: 6px 10px; margin: 8px 0 4px;
+  }
+  .borrowed-note[hidden] { display: none; }
+  .borrowed-note .icon-btn { margin-left: auto; }
+
+  /* on/off switch: is this list's content in your collection? */
+  .list-onoff {
+    flex-shrink: 0; align-self: center; position: relative;
+    width: 38px; height: 22px; padding: 0; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--paper-sunken); cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .list-onoff .knob {
+    position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--ink-soft); transition: transform 0.15s, background 0.15s;
+  }
+  .list-onoff.is-on { background: var(--accent); border-color: var(--accent); }
+  .list-onoff.is-on .knob { transform: translateX(16px); background: var(--paper); }
+  .list-onoff:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .list-onoff, .list-onoff .knob { transition: none; } }
+  .list-row { gap: 10px; }
+  .list-row.is-off .inf, .list-row.is-off .def { opacity: 0.55; }
+  .lists-section-head {
+    list-style: none; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-soft); padding: 14px 4px 6px;
+  }
+  .lists-section-head:first-child { padding-top: 2px; }
+
+  /* the open list */
+  .ld-role { font-size: 13px; color: var(--ink-soft); margin: -6px 0 6px; }
+  .ld-onoff { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 13px; color: var(--ink-soft); }
+  .ld-onoff[hidden] { display: none; }
+  .list-item-row { flex-wrap: wrap; }
+  .list-item-row .li-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .list-item-mine { font-size: 12px; color: var(--ink-soft); font-style: italic; }
+  .list-item-check { width: 18px; height: 18px; margin: 0 4px 0 0; accent-color: var(--accent); flex-shrink: 0; }
+  .ld-select-bar {
+    position: sticky; bottom: 8px; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--paper-raised); border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 10px; margin: 10px 0;
+  }
+  .ld-select-bar[hidden] { display: none; }
+  .ld-people { list-style: none; margin: 0 0 8px; padding: 0; }
+  .ld-person, .ld-person-more { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; padding: 7px 2px; border-top: 1px solid var(--line); font-size: 14px; }
+  .ld-person:first-child { border-top: none; }
+  .ld-person-more { color: var(--ink-soft); font-size: 13px; }
+  .ld-person-name { flex: 1 1 8em; min-width: 0; }
+  .ld-person-role, .ld-invite select {
+    font-family: inherit; font-size: 14px; color: var(--ink);
+    background: var(--paper-sunken); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px;
+  }
+  .ld-invite { margin: 8px 0; }
+  .ld-invite-label { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 6px; }
+  .ld-invite-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ld-invite-row[hidden] { display: none; }
+  .ld-invite-row #ld-invite-friend { flex: 1 1 10em; min-width: 0; }
+  .ld-visibility { margin: 10px 0 4px; }
+  .ld-check { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 6px 0; cursor: pointer; }
+  .ld-check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+  /* Biblioteca */
+  .library-list { max-height: 55vh; overflow-y: auto; }
+  .library-row { flex-wrap: wrap; }
+  .library-row .icon-btn { margin-left: auto; }
+
+  /* Quedármela under a flashcard (same pill as Sabido, no check) */
+  .keep-toggle {
+    background: var(--paper-sunken); border: 1px dashed var(--line); border-radius: 20px;
+    font-family: inherit; font-size: 14px; line-height: 1.4; color: var(--ink-soft);
+    padding: 7px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .keep-toggle:hover { border-color: var(--accent); color: var(--ink); }
+  .keep-toggle:disabled { cursor: default; border-style: solid; color: var(--accent-deep); }
+  .keep-toggle[hidden] { display: none; }
+  .share-actions .btn-secondary { margin: 8px 0 0; display: block; }

@@ -851,11 +851,15 @@
       btn_rae_lookup: "Buscar en RAE",
       rae_lookup_looking_up: "Buscando…",
       rae_lookup_not_found: "No se encontró en el DLE. Completá los campos a mano.",
-      rae_lookup_filled: "Campos completados desde el DLE — revisalos antes de guardar.",
+      rae_lookup_filled: "Campos vacíos completados — revisalos antes de guardar.",
+      rae_lookup_not_in_rae: " No figura en el DLE: revisá bien la definición.",
       rae_lookup_maybe_irregular: "Algunas de las formas que trajo el DLE no coinciden con la conjugación regular esperada — probablemente este verbo sea irregular; revisá el patrón y la Irregularidad.",
       rae_lookup_translation_unavailable: " La traducción automática no está disponible ahora, así que la definición quedó en español.",
       rae_lookup_error: "No se pudo consultar el DLE ahora. Probá de nuevo.",
       rae_lookup_daily_limit: "Llegaste al límite de búsquedas de hoy. Mañana podés seguir.",
+      btn_phrase_lookup: "Completar",
+      phrase_lookup_not_found: "No se reconoció la frase. Completá los campos a mano.",
+      lookup_error_retry: "No se pudo completar ahora. Probá de nuevo.",
       // Uso + límites del mes gratis (2026-10-10)
       tts_limit_daily: "Llegaste al límite de audio nuevo de hoy. Lo que ya escuchaste sigue sonando.",
       tts_limit_reserve: "El audio nuevo está en pausa hasta que se renueve el mes gratis. Lo que ya escuchaste sigue sonando.",
@@ -1026,7 +1030,83 @@
       el_stopped: "Parado. Lo que ya se hizo queda guardado: seguí cuando quieras.",
       el_sql: "Falta correr pending_2026-10-17_voces.sql en Supabase.",
       el_note: "En Escenas, una voz se ofrece para un personaje solo cuando tiene todas sus líneas. La etiqueta de ánimo cuenta como caracteres.",
-      lists_intro: "Armá una lista con los verbos, las palabras y las frases que quieras de tu colección — podés mezclarlos, por ejemplo todo lo útil para \"la cocina\" — y compartila con un enlace. Quien lo abra puede ver la lista e importarla a su propia cuenta, sin tocar el resto de tus datos.",
+      lists_intro: "Armá listas con lo que quieras (verbos, palabras y frases juntos, por ejemplo todo lo de «la cocina») y compartilas. Mientras una lista está activa, sus ítems están en tu colección; apagala y se van, salvo los que te quedaste.",
+      borrowed_from: "De la lista «{name}»",
+      borrowed_edited_by: " · editado por {name}",
+      edited_by: "editado por {name}",
+      keep_btn_verb: "Quedármelo",
+      keep_btn_word: "Quedármela",
+      keep_btn_phrase: "Quedármela",
+      kept_one: "Listo: ya está en tu colección.",
+      kept_n: "Listo: {n} ítems más en tu colección.",
+      kept_already: "Ya estaba en tu colección.",
+      kept_done: "✓ En tu colección",
+      form_title_keep_verb: "Guardar como tuyo",
+      form_title_keep_word: "Guardar como tuya",
+      form_title_keep_phrase: "Guardar como tuya",
+      form_title_edit_in_list: "Editar en «{name}»",
+      list_in_collection: "en tu colección",
+      lists_section_mine: "Tus listas",
+      lists_section_shared: "Compartidas con vos",
+      list_role_owner: "Dueño",
+      list_role_editor: "Editor",
+      list_role_reader: "Lector",
+      list_role_line_owner: "Tu lista",
+      list_role_line: "{role} · lista de {owner}",
+      list_onoff_aria: "Usar esta lista en tu colección",
+      list_onoff_hint_on: "Activa: sus ítems están en tu colección.",
+      list_onoff_hint_off: "Apagada: sus ítems no están en tu colección.",
+      btn_list_select: "Elegir",
+      btn_list_select_cancel: "Cancelar",
+      ld_select_count: "{n} elegidos",
+      ld_select_count_1: "1 elegido",
+      btn_keep_selected: "Quedarme con ellos",
+      btn_list_rename: "Renombrar",
+      list_rename_prompt: "Nuevo nombre de la lista",
+      btn_list_leave: "Salir de la lista",
+      confirm_leave_list: "¿Salir de «{name}»? Lo que ya te quedaste sigue en tu colección.",
+      ld_people: "Personas",
+      ld_people_you: " (vos)",
+      ld_readers_more: "y {n} lectores más",
+      ld_readers_more_1: "y 1 lector más",
+      btn_make_owner: "Hacer dueño",
+      confirm_make_owner: "¿Darle «{name}» a {person}? Vos vas a quedar como editor.",
+      btn_remove_member: "Quitar",
+      confirm_remove_member: "¿Sacar a {person} de la lista?",
+      ld_invite_label: "Agregar a un amigo",
+      ld_invite_role_aria: "Rol",
+      ld_invite_none: "Agregá amigos en Jugar → Amigos para compartirles la lista.",
+      btn_invite: "Agregar",
+      ld_invite_added: "Listo: {person} ya tiene la lista.",
+      ld_invite_updated: "Listo: cambió el rol de {person}.",
+      ld_invite_not_friend: "Solo podés agregar a tus amigos.",
+      ld_friends_see: "Visible para tus amigos (en su Biblioteca)",
+      ld_app_wide: "En la Biblioteca de todos",
+      btn_library: "Biblioteca",
+      library_title: "Biblioteca",
+      library_intro: "Listas que tus amigos hacen visibles y listas para todos. Al agregar una, sus ítems pasan a tu colección mientras la tengas activa.",
+      library_empty: "Todavía no hay listas para vos acá.",
+      library_by: "de {name}",
+      library_app: "para todos",
+      library_section_app: "Para todos",
+      library_section_friends: "De tus amigos",
+      btn_library_add: "Agregar",
+      library_added: "✓ Agregada",
+      library_have: "Ya la tenés",
+      library_unavailable: "La Biblioteca todavía no está lista: falta actualizar la base de datos.",
+      btn_share_join: "Agregar la lista",
+      btn_share_copy: "Copiar todo a mi colección",
+      share_join_note: "Mientras la tengas activa, sus ítems están en tu colección y se actualizan si la cambian. Podés quedarte con los que quieras.",
+      share_joined: "Listo: la lista está en Listas y sus ítems ya están en tu colección.",
+      share_join_owner: "Es una lista tuya.",
+      gone_title: "«{name}» ya no está",
+      gone_text: "La dejaron de compartir o ya no estás en ella. {n} de sus ítems no están en tu colección. ¿Te los quedás?",
+      gone_text_1: "La dejaron de compartir o ya no estás en ella. 1 de sus ítems no está en tu colección. ¿Te lo quedás?",
+      gone_keep: "Quedarme con los {n}",
+      gone_keep_1: "Quedármelo",
+      gone_skip: "No, gracias",
+      list_version_differs: "La lista «{name}» tiene otra versión",
+      btn_use_list_version: "Usar esa",
       lists_empty: "Todavía no creaste ninguna lista.",
       btn_create_list_toggle: "+ Crear lista",
       list_form_title: "Nueva lista",
@@ -1216,6 +1296,7 @@
       import_warn_verb_tags: "verbo #{n} ({inf}): el archivo dice «{said}», pero según la tabla es «{table}». Se guarda lo de la tabla; si no te cierra, revisá las formas.",
       import_err_word_missing: "palabra #{n}: falta \"word\" o \"definition\".",
       import_err_word_bad_pos: "palabra #{n} ({word}): valor de \"part_of_speech\" no válido.",
+      import_err_word_bad_register: "palabra #{n} ({word}): valor de \"register\" no válido.",
       import_err_word_bad_gender: "palabra #{n} ({word}): valor de \"gender\" no válido.",
       import_err_phrase_missing: "frase #{n}: falta \"phrase\" o \"definition\".",
       import_err_phrase_bad_function: "frase #{n} ({phrase}): valor de \"function\" no válido.",
@@ -1960,11 +2041,15 @@
       btn_rae_lookup: "Look up in RAE",
       rae_lookup_looking_up: "Looking up…",
       rae_lookup_not_found: "Not found in the DLE. Fill in the fields by hand.",
-      rae_lookup_filled: "Fields filled in from the DLE — check them over before saving.",
+      rae_lookup_filled: "Empty fields filled in — check them over before saving.",
+      rae_lookup_not_in_rae: " It isn't in the DLE, so double-check the definition.",
       rae_lookup_maybe_irregular: "Some of the forms the DLE filled in don't match the expected regular conjugation — this verb is probably irregular; check the pattern and Irregularity.",
       rae_lookup_translation_unavailable: " Automatic translation isn't available right now, so the definition stayed in Spanish.",
       rae_lookup_error: "Couldn't reach the DLE right now. Try again.",
       rae_lookup_daily_limit: "You've reached today's lookup limit. You can look up more tomorrow.",
+      btn_phrase_lookup: "Fill in",
+      phrase_lookup_not_found: "This phrase wasn't recognized. Fill in the fields by hand.",
+      lookup_error_retry: "Couldn't fill it in right now. Try again.",
       // Usage + free-month limits (2026-10-10)
       tts_limit_daily: "You've reached today's limit for new audio. Clips you've already heard still play.",
       tts_limit_reserve: "New audio is paused until the free month renews. Clips you've already heard still play.",
@@ -2135,7 +2220,83 @@
       el_stopped: "Stopped. What's made is kept: carry on any time.",
       el_sql: "pending_2026-10-17_voces.sql still needs to be run in Supabase.",
       el_note: "In Escenas, a voice is offered for a character only once all of its lines exist. The mood tag counts as characters.",
-      lists_intro: "Build a list out of any verbs, words, and phrases from your collection — you can mix them, for example everything useful for \"the kitchen\" — and share it with a link. Whoever opens it can see the list and import it into their own account, without touching the rest of your data.",
+      lists_intro: "Make lists of anything (verbs, words and phrases together, say everything for “the kitchen”) and share them. While a list is on, its items are in your collection; turn it off and they leave, except the ones you kept.",
+      borrowed_from: "From the list “{name}”",
+      borrowed_edited_by: " · edited by {name}",
+      edited_by: "edited by {name}",
+      keep_btn_verb: "Keep it",
+      keep_btn_word: "Keep it",
+      keep_btn_phrase: "Keep it",
+      kept_one: "Done: it's in your collection now.",
+      kept_n: "Done: {n} more items in your collection.",
+      kept_already: "It was already in your collection.",
+      kept_done: "✓ In your collection",
+      form_title_keep_verb: "Save as yours",
+      form_title_keep_word: "Save as yours",
+      form_title_keep_phrase: "Save as yours",
+      form_title_edit_in_list: "Edit in “{name}”",
+      list_in_collection: "in your collection",
+      lists_section_mine: "Your lists",
+      lists_section_shared: "Shared with you",
+      list_role_owner: "Owner",
+      list_role_editor: "Editor",
+      list_role_reader: "Reader",
+      list_role_line_owner: "Your list",
+      list_role_line: "{role} · {owner}'s list",
+      list_onoff_aria: "Use this list in your collection",
+      list_onoff_hint_on: "On: its items are in your collection.",
+      list_onoff_hint_off: "Off: its items aren't in your collection.",
+      btn_list_select: "Choose",
+      btn_list_select_cancel: "Cancel",
+      ld_select_count: "{n} chosen",
+      ld_select_count_1: "1 chosen",
+      btn_keep_selected: "Keep them",
+      btn_list_rename: "Rename",
+      list_rename_prompt: "New name for the list",
+      btn_list_leave: "Leave the list",
+      confirm_leave_list: "Leave “{name}”? Anything you kept stays in your collection.",
+      ld_people: "People",
+      ld_people_you: " (you)",
+      ld_readers_more: "and {n} more readers",
+      ld_readers_more_1: "and 1 more reader",
+      btn_make_owner: "Make owner",
+      confirm_make_owner: "Give “{name}” to {person}? You'll stay on as an editor.",
+      btn_remove_member: "Remove",
+      confirm_remove_member: "Remove {person} from the list?",
+      ld_invite_label: "Add a friend",
+      ld_invite_role_aria: "Role",
+      ld_invite_none: "Add friends in Jugar → Amigos to share the list with them.",
+      btn_invite: "Add",
+      ld_invite_added: "Done: {person} has the list now.",
+      ld_invite_updated: "Done: {person}'s role changed.",
+      ld_invite_not_friend: "You can only add your friends.",
+      ld_friends_see: "Visible to your friends (in their Library)",
+      ld_app_wide: "In everyone's Library",
+      btn_library: "Library",
+      library_title: "Library",
+      library_intro: "Lists your friends make visible, and lists for everyone. When you add one, its items join your collection while it's on.",
+      library_empty: "There aren't any lists for you here yet.",
+      library_by: "by {name}",
+      library_app: "for everyone",
+      library_section_app: "For everyone",
+      library_section_friends: "From your friends",
+      btn_library_add: "Add",
+      library_added: "✓ Added",
+      library_have: "You have it",
+      library_unavailable: "The Library isn't ready yet: the database still needs its update.",
+      btn_share_join: "Add the list",
+      btn_share_copy: "Copy everything to my collection",
+      share_join_note: "While it's on, its items are in your collection and update when the list changes. You can keep any of them for good.",
+      share_joined: "Done: the list is in Listas and its items are in your collection.",
+      share_join_owner: "This is one of your lists.",
+      gone_title: "“{name}” is gone",
+      gone_text: "It's no longer shared, or you're no longer in it. {n} of its items aren't in your collection. Keep them?",
+      gone_text_1: "It's no longer shared, or you're no longer in it. 1 of its items isn't in your collection. Keep it?",
+      gone_keep: "Keep all {n}",
+      gone_keep_1: "Keep it",
+      gone_skip: "No, thanks",
+      list_version_differs: "The list “{name}” has a different version",
+      btn_use_list_version: "Use that one",
       lists_empty: "You haven't created any lists yet.",
       btn_create_list_toggle: "+ Create list",
       list_form_title: "New list",
@@ -2325,6 +2486,7 @@
       import_warn_verb_tags: "verb #{n} ({inf}): the file says “{said}”, but the table says “{table}”. The table's tags are saved; if that looks wrong, check the forms.",
       import_err_word_missing: "word #{n}: missing \"word\" or \"definition\".",
       import_err_word_bad_pos: "word #{n} ({word}): invalid \"part_of_speech\" value.",
+      import_err_word_bad_register: "word #{n} ({word}): invalid \"register\" value.",
       import_err_word_bad_gender: "word #{n} ({word}): invalid \"gender\" value.",
       import_err_phrase_missing: "phrase #{n}: missing \"phrase\" or \"definition\".",
       import_err_phrase_bad_function: "phrase #{n} ({phrase}): invalid \"function\" value.",
@@ -2526,7 +2688,8 @@
   // withHistory: the practice cards too (a backup holds them; Borrar
   // contenido doesn't touch them, so its warning leaves them out).
   function currentContentCounts(withHistory) {
-    var c = { verbs: allVerbs.length, words: allWords.length, phrases: allPhrases.length, lists: allLists.length };
+    var c = { verbs: ownVerbs.length, words: ownWords.length, phrases: ownPhrases.length,
+      lists: allLists.filter(function (l) { return l.data.role === "owner"; }).length };
     if (withHistory) c.practice = practiceHistory.rows ? practiceAllRows().length : 0;
     return c;
   }
@@ -4484,9 +4647,9 @@
   function starterPackHave() {
     var d = starterPackData(), have = 0;
     var vs = {}, ws = {}, ps = {};
-    allVerbs.forEach(function (v) { vs[norm(v.data.infinitive || "")] = true; });
-    allWords.forEach(function (w) { ws[norm(w.data.word || "")] = true; });
-    allPhrases.forEach(function (p) { ps[norm(p.data.phrase || "")] = true; });
+    ownVerbs.forEach(function (v) { vs[norm(v.data.infinitive || "")] = true; });
+    ownWords.forEach(function (w) { ws[norm(w.data.word || "")] = true; });
+    ownPhrases.forEach(function (p) { ps[norm(p.data.phrase || "")] = true; });
     d.verbs.forEach(function (v) { if (vs[norm(v.infinitive)]) have++; });
     d.words.forEach(function (w) { if (ws[norm(w.word)]) have++; });
     d.phrases.forEach(function (p) { if (ps[norm(p.phrase)]) have++; });
@@ -4494,7 +4657,16 @@
   }
 
   // ================= state =================
-  var allVerbs = [];      // [{id, data}]
+  var allVerbs = [];      // [{id, data}] — your own verbs plus the ones you have through a list (see "Listas vivas")
+  // Listas vivas (2026-10-23): your own rows, before the items of the lists
+  // you have on are added in. See the "Listas vivas" section.
+  var ownVerbs = [], ownWords = [], ownPhrases = [];
+  var borrowedCache = {};   // list_item id -> { sig, kind, data }
+  var borrowedSrc = {};     // "b:<list_item id>" -> { listId, listName, itemId, role, editedBy, kind }
+  var itemProgress = {};    // "kind|normalised text" -> { known, known_forms }, for items you have through a list
+  var liveListsOk = true;   // list_members exists (pending_2026-10-23_live_lists.sql has run)
+  var itemProgressOk = true;
+  var formOrigin = { verb: null, word: null, phrase: null }; // { keep: data } or { listItem: { id, listId, listName } } while a form is open for one
 
   // Alphabetical order for every content tab (mason, 2026-10-02). The
   // database's own ORDER BY uses the server's collation, which can put
@@ -4557,6 +4729,7 @@
   var activeWordFilters = {
     pos: { include: new Set(), exclude: new Set() },
     gender: { include: new Set(), exclude: new Set() },
+    register: { include: new Set(), exclude: new Set() },
     flag: { include: new Set(), exclude: new Set() }
   };
 
@@ -4859,6 +5032,7 @@
     wfNotes: document.getElementById("wf-notes"),
     wfExample: document.getElementById("wf-example"),
     wfRaeLookup: document.getElementById("wf-rae-lookup"),
+    wfRegister: document.getElementById("wf-register"),
     wordFilters: document.getElementById("word-filters"),
     wordFiltersClear: document.getElementById("word-filters-clear"),
     wordListsGroup: document.getElementById("word-lists-group"),
@@ -4889,6 +5063,7 @@
     phraseFormMsg: document.getElementById("phrase-form-msg"),
     phraseFormCancel: document.getElementById("phrase-form-cancel"),
     pfPhrase: document.getElementById("pf-phrase"),
+    pfLookup: document.getElementById("pf-lookup"),
     pfDefinition: document.getElementById("pf-definition"),
     pfFunction: document.getElementById("pf-function"),
     pfRegister: document.getElementById("pf-register"),
@@ -5127,6 +5302,42 @@
     ldPhrasesItems: document.getElementById("ld-phrases-items"),
     ldShareBtn: document.getElementById("ld-share-btn"),
     ldDelete: document.getElementById("ld-delete"),
+    // Listas vivas (2026-10-23)
+    ldRole: document.getElementById("ld-role"),
+    ldOnoffWrap: document.getElementById("ld-onoff"),
+    ldRename: document.getElementById("ld-rename"),
+    ldLeave: document.getElementById("ld-leave"),
+    ldSelectBtn: document.getElementById("ld-select-btn"),
+    ldSelectBar: document.getElementById("ld-select-bar"),
+    ldSelectCount: document.getElementById("ld-select-count"),
+    ldKeepSelected: document.getElementById("ld-keep-selected"),
+    ldPeopleGroup: document.getElementById("ld-people-group"),
+    ldPeople: document.getElementById("ld-people"),
+    ldPeopleMsg: document.getElementById("ld-people-msg"),
+    ldInvite: document.getElementById("ld-invite"),
+    ldInviteRow: document.getElementById("ld-invite-row"),
+    ldInviteNone: document.getElementById("ld-invite-none"),
+    ldInviteFriend: document.getElementById("ld-invite-friend"),
+    ldInviteRole: document.getElementById("ld-invite-role"),
+    ldInviteBtn: document.getElementById("ld-invite-btn"),
+    ldVisibility: document.getElementById("ld-visibility"),
+    ldFriendsSee: document.getElementById("ld-friends-see"),
+    ldAppWideWrap: document.getElementById("ld-app-wide-wrap"),
+    ldAppWide: document.getElementById("ld-app-wide"),
+    openLibraryBtn: document.getElementById("open-library"),
+    libraryOverlay: document.getElementById("library-overlay"),
+    libraryList: document.getElementById("library-list"),
+    libraryMsg: document.getElementById("library-msg"),
+    libraryClose: document.getElementById("library-close"),
+    goneOverlay: document.getElementById("gone-overlay"),
+    goneTitle: document.getElementById("gone-title"),
+    goneText: document.getElementById("gone-text"),
+    goneMsg: document.getElementById("gone-msg"),
+    goneKeep: document.getElementById("gone-keep"),
+    goneSkip: document.getElementById("gone-skip"),
+    shareCopyBtn: document.getElementById("share-copy-btn"),
+    shareJoinNote: document.getElementById("share-join-note"),
+    flashKeep: document.getElementById("flash-keep"),
 
     dAddToList: document.getElementById("d-add-to-list"),
     wdAddToList: document.getElementById("wd-add-to-list"),
@@ -5193,7 +5404,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "143";
+  var VOSEA_BUILD = "145";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -5569,6 +5780,7 @@
     inf.textContent = data.infinitive || id;
     if (data.known) inf.appendChild(knownMark());
     btn.appendChild(inf);
+    appendBorrowedMark(btn, id);
 
     if (data.type) {
       var tb = document.createElement("span");
@@ -5922,6 +6134,7 @@
       requestAnimationFrame(syncConjRowHeights);
     });
     renderItemHistory("verb");
+    paintBorrowedDetail("verb");
   }
 
   // The pronoun column is its own small <table> beside the scrolling tense
@@ -6118,7 +6331,10 @@
 
   function openForm(mode, data) {
     editingId = mode === "edit" ? selectedId : null;
-    el.formTitle.textContent = mode === "edit" ? t("form_title_edit_verb") : t("form_title_add_verb");
+    formOrigin.verb = null;
+    // A verb you have through a list: editing it saves your own copy.
+    if (isBorrowedId(editingId)) { formOrigin.verb = { keep: data }; editingId = null; }
+    el.formTitle.textContent = formOrigin.verb ? t("form_title_keep_verb") : mode === "edit" ? t("form_title_edit_verb") : t("form_title_add_verb");
     el.formMsg.textContent = "";
     if (mode === "edit" && data) fillForm(data); else clearForm();
     renderFormIrregularity();
@@ -6134,6 +6350,7 @@
     el.toggleAdd.hidden = false;
     el.seedToolbarBtn.hidden = false;
     editingId = null;
+    formOrigin.verb = null;
     el.formMsg.textContent = "";
   }
 
@@ -6249,7 +6466,8 @@
         clearBanner();
         var prevById = {};
         allVerbs.forEach(function (v) { prevById[v.id] = v.data; });
-        allVerbs = sortByText((res.data || []).map(rowToVerb), "infinitive");
+        ownVerbs = sortByText((res.data || []).map(rowToVerb), "infinitive");
+        rebuildCollection("verb");
         carryOverVerbGlosses(prevById, allVerbs);
         renderList();
         queueVerbGlosses(); // fills in English for any verb that's missing/outdated — see verb-gloss section
@@ -6261,7 +6479,8 @@
       .catch(function (err) {
         var cached = readCache("verbs");
         if (!cached) { showBanner(t("msg_error_cargar_verbos", { msg: (err && err.message) || err })); return; }
-        allVerbs = sortByText(cached.rows.map(rowToVerb), "infinitive");
+        ownVerbs = sortByText(cached.rows.map(rowToVerb), "infinitive");
+        rebuildCollection("verb");
         markOffline("verbs", cached.savedAt);
         contentReady.verbs = true;
         renderList();
@@ -6272,6 +6491,10 @@
     evt.preventDefault();
     var data = collectFormData();
     if (!data.infinitive) { el.formMsg.textContent = t("msg_falta_infinitivo"); return; }
+    var origin = formOrigin.verb;
+    if (origin && origin.listItem) { saveListItemEdit(origin.listItem, data, el.formMsg, closeForm); return; }
+    // Saving a verb you had through a list as your own keeps its Sabido marks.
+    if (origin && origin.keep) { data.known = !!origin.keep.known; data.known_forms = origin.keep.known_forms || {}; }
     el.formMsg.textContent = t("msg_guardando");
 
     var query = editingId
@@ -6332,7 +6555,7 @@
 
   function seedStarterVerbs() {
     var existing = {};
-    allVerbs.forEach(function (v) { existing[norm(v.data.infinitive || "")] = true; });
+    ownVerbs.forEach(function (v) { existing[norm(v.data.infinitive || "")] = true; });
     var toInsert = STARTER_VERBS.filter(function (sv) { return !existing[norm(sv.infinitive)]; }).map(normalizeStarterVerb);
     if (toInsert.length === 0) {
       showBanner(t("msg_ya_tenes_verbos_ejemplo"));
@@ -6926,9 +7149,11 @@
     w.textContent = data.word || id;
     if (data.known) w.appendChild(knownMark());
     btn.appendChild(w);
+    appendBorrowedMark(btn, id);
 
     if (data.partOfSpeech) btn.appendChild(badge("type", tagLabel(data.partOfSpeech)));
     if (data.gender) btn.appendChild(badge("gender", tagLabel(data.gender)));
+    if (data.register && data.register !== "neutro") btn.appendChild(badge("register", registerLabel(data.register)));
 
     var def = document.createElement("span");
     def.className = "def";
@@ -6945,6 +7170,7 @@
   function wordPassesFacets(v, ignoreExcludes) {
     if (!facetOk(activeWordFilters, "pos", v.data.partOfSpeech || "", ignoreExcludes)) return false;
     if (!facetOk(activeWordFilters, "gender", v.data.gender || "", ignoreExcludes)) return false;
+    if (!facetOk(activeWordFilters, "register", v.data.register || "neutro", ignoreExcludes)) return false;
     if (!flagOk(activeWordFilters, "flag", function (value) {
       if (value === "known") return !!v.data.known;
       return false;
@@ -7012,6 +7238,7 @@
     el.wdBadges.innerHTML = "";
     if (data.partOfSpeech) el.wdBadges.appendChild(badge("type", tagLabel(data.partOfSpeech)));
     if (data.gender) el.wdBadges.appendChild(badge("gender", tagLabel(data.gender)));
+    if (data.register && data.register !== "neutro") el.wdBadges.appendChild(badge("register", registerLabel(data.register)));
     appendKnownToggle(el.wdBadges, el.wdKnown, data.known);
     el.wdNotes.textContent = data.notes || "";
     el.wdNotes.style.display = data.notes ? "" : "none";
@@ -7022,6 +7249,7 @@
     el.wordDetail.hidden = false;
     el.wordDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
     renderItemHistory("word");
+    paintBorrowedDetail("word");
   }
 
   function clearWordForm() {
@@ -7029,6 +7257,7 @@
     el.wfDefinition.value = "";
     el.wfPos.value = "sustantivo";
     el.wfGender.value = "";
+    el.wfRegister.value = "neutro";
     el.wfNotes.value = "";
     el.wfExample.value = "";
   }
@@ -7038,13 +7267,16 @@
     el.wfDefinition.value = data.definition || "";
     el.wfPos.value = data.partOfSpeech || "sustantivo";
     el.wfGender.value = data.gender || "";
+    el.wfRegister.value = data.register || "neutro";
     el.wfNotes.value = data.notes || "";
     el.wfExample.value = data.example || "";
   }
 
   function openWordForm(mode, data) {
     editingWordId = mode === "edit" ? selectedWordId : null;
-    el.wordFormTitle.textContent = mode === "edit" ? t("form_title_edit_word") : t("form_title_add_word");
+    formOrigin.word = null;
+    if (isBorrowedId(editingWordId)) { formOrigin.word = { keep: data }; editingWordId = null; }
+    el.wordFormTitle.textContent = formOrigin.word ? t("form_title_keep_word") : mode === "edit" ? t("form_title_edit_word") : t("form_title_add_word");
     el.wordFormMsg.textContent = "";
     if (mode === "edit" && data) fillWordForm(data); else clearWordForm();
     el.wordForm.hidden = false;
@@ -7059,6 +7291,7 @@
     el.toggleAddWord.hidden = false;
     el.seedWordsToolbarBtn.hidden = false;
     editingWordId = null;
+    formOrigin.word = null;
     el.wordFormMsg.textContent = "";
   }
 
@@ -7068,6 +7301,7 @@
       definition: el.wfDefinition.value.trim(),
       partOfSpeech: el.wfPos.value,
       gender: el.wfGender.value,
+      register: el.wfRegister.value || "neutro",
       notes: el.wfNotes.value.trim(),
       example: el.wfExample.value.trim()
     };
@@ -7081,11 +7315,27 @@
         definition: row.definition || "",
         partOfSpeech: row.part_of_speech || "sustantivo",
         gender: row.gender || "",
+        register: row.register || "neutro",
         notes: row.notes || "",
         example: row.example || "",
         known: !!row.known
       }
     };
+  }
+
+  // words.register (2026-10-23) comes with pending_2026-10-23_word_register.sql.
+  // Until that SQL has run, a write that includes it fails with "column not
+  // found", so it's retried once without the register: saving never breaks.
+  function wordRegisterMissing(err) {
+    var m = String((err && (err.message || "") + " " + (err.details || "")) || "");
+    return /register/.test(m) && (err.code === "PGRST204" || err.code === "42703" || /column/i.test(m));
+  }
+  function wordsWrite(rows, run) {
+    return Promise.resolve(run(rows)).then(function (res) {
+      if (!(res && res.error && wordRegisterMissing(res.error))) return res;
+      (Array.isArray(rows) ? rows : [rows]).forEach(function (r) { delete r.register; });
+      return run(rows);
+    });
   }
 
   function loadWords() {
@@ -7099,7 +7349,8 @@
         saveCache("words", res.data || []);
         markOnline("words");
         clearBanner();
-        allWords = sortByText((res.data || []).map(rowToWord), "word");
+        ownWords = sortByText((res.data || []).map(rowToWord), "word");
+        rebuildCollection("word");
         renderWordList();
         if (selectedWordId) {
           var still = allWords.find(function (v) { return v.id === selectedWordId; });
@@ -7109,7 +7360,8 @@
       .catch(function (err) {
         var cached = readCache("words");
         if (!cached) { showBanner(t("msg_error_cargar_vocab", { msg: (err && err.message) || err })); return; }
-        allWords = sortByText(cached.rows.map(rowToWord), "word");
+        ownWords = sortByText(cached.rows.map(rowToWord), "word");
+        rebuildCollection("word");
         markOffline("words", cached.savedAt);
         contentReady.words = true;
         renderWordList();
@@ -7120,6 +7372,8 @@
     evt.preventDefault();
     var data = collectWordFormData();
     if (!data.word) { el.wordFormMsg.textContent = t("msg_falta_palabra"); return; }
+    var origin = formOrigin.word;
+    if (origin && origin.listItem) { saveListItemEdit(origin.listItem, data, el.wordFormMsg, closeWordForm); return; }
     el.wordFormMsg.textContent = t("msg_guardando");
 
     var row = {
@@ -7127,13 +7381,17 @@
       definition: data.definition,
       part_of_speech: data.partOfSpeech,
       gender: data.gender,
+      register: data.register,
       notes: data.notes,
       example: data.example
     };
+    if (origin && origin.keep) row.known = !!origin.keep.known;
 
-    var query = editingWordId
-      ? supabaseClient.from("words").update(row).eq("id", editingWordId).select().single()
-      : supabaseClient.from("words").insert(row).select().single();
+    var query = wordsWrite(row, function (r) {
+      return editingWordId
+        ? supabaseClient.from("words").update(r).eq("id", editingWordId).select().single()
+        : supabaseClient.from("words").insert(r).select().single();
+    });
 
     query.then(function (res) {
       if (res.error) { el.wordFormMsg.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
@@ -7170,7 +7428,7 @@
 
   function seedStarterWords() {
     var existing = {};
-    allWords.forEach(function (v) { existing[norm(v.data.word || "")] = true; });
+    ownWords.forEach(function (v) { existing[norm(v.data.word || "")] = true; });
     var toInsert = STARTER_WORDS.filter(function (sw) { return !existing[norm(sw.word)]; }).map(normalizeStarterWord);
     if (toInsert.length === 0) {
       showBanner(t("msg_ya_tenes_palabras_ejemplo"));
@@ -7201,6 +7459,7 @@
     p.textContent = data.phrase || id;
     if (data.known) p.appendChild(knownMark());
     btn.appendChild(p);
+    appendBorrowedMark(btn, id);
 
     if (data.function) btn.appendChild(badge("type", tagLabel(data.function)));
     if (data.register && data.register !== "neutro") btn.appendChild(badge("register", registerLabel(data.register)));
@@ -7300,6 +7559,7 @@
     el.phraseDetail.hidden = false;
     el.phraseDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
     renderItemHistory("phrase");
+    paintBorrowedDetail("phrase");
   }
 
   function clearPhraseForm() {
@@ -7328,7 +7588,9 @@
 
   function openPhraseForm(mode, data) {
     editingPhraseId = mode === "edit" ? selectedPhraseId : null;
-    el.phraseFormTitle.textContent = mode === "edit" ? t("form_title_edit_phrase") : t("form_title_add_phrase");
+    formOrigin.phrase = null;
+    if (isBorrowedId(editingPhraseId)) { formOrigin.phrase = { keep: data }; editingPhraseId = null; }
+    el.phraseFormTitle.textContent = formOrigin.phrase ? t("form_title_keep_phrase") : mode === "edit" ? t("form_title_edit_phrase") : t("form_title_add_phrase");
     el.phraseFormMsg.textContent = "";
     if (mode === "edit" && data) fillPhraseForm(data); else clearPhraseForm();
     el.phraseForm.hidden = false;
@@ -7343,6 +7605,7 @@
     el.toggleAddPhrase.hidden = false;
     el.seedPhrasesToolbarBtn.hidden = false;
     editingPhraseId = null;
+    formOrigin.phrase = null;
     el.phraseFormMsg.textContent = "";
   }
 
@@ -7387,7 +7650,8 @@
         saveCache("phrases", res.data || []);
         markOnline("phrases");
         clearBanner();
-        allPhrases = sortByText((res.data || []).map(rowToPhrase), "phrase");
+        ownPhrases = sortByText((res.data || []).map(rowToPhrase), "phrase");
+        rebuildCollection("phrase");
         renderPhraseList();
         if (selectedPhraseId) {
           var still = allPhrases.find(function (v) { return v.id === selectedPhraseId; });
@@ -7397,7 +7661,8 @@
       .catch(function (err) {
         var cached = readCache("phrases");
         if (!cached) { showBanner(t("msg_error_cargar_frases", { msg: (err && err.message) || err })); return; }
-        allPhrases = sortByText(cached.rows.map(rowToPhrase), "phrase");
+        ownPhrases = sortByText(cached.rows.map(rowToPhrase), "phrase");
+        rebuildCollection("phrase");
         markOffline("phrases", cached.savedAt);
         contentReady.phrases = true;
         renderPhraseList();
@@ -7408,6 +7673,8 @@
     evt.preventDefault();
     var data = collectPhraseFormData();
     if (!data.phrase) { el.phraseFormMsg.textContent = t("msg_falta_frase"); return; }
+    var origin = formOrigin.phrase;
+    if (origin && origin.listItem) { saveListItemEdit(origin.listItem, data, el.phraseFormMsg, closePhraseForm); return; }
     el.phraseFormMsg.textContent = t("msg_guardando");
 
     var row = {
@@ -7420,6 +7687,7 @@
       notes: data.notes,
       example: data.example
     };
+    if (origin && origin.keep) row.known = !!origin.keep.known;
 
     var query = editingPhraseId
       ? supabaseClient.from("phrases").update(row).eq("id", editingPhraseId).select().single()
@@ -7460,7 +7728,7 @@
 
   function seedStarterPhrases() {
     var existing = {};
-    allPhrases.forEach(function (v) { existing[norm(v.data.phrase || "")] = true; });
+    ownPhrases.forEach(function (v) { existing[norm(v.data.phrase || "")] = true; });
     var toInsert = STARTER_PHRASES.filter(function (sp) { return !existing[norm(sp.phrase)]; }).map(normalizeStarterPhrase);
     if (toInsert.length === 0) {
       showBanner(t("msg_ya_tenes_frases_ejemplo"));
@@ -7944,7 +8212,9 @@
         if (typeof x.data.cached === "number") { counted = true; cachedN += x.data.cached; genN += x.data.generated || 0; }
       });
       var res = { data: counted ? { cached: cachedN, generated: genN } : {} };
-      return supabaseClient.from("verbs").update({ forms_en: glosses, forms_en_sig: sig }).eq("id", id).then(function (up) {
+      // A verb you have through a list keeps its English in memory only.
+      var save = isBorrowedId(id) ? Promise.resolve({ error: null }) : supabaseClient.from("verbs").update({ forms_en: glosses, forms_en_sig: sig }).eq("id", id);
+      return Promise.resolve(save).then(function (up) {
         if (up.error) { noteVerbGlossFailure(data.infinitive, "couldn't save (" + up.error.message + ")"); return; }
         verbGlossFailures = 0;
         // The list may have been reloaded meanwhile (new data objects) —
@@ -8125,6 +8395,7 @@
     } else if (card.kind === "word") {
       if (data.partOfSpeech) frag.appendChild(badge("type", tagLabel(data.partOfSpeech)));
       if (data.gender) frag.appendChild(badge("gender", tagLabel(data.gender)));
+      if (data.register && data.register !== "neutro") frag.appendChild(badge("register", registerLabel(data.register)));
     } else {
       if (data.function) frag.appendChild(badge("type", tagLabel(data.function)));
       if (data.register && data.register !== "neutro") frag.appendChild(badge("register", registerLabel(data.register)));
@@ -8539,15 +8810,25 @@
     });
   }
 
+  // 2026-10-23 (commit 124): the lookup now writes the whole entry in the
+  // house style (see dle-lookup/index.ts, "House-style entries"): a short
+  // definition, an example and a note, plus the register for words and
+  // phrases, the preposition for verbs, and function / idiomatic / literal
+  // for phrases. Phrases got a "Completar" button too. Text fields are only
+  // ever filled when they're empty; dropdowns and checkboxes are set.
+  function fillIfEmpty(input, value) {
+    if (input && value && !input.value.trim()) input.value = value;
+  }
   function lookupInRae(kind) {
-    var isVerb = kind === "verb";
-    var termEl = isVerb ? el.fInfinitive : el.wfWord;
-    var btn = isVerb ? el.fRaeLookup : el.wfRaeLookup;
-    var msgEl = isVerb ? el.formMsg : el.wordFormMsg;
+    var isVerb = kind === "verb", isPhrase = kind === "phrase";
+    var termEl = isVerb ? el.fInfinitive : isPhrase ? el.pfPhrase : el.wfWord;
+    var btn = isVerb ? el.fRaeLookup : isPhrase ? el.pfLookup : el.wfRaeLookup;
+    var msgEl = isVerb ? el.formMsg : isPhrase ? el.phraseFormMsg : el.wordFormMsg;
+    var defEl = isVerb ? el.fDefinition : isPhrase ? el.pfDefinition : el.wfDefinition;
     var term = (termEl.value || "").trim();
 
     if (!term) {
-      msgEl.textContent = isVerb ? t("msg_falta_infinitivo") : t("msg_falta_palabra");
+      msgEl.textContent = isVerb ? t("msg_falta_infinitivo") : isPhrase ? t("msg_falta_frase") : t("msg_falta_palabra");
       return;
     }
     if (raeLookupInFlight) return;
@@ -8555,18 +8836,25 @@
     btn.disabled = true;
     msgEl.textContent = t("rae_lookup_looking_up");
 
-    supabaseClient.functions.invoke("dle-lookup", { body: { term: term, kind: kind } })
+    // A definition already typed in steers the example and notes to that meaning.
+    var body = { term: term, kind: kind };
+    if (defEl.value.trim()) body.definition = defEl.value.trim();
+
+    supabaseClient.functions.invoke("dle-lookup", { body: body })
       .then(function (res) {
         if (res.error) throw res.error;
         var data = res.data || {};
         if (!data.found) {
-          msgEl.textContent = t("rae_lookup_not_found");
+          msgEl.textContent = t(data.error === "writer_unavailable" ? "lookup_error_retry" : isPhrase ? "phrase_lookup_not_found" : "rae_lookup_not_found");
           return;
         }
+        var msg = t("rae_lookup_filled");
 
         if (isVerb) {
-          if (data.definition && !el.fDefinition.value) el.fDefinition.value = data.definition;
-          if (data.example && !el.fExample.value) el.fExample.value = data.example;
+          fillIfEmpty(el.fDefinition, data.definition);
+          fillIfEmpty(el.fExample, data.example);
+          fillIfEmpty(el.fNotes, data.notes);
+          fillIfEmpty(el.fPreposicion, data.preposicion);
           if (data.transitivity) el.fTransitivity.value = data.transitivity;
           if (data.reflexive) el.fReflexive.checked = true;
           if (data.gerundio) el.fGerundio.value = data.gerundio;
@@ -8581,38 +8869,38 @@
           var reflexiveNow = el.fReflexive.checked;
           if (data.forms) fillConjugationCellsFromRae(data.forms, reflexiveNow);
           renderFormIrregularity(); // the cells were filled without input events
-
-          var msg = t("rae_lookup_filled");
           if (data.forms && raeFormsLookIrregular(data.forms, term, reflexiveNow)) {
             msg += " " + t("rae_lookup_maybe_irregular");
           }
-          // The Edge Function translates the definition es->en via Azure
-          // Translator (see dle-lookup/index.ts) and reports whether that
-          // actually happened — say so plainly rather than silently leaving
-          // a Spanish sentence in a field meant to be an English gloss
-          // (e.g. before mason has deployed the AZURE_TRANSLATOR_KEY
-          // secret, or on a transient Azure hiccup).
-          if (data.definition && data.definitionTranslated === false) {
-            msg += t("rae_lookup_translation_unavailable");
-          }
-          msgEl.textContent = msg;
+        } else if (isPhrase) {
+          fillIfEmpty(el.pfDefinition, data.definition);
+          fillIfEmpty(el.pfNotes, data.notes);
+          fillIfEmpty(el.pfExample, data.example);
+          if (data.function) el.pfFunction.value = data.function;
+          if (data.register) el.pfRegister.value = data.register;
+          if (typeof data.idiomatic === "boolean") el.pfIdiomatic.checked = data.idiomatic;
+          el.pfLiteralWrap.hidden = !el.pfIdiomatic.checked;
+          if (el.pfIdiomatic.checked) fillIfEmpty(el.pfLiteral, data.literal);
         } else {
-          if (data.definition && !el.wfDefinition.value) el.wfDefinition.value = data.definition;
+          fillIfEmpty(el.wfDefinition, data.definition);
+          fillIfEmpty(el.wfNotes, data.notes);
+          fillIfEmpty(el.wfExample, data.example);
           if (data.pos) el.wfPos.value = data.pos;
-          if (data.gender) el.wfGender.value = data.gender;
-          if (data.example && !el.wfExample.value) el.wfExample.value = data.example;
-          var wordMsg = t("rae_lookup_filled");
-          if (data.definition && data.definitionTranslated === false) {
-            wordMsg += t("rae_lookup_translation_unavailable");
-          }
-          msgEl.textContent = wordMsg;
+          if (typeof data.gender === "string") el.wfGender.value = data.gender;
+          if (data.register) el.wfRegister.value = data.register;
         }
+
+        // A word or verb RAE doesn't list (lots of lunfardo) is still written up.
+        if (!isPhrase && data.fromRae === false) msg += t("rae_lookup_not_in_rae");
+        // Claude unreachable: the definition is RAE's own, translated (or not).
+        if (data.definition && data.definitionTranslated === false) msg += t("rae_lookup_translation_unavailable");
+        msgEl.textContent = msg;
       })
       .catch(function (err) {
         console.log("[dle-lookup] request failed", err);
         // 429 = this account's daily lookup limit (see dle-lookup/index.ts).
         var limited = err && err.context && err.context.status === 429;
-        msgEl.textContent = t(limited ? "rae_lookup_daily_limit" : "rae_lookup_error");
+        msgEl.textContent = t(limited ? "rae_lookup_daily_limit" : isPhrase ? "lookup_error_retry" : "rae_lookup_error");
       })
       .then(function () {
         raeLookupInFlight = false;
@@ -8977,6 +9265,7 @@
     el.flashFrontSpeak.hidden = !card.frontSpeak;
     el.flashBackSpeak.hidden = !card.backSpeak;
     setKnownToggleState(el.flashKnownToggle, cardShowsKnown(card));
+    renderFlashKeep(card);
     renderTopicFaces(card);
     renderFlashGrade(card);
     renderFlashTally();
@@ -9570,7 +9859,7 @@
         session_id: practiceSession.id,
         shown_at: new Date().toISOString(),
         item_kind: card.kind,
-        item_id: findItemId(card.kind, card.data),
+        item_id: uuidOrNull(findItemId(card.kind, card.data)), // a list item has no row of its own
         item_key: practiceNorm(d.infinitive || d.word || d.phrase || d.topic),
         form_key: card.formKey || null,
         mode: card.listen ? "escuchar" : (card.speak ? "hablar" : "leer"),
@@ -17086,9 +17375,17 @@
   // threading id through every deck.push() call site.
   function findItemId(kind, data) {
     if (kind === "topic") return null; // built into the app, no row
-    var found = knownCollection(kind).find(function (item) { return item.data === data; });
+    var coll = knownCollection(kind);
+    var found = coll.find(function (item) { return item.data === data; });
+    // A card made before its item changed hands (kept from a list, or the
+    // list reloaded): match it by its Spanish text instead.
+    if (!found && data) {
+      var k = norm(kindText(kind, data));
+      if (k) found = coll.find(function (item) { return norm(kindText(kind, item.data)) === k; });
+    }
     return found ? found.id : null;
   }
+  function entryById(kind, id) { return id ? knownCollection(kind).find(function (x) { return x.id === id; }) : null; }
 
   function setKnownToggleState(btn, known) {
     if (!btn) return;
@@ -17232,8 +17529,18 @@
     }
     data.known_forms = next;
     patch.known_forms = next;
+    var entry = entryById("verb", id);
+    if (entry && entry.data !== data) { entry.data.known_forms = next; entry.data.known = data.known; }
     refreshKnownUi("verb", id);
     if (!id) return;
+    if (isBorrowedId(id)) {
+      saveItemProgress("verb", data, function () {
+        data.known_forms = prevForms; data.known = prevKnown;
+        if (entry && entry.data !== data) { entry.data.known_forms = prevForms; entry.data.known = prevKnown; }
+        refreshKnownUi("verb", id);
+      });
+      return;
+    }
     supabaseClient.from("verbs").update(patch).eq("id", id).then(function (res) {
       if (!res.error) return;
       data.known_forms = prevForms;
@@ -17302,9 +17609,19 @@
   // would orphan the references an open flashcard deck is holding.
   function setItemKnown(kind, data, known) {
     var id = findItemId(kind, data);
+    var entry = entryById(kind, id);
     data.known = known;
+    if (entry && entry.data !== data) entry.data.known = known;
     refreshKnownUi(kind, id);
     if (!id) return;
+    if (isBorrowedId(id)) {
+      saveItemProgress(kind, data, function () {
+        data.known = !known;
+        if (entry && entry.data !== data) entry.data.known = !known;
+        refreshKnownUi(kind, id);
+      });
+      return;
+    }
     var table = kind === "verb" ? "verbs" : (kind === "word" ? "words" : "phrases");
     supabaseClient.from(table).update({ known: known }).eq("id", id).then(function (res) {
       if (!res.error) return;
@@ -17471,6 +17788,11 @@
   }
 
   function rowToList(row) {
+    // Your role and your switch come from your own list_members row (Listas
+    // vivas). Without one (the SQL hasn't run yet) every list is yours and on.
+    var me = currentUser ? currentUser.id : null;
+    var mine = (row.list_members || []).filter(function (m) { return m.user_id === me; })[0];
+    var role = (!liveListsOk || !row.user_id || row.user_id === me) ? "owner" : (mine && mine.role !== "owner" ? mine.role : "reader");
     return {
       id: row.id,
       data: {
@@ -17478,6 +17800,10 @@
         ownerLabel: row.owner_label || "",
         shareToken: row.share_token,
         shareEnabled: !!row.share_enabled,
+        role: role,
+        enabled: liveListsOk && mine ? mine.enabled !== false : true,
+        friendsCanSee: !!row.friends_can_see,
+        appWide: !!row.app_wide,
         itemCount: 0
       }
     };
@@ -17507,6 +17833,7 @@
         var d = it.data || {};
         return { type: it.item_type, key: practiceNorm(d.infinitive || d.word || d.phrase) };
       });
+      entry.data.rawItems = row.list_items || []; // the items themselves, for the borrowed items (Listas vivas)
       return entry;
     });
   }
@@ -17533,6 +17860,729 @@
         if (!map[key]) map[key] = new Set();
         map[key].add(row.id);
       });
+    });
+  }
+
+
+  // ================= Listas vivas (2026-10-23, commit 126) =================
+  // mason: a list you're in should "behave as though it is in my content
+  // dataset so long as the list is 'on'", live, with roles (plan:
+  // claude/vosea-live-lists-plan.md; SQL: pending_2026-10-23_live_lists.sql).
+  //   · ownVerbs / ownWords / ownPhrases are your own rows. allVerbs /
+  //     allWords / allPhrases are those plus the "borrowed" items: every item
+  //     of every list that's on and isn't in your own collection (matched by
+  //     name). Your own version always wins; otherwise the first list by
+  //     name. A borrowed entry's id is "b:<list_item id>"; borrowedSrc says
+  //     which list it came from, your role there and who last edited it.
+  //   · Borrowed items show and practice like your own. They can't be edited
+  //     or deleted in place: Editar saves your own copy, Quedármela keeps it
+  //     as it is (with its Sabido marks). Their Sabido marks are kept in
+  //     item_progress (kind + normalised text, like practice_log), so they
+  //     follow the word across lists and when you keep it. A borrowed verb's
+  //     English stays in memory (the shared gloss cache answers it for free).
+  //   · Roles: Dueño (whoever made it; one per list), Editor, Lector. A share
+  //     link gives Lector; editors are friends the owner adds. Everyone has
+  //     their own on/off switch (list_members.enabled).
+  //   · Until the SQL has run, loadLists() falls back to the old query and
+  //     every list is yours and on, exactly as before.
+  var leftListIds = {};   // lists you just left (so they don't count as "gone")
+  var goneQueue = [];     // lists that disappeared: offered as copies to keep
+
+  function kindText(kind, d) {
+    d = d || {};
+    return kind === "verb" ? (d.infinitive || "") : kind === "word" ? (d.word || "") : (d.phrase || "");
+  }
+  function isBorrowedId(id) { return typeof id === "string" && id.slice(0, 2) === "b:"; }
+  function uuidOrNull(id) { return id && !isBorrowedId(id) ? id : null; }
+  function ownCollection(kind) { return kind === "verb" ? ownVerbs : kind === "word" ? ownWords : ownPhrases; }
+  function ownHas(kind, d) {
+    var k = norm(kindText(kind, d));
+    return !!k && ownCollection(kind).some(function (e) { return norm(kindText(kind, e.data)) === k; });
+  }
+  function progressKey(kind, d) { return kind + "|" + practiceNorm(kindText(kind, d)); }
+  function myDisplayName() { return (amigos.profile && currentUser && amigos.userId === currentUser.id) ? amigos.profile.display_name : ""; }
+  function listRoleLabel(role) { return t(role === "editor" ? "list_role_editor" : role === "reader" ? "list_role_reader" : "list_role_owner"); }
+  function listCanEdit(l) { return !!l && (l.data.role === "owner" || l.data.role === "editor"); }
+  // "editado por …" only says something when it wasn't you or the owner.
+  function editorShown(name, ownerLabel) { return !!name && name !== myDisplayName() && name !== ownerLabel ? name : ""; }
+
+  // A list snapshot (stored in the shape of the item's in-memory data) as a
+  // fresh data object, normalised the same way your own rows are.
+  function snapshotToData(kind, s) {
+    s = s || {};
+    if (kind === "verb") return rowToVerb(Object.assign({}, s, { id: null, known: false, known_forms: {} })).data;
+    if (kind === "word") {
+      return rowToWord({ word: s.word, definition: s.definition, part_of_speech: s.partOfSpeech || s.part_of_speech, gender: s.gender,
+        register: s.register, notes: s.notes, example: s.example }).data;
+    }
+    return rowToPhrase({ phrase: s.phrase, definition: s.definition, function: s.function, register: s.register,
+      idiomatic: s.idiomatic, literal: s.literal, notes: s.notes, example: s.example }).data;
+  }
+  function applyProgress(kind, d) {
+    var p = itemProgress[progressKey(kind, d)];
+    d.known = !!(p && p.known);
+    if (kind === "verb") d.known_forms = Object.assign({}, (p && p.known_forms) || {});
+  }
+
+  // The borrowed entries of one kind, in list order. A data object is reused
+  // while its snapshot is unchanged, so an open flashcard deck keeps working
+  // across reloads.
+  function borrowedFor(kind) {
+    var have = {};
+    ownCollection(kind).forEach(function (e) { var k = norm(kindText(kind, e.data)); if (k) have[k] = true; });
+    var out = [];
+    allLists.forEach(function (l) {
+      if (!l.data.enabled) return;
+      (l.data.rawItems || []).forEach(function (it) {
+        if (it.item_type !== kind) return;
+        var k = norm(kindText(kind, it.data));
+        if (!k || have[k]) return;
+        have[k] = true;
+        var sig = JSON.stringify(it.data || {});
+        var c = borrowedCache[it.id];
+        if (!c || c.sig !== sig) {
+          var d = snapshotToData(kind, it.data);
+          applyProgress(kind, d);
+          c = borrowedCache[it.id] = { sig: sig, kind: kind, data: d };
+        }
+        var id = "b:" + it.id;
+        borrowedSrc[id] = { listId: l.id, listName: l.data.name, itemId: it.id, role: l.data.role, editedBy: editorShown(it.edited_by_name, l.data.ownerLabel), kind: kind };
+        out.push({ id: id, data: c.data });
+      });
+    });
+    return out;
+  }
+  function rebuildCollection(kind) {
+    var field = kind === "verb" ? "infinitive" : kind === "word" ? "word" : "phrase";
+    var merged = sortByText(ownCollection(kind).concat(borrowedFor(kind)), field);
+    if (kind === "verb") allVerbs = merged; else if (kind === "word") allWords = merged; else allPhrases = merged;
+  }
+  function selectedOf(kind) { return kind === "verb" ? selectedId : kind === "word" ? selectedWordId : selectedPhraseId; }
+  function selectOf(kind, id) { if (kind === "verb") selectVerb(id); else if (kind === "word") selectWord(id); else selectPhrase(id); }
+  function deselectOf(kind) { if (kind === "verb") deselectVerb(); else if (kind === "word") deselectWord(); else deselectPhrase(); }
+  // Selects the item with this Spanish text, if it's in the collection.
+  function selectByText(kind, text) {
+    var k = norm(text || "");
+    var e = knownCollection(kind).find(function (x) { return norm(kindText(kind, x.data)) === k; });
+    if (e) selectOf(kind, e.id);
+    return e || null;
+  }
+
+  // Recomputes the borrowed items after the lists, their switches or your
+  // own collection changed, and redraws what shows them.
+  function rebuildBorrowed() {
+    borrowedSrc = {};
+    rebuildCollection("verb"); rebuildCollection("word"); rebuildCollection("phrase");
+    renderList(); renderWordList(); renderPhraseList();
+    ["verb", "word", "phrase"].forEach(function (kind) {
+      var sel = selectedOf(kind);
+      if (!sel) return;
+      var e = knownCollection(kind).some(function (x) { return x.id === sel; });
+      if (!e) deselectOf(kind);
+      else if (isBorrowedId(sel)) paintBorrowedDetail(kind);
+    });
+    queueVerbGlosses();
+    if (typeof updateColBar === "function") updateColBar();
+  }
+
+  // ---- Sabido for borrowed items (item_progress) ----
+  function progressMissing(err) {
+    var m = String((err && err.message) || "");
+    return (err && (err.code === "42P01" || err.code === "PGRST205" || err.code === "PGRST204")) || /item_progress/.test(m);
+  }
+  function progressRows() {
+    return Object.keys(itemProgress).map(function (k) {
+      var i = k.indexOf("|");
+      return { item_kind: k.slice(0, i), item_key: k.slice(i + 1), known: itemProgress[k].known, known_forms: itemProgress[k].known_forms || {} };
+    });
+  }
+  function setItemProgressRows(rows) {
+    itemProgress = {};
+    (rows || []).forEach(function (r) { itemProgress[r.item_kind + "|" + r.item_key] = { known: !!r.known, known_forms: r.known_forms || {} }; });
+    var any = false;
+    Object.keys(borrowedCache).forEach(function (id) { var c = borrowedCache[id]; applyProgress(c.kind, c.data); any = true; });
+    if (any) { renderList(); renderWordList(); renderPhraseList(); }
+  }
+  function loadItemProgress() {
+    if (!currentUser) return Promise.resolve();
+    var cached = readCache("item_progress");
+    if (!itemProgressOk) { if (cached) setItemProgressRows(cached.rows); return Promise.resolve(); }
+    return Promise.resolve(supabaseClient.from("item_progress").select("item_kind, item_key, known, known_forms")).then(function (res) {
+      if (res.error) throw res.error;
+      saveCache("item_progress", res.data || []);
+      setItemProgressRows(res.data || []);
+    }).catch(function (err) {
+      if (progressMissing(err)) itemProgressOk = false;
+      if (cached) setItemProgressRows(cached.rows);
+    });
+  }
+  // Saves a borrowed item's Sabido marks. Before the SQL has run they're
+  // kept on this device.
+  function saveItemProgress(kind, data, rollback) {
+    if (!currentUser) return;
+    var key = practiceNorm(kindText(kind, data));
+    if (!key) return;
+    var row = { user_id: currentUser.id, item_kind: kind, item_key: key, known: !!data.known,
+      known_forms: kind === "verb" ? (data.known_forms || {}) : {}, updated_at: new Date().toISOString() };
+    itemProgress[kind + "|" + key] = { known: row.known, known_forms: row.known_forms };
+    saveCache("item_progress", progressRows());
+    if (!itemProgressOk) return;
+    supabaseClient.from("item_progress").upsert(row, { onConflict: "user_id,item_kind,item_key" }).then(function (res) {
+      if (!res.error) return;
+      if (progressMissing(res.error)) { itemProgressOk = false; return; }
+      if (rollback) rollback();
+      showBanner(t("msg_error_guardar", { msg: res.error.message }));
+    });
+  }
+
+  // ---- Quedármela: keep items for good ----
+  function keepRowFor(kind, d) {
+    if (kind === "verb") {
+      var v = listSnapshot(d);
+      v.known = !!d.known;
+      v.known_forms = d.known_forms || {};
+      return v;
+    }
+    if (kind === "word") {
+      return { word: d.word || "", definition: d.definition || "", part_of_speech: d.partOfSpeech || "sustantivo", gender: d.gender || "",
+        register: d.register || "neutro", notes: d.notes || "", example: d.example || "", known: !!d.known };
+    }
+    return { phrase: d.phrase || "", definition: d.definition || "", function: d.function || "otro", register: d.register || "neutro",
+      idiomatic: !!d.idiomatic, literal: d.literal || "", notes: d.notes || "", example: d.example || "", known: !!d.known };
+  }
+  // items: [{ kind, data }] (in-memory data shape). Resolves { added, already }.
+  function keepItems(items) {
+    var rows = { verb: [], word: [], phrase: [] }, seen = {}, already = 0;
+    (items || []).forEach(function (it) {
+      var k = it.kind + "|" + norm(kindText(it.kind, it.data));
+      if (seen[k]) return;
+      seen[k] = true;
+      if (ownHas(it.kind, it.data)) { already++; return; }
+      rows[it.kind].push(keepRowFor(it.kind, it.data));
+    });
+    var added = rows.verb.length + rows.word.length + rows.phrase.length;
+    if (!added) return Promise.resolve({ added: 0, already: already });
+    return Promise.all([
+      rows.verb.length ? supabaseClient.from("verbs").insert(rows.verb) : { error: null },
+      rows.word.length ? wordsWrite(rows.word, function (r) { return supabaseClient.from("words").insert(r); }) : { error: null },
+      rows.phrase.length ? supabaseClient.from("phrases").insert(rows.phrase) : { error: null }
+    ]).then(function (results) {
+      var bad = results.filter(function (r) { return r && r.error; })[0];
+      if (bad) throw bad.error;
+      return Promise.all([
+        rows.verb.length ? loadVerbs() : null,
+        rows.word.length ? loadWords() : null,
+        rows.phrase.length ? loadPhrases() : null
+      ]);
+    }).then(function () { return { added: added, already: already }; });
+  }
+  function keptMessage(r) {
+    if (!r.added) return t("kept_already");
+    return r.added === 1 ? t("kept_one") : t("kept_n", { n: r.added });
+  }
+  function keepFromDetail(kind, id, btn) {
+    var e = knownCollection(kind).find(function (x) { return x.id === id; });
+    if (!e) return;
+    var text = kindText(kind, e.data);
+    btn.disabled = true;
+    keepItems([{ kind: kind, data: e.data }]).then(function (r) {
+      selectByText(kind, text);
+      showBanner(keptMessage(r));
+    }).catch(function (err) {
+      btn.disabled = false;
+      showBanner(t("msg_error_guardar", { msg: (err && err.message) || err }));
+    });
+  }
+
+  // ---- marks on rows, detail pages and flashcards ----
+  function appendBorrowedMark(btn, id) {
+    var src = isBorrowedId(id) && borrowedSrc[id];
+    if (!src) return;
+    var b = badge("borrowed", src.listName);
+    b.title = t("borrowed_from", { name: src.listName });
+    btn.appendChild(b);
+  }
+  function paintBorrowedDetail(kind) {
+    var sel = selectedOf(kind);
+    var detail = kind === "verb" ? el.detail : kind === "word" ? el.wordDetail : el.phraseDetail;
+    var badges = kind === "verb" ? el.dBadges : kind === "word" ? el.wdBadges : el.pdBadges;
+    var del = kind === "verb" ? el.dDelete : kind === "word" ? el.wdDelete : el.pdDelete;
+    if (!detail || !badges) return;
+    var note = detail.querySelector(".borrowed-note");
+    if (!note) {
+      note = document.createElement("div");
+      note.className = "borrowed-note";
+      badges.parentNode.insertBefore(note, badges.nextSibling);
+    }
+    var src = isBorrowedId(sel) ? borrowedSrc[sel] : null;
+    if (del) del.hidden = !!src;
+    note.hidden = !src;
+    note.textContent = "";
+    if (!src) { paintListVersionNote(kind, sel, note); return; }
+    var txt = document.createElement("span");
+    txt.textContent = t("borrowed_from", { name: src.listName }) + (src.editedBy ? t("borrowed_edited_by", { name: src.editedBy }) : "");
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "icon-btn";
+    btn.textContent = t("keep_btn_" + kind);
+    btn.addEventListener("click", function () { keepFromDetail(kind, sel, btn); });
+    note.appendChild(txt);
+    note.appendChild(btn);
+  }
+  // Your own copy of something a list shared with you has: if the list's
+  // version is different now (its owner or an editor changed it), say so and
+  // offer to use it. Your Sabido marks stay as they are.
+  var LIST_VERSION_FIELDS = {
+    verb: ["definition", "notes", "example", "preposicion", "transitivity", "reflexive", "gustar_like", "personal_definition", "personal_example", "forms"],
+    word: ["definition", "partOfSpeech", "gender", "register", "notes", "example"],
+    phrase: ["definition", "function", "register", "idiomatic", "literal", "notes", "example"]
+  };
+  // JSON with sorted keys and blanks treated alike, for comparing versions.
+  function stableJson(v) {
+    if (v === undefined || v === null || v === "") return "null";
+    if (Array.isArray(v)) return "[" + v.map(stableJson).join(",") + "]";
+    if (typeof v === "object") {
+      var keys = Object.keys(v).filter(function (k) { return v[k] !== undefined && v[k] !== null && v[k] !== ""; }).sort();
+      return "{" + keys.map(function (k) { return JSON.stringify(k) + ":" + stableJson(v[k]); }).join(",") + "}";
+    }
+    return JSON.stringify(v);
+  }
+  function listVersionFor(kind, data) {
+    var k = norm(kindText(kind, data));
+    var fields = LIST_VERSION_FIELDS[kind];
+    for (var i = 0; i < allLists.length; i++) {
+      var l = allLists[i];
+      if (!l.data.enabled || l.data.role === "owner") continue;
+      var it = (l.data.rawItems || []).find(function (x) { return x.item_type === kind && norm(kindText(kind, x.data)) === k; });
+      if (!it) continue;
+      var theirs = snapshotToData(kind, it.data);
+      var differs = fields.some(function (f) { return stableJson(theirs[f]) !== stableJson(data[f]); });
+      return differs ? { list: l, data: theirs } : null;
+    }
+    return null;
+  }
+  function paintListVersionNote(kind, sel, note) {
+    var e = sel && knownCollection(kind).find(function (x) { return x.id === sel; });
+    var v = e && listVersionFor(kind, e.data);
+    if (!v) return;
+    note.hidden = false;
+    var txt = document.createElement("span");
+    txt.textContent = t("list_version_differs", { name: v.list.data.name }) +
+      (v.data.definition && v.data.definition !== e.data.definition ? " (" + v.data.definition + ")" : "");
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "icon-btn";
+    btn.textContent = t("btn_use_list_version");
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      var d = v.data, patch, table;
+      if (kind === "verb") {
+        table = "verbs";
+        patch = listSnapshot(d);
+        ["known", "known_forms", "forms_en", "forms_en_sig", "infinitive"].forEach(function (f) { delete patch[f]; });
+      } else if (kind === "word") {
+        table = "words";
+        patch = { definition: d.definition, part_of_speech: d.partOfSpeech, gender: d.gender, register: d.register, notes: d.notes, example: d.example };
+      } else {
+        table = "phrases";
+        patch = { definition: d.definition, function: d.function, register: d.register, idiomatic: d.idiomatic, literal: d.literal, notes: d.notes, example: d.example };
+      }
+      var run = function (r) { return supabaseClient.from(table).update(r).eq("id", sel); };
+      (kind === "word" ? wordsWrite(patch, run) : Promise.resolve(run(patch))).then(function (res) {
+        if (res.error) { btn.disabled = false; showBanner(t("msg_error_guardar", { msg: res.error.message })); return; }
+        var reload = kind === "verb" ? loadVerbs : kind === "word" ? loadWords : loadPhrases;
+        reload().then(function () { selectOf(kind, sel); });
+      });
+    });
+    note.appendChild(txt);
+    note.appendChild(btn);
+  }
+
+  function renderFlashKeep(card) {
+    var b = el.flashKeep;
+    if (!b) return;
+    var kind = card && card.kind;
+    if (kind !== "verb" && kind !== "word" && kind !== "phrase") { b.hidden = true; return; }
+    var id = findItemId(kind, card.data);
+    if (card.data && card.data._kept) {
+      b.hidden = false; b.disabled = true; b.textContent = t("kept_done");
+    } else if (isBorrowedId(id)) {
+      b.hidden = false; b.disabled = false; b.textContent = t("keep_btn_" + kind);
+    } else {
+      b.hidden = true;
+    }
+  }
+  function flashKeepClick() {
+    var card = flashDeck[flashIndex];
+    if (!card) return;
+    el.flashKeep.disabled = true;
+    keepItems([{ kind: card.kind, data: card.data }]).then(function () {
+      card.data._kept = true;
+      if (flashDeck[flashIndex] === card) renderFlashKeep(card);
+    }).catch(function (err) {
+      el.flashKeep.disabled = false;
+      el.flashTtsMsg.textContent = t("msg_error_guardar", { msg: (err && err.message) || err });
+    });
+  }
+
+  // ---- lists that disappeared (unshared, deleted, or you were removed) ----
+  function joinedKey() { return "vosea-joined-lists:" + (currentUser ? currentUser.id : ""); }
+  function trackGoneLists() {
+    if (!liveListsOk || !currentUser) return;
+    var prev = {};
+    try { prev = JSON.parse(localStorage.getItem(joinedKey()) || "{}") || {}; } catch (e) { prev = {}; }
+    var now = {};
+    allLists.forEach(function (l) {
+      if (l.data.role === "owner") return;
+      now[l.id] = { name: l.data.name, items: (l.data.rawItems || []).map(function (it) { return { item_type: it.item_type, data: it.data }; }) };
+    });
+    try { localStorage.setItem(joinedKey(), JSON.stringify(now)); } catch (e) {}
+    Object.keys(prev).forEach(function (id) {
+      if (now[id] || leftListIds[id] || !prev[id]) return;
+      goneQueue.push(prev[id]);
+    });
+    if (goneQueue.length && el.goneOverlay && el.goneOverlay.hidden) showNextGone();
+  }
+  var goneCurrent = null;
+  function showNextGone() {
+    while (goneQueue.length) {
+      var g = goneQueue.shift();
+      var items = (g.items || []).filter(function (it) { return it.data && !ownHas(it.item_type, it.data); }).map(function (it) {
+        var d = snapshotToData(it.item_type, it.data);
+        applyProgress(it.item_type, d);
+        return { kind: it.item_type, data: d };
+      });
+      if (!items.length) continue;
+      goneCurrent = { name: g.name, items: items };
+      el.goneTitle.textContent = t("gone_title", { name: g.name });
+      el.goneText.textContent = t(items.length === 1 ? "gone_text_1" : "gone_text", { n: items.length });
+      el.goneKeep.textContent = t(items.length === 1 ? "gone_keep_1" : "gone_keep", { n: items.length });
+      el.goneKeep.disabled = false;
+      el.goneMsg.textContent = "";
+      el.goneOverlay.hidden = false;
+      return;
+    }
+    goneCurrent = null;
+    el.goneOverlay.hidden = true;
+  }
+  function goneKeepClick() {
+    if (!goneCurrent) return;
+    el.goneKeep.disabled = true;
+    el.goneMsg.textContent = t("msg_guardando");
+    keepItems(goneCurrent.items).then(function (r) {
+      showBanner(keptMessage(r));
+      showNextGone();
+    }).catch(function (err) {
+      el.goneKeep.disabled = false;
+      el.goneMsg.textContent = t("msg_error_guardar", { msg: (err && err.message) || err });
+    });
+  }
+
+  // ---- your switch, leaving, renaming ----
+  function setListEnabled(l, on) {
+    var prev = l.data.enabled;
+    l.data.enabled = on;
+    rebuildBorrowed();
+    renderListsPanel();
+    if (selectedListId === l.id) renderListHead(l);
+    if (!liveListsOk) return;
+    supabaseClient.rpc("list_set_enabled", { p_list: l.id, p_enabled: on }).then(function (res) {
+      if (!res.error) return;
+      l.data.enabled = prev;
+      rebuildBorrowed();
+      renderListsPanel();
+      if (selectedListId === l.id) renderListHead(l);
+      showBanner(t("msg_error_guardar", { msg: res.error.message }));
+    });
+  }
+  function onoffButton(l, cls) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = cls + (l.data.enabled ? " is-on" : "");
+    b.setAttribute("aria-pressed", l.data.enabled ? "true" : "false");
+    b.setAttribute("aria-label", t("list_onoff_aria") + " — " + l.data.name);
+    b.title = t(l.data.enabled ? "list_onoff_hint_on" : "list_onoff_hint_off");
+    var knob = document.createElement("span");
+    knob.className = "knob";
+    b.appendChild(knob);
+    b.addEventListener("click", function (evt) { evt.stopPropagation(); setListEnabled(l, !l.data.enabled); });
+    return b;
+  }
+  function handleListLeave() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    if (!l || l.data.role === "owner" || !currentUser) return;
+    if (!window.confirm(t("confirm_leave_list", { name: l.data.name }))) return;
+    supabaseClient.rpc("list_remove_member", { p_list: l.id, p_user: currentUser.id }).then(function (res) {
+      if (res.error || res.data === false) { el.ldShareMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+      leftListIds[l.id] = true;
+      selectedListId = null;
+      el.listDetail.hidden = true;
+      loadLists();
+    });
+  }
+  function handleListRename() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    if (!l || l.data.role !== "owner") return;
+    var name = window.prompt(t("list_rename_prompt"), l.data.name);
+    name = (name || "").trim();
+    if (!name || name === l.data.name) return;
+    supabaseClient.from("lists").update({ name: name }).eq("id", l.id).then(function (res) {
+      if (res.error) { el.ldShareMsg.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
+      loadLists().then(function () { selectListRow(l.id); });
+    });
+  }
+
+  // ---- the people in a list ----
+  function renderListPeople(l) {
+    var group = el.ldPeopleGroup;
+    if (!group) return;
+    group.hidden = !liveListsOk;
+    el.ldPeopleMsg.textContent = "";
+    el.ldPeople.innerHTML = "";
+    el.ldInvite.hidden = true;
+    el.ldVisibility.hidden = l.data.role !== "owner";
+    el.ldFriendsSee.checked = !!l.data.friendsCanSee;
+    el.ldAppWideWrap.hidden = !(l.data.role === "owner" && usageRole && usageRole.can_view_usage);
+    el.ldAppWide.checked = !!l.data.appWide;
+    if (!liveListsOk) return;
+    var listId = l.id;
+    Promise.all([
+      supabaseClient.rpc("list_people", { p_list: listId }),
+      l.data.role === "owner" ? { data: 0 } : supabaseClient.rpc("list_reader_count", { p_list: listId }),
+      l.data.role === "owner" ? loadAmigos() : null
+    ]).then(function (res) {
+      if (selectedListId !== listId) return;
+      var people = (res[0] && res[0].data) || [];
+      el.ldPeople.innerHTML = "";
+      people.forEach(function (p) { el.ldPeople.appendChild(personRow(l, p)); });
+      var readers = (res[1] && res[1].data) || 0;
+      var shownReaders = people.filter(function (p) { return p.role === "reader" && !p.is_me; }).length;
+      var more = readers - shownReaders - (l.data.role === "reader" ? 1 : 0);
+      if (l.data.role !== "owner" && more > 0) {
+        var li = document.createElement("li");
+        li.className = "ld-person-more";
+        li.textContent = t(more === 1 ? "ld_readers_more_1" : "ld_readers_more", { n: more });
+        el.ldPeople.appendChild(li);
+      }
+      if (l.data.role === "owner") renderInvite(l, people);
+    });
+  }
+  function personRow(l, p) {
+    var li = document.createElement("li");
+    li.className = "ld-person";
+    var name = document.createElement("span");
+    name.className = "ld-person-name";
+    name.textContent = p.display_name + (p.is_me ? t("ld_people_you") : "");
+    li.appendChild(name);
+    if (l.data.role !== "owner" || p.role === "owner") {
+      li.appendChild(badge("list-role", listRoleLabel(p.role)));
+      return li;
+    }
+    var sel = document.createElement("select");
+    sel.className = "ld-person-role";
+    ["editor", "reader"].forEach(function (r) {
+      var o = document.createElement("option");
+      o.value = r; o.textContent = listRoleLabel(r);
+      if (p.role === r) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener("change", function () {
+      supabaseClient.rpc("list_set_member_role", { p_list: l.id, p_user: p.user_id, p_role: sel.value }).then(function (res) {
+        if (res.error || res.data === false) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+        renderListPeople(l);
+      });
+    });
+    li.appendChild(sel);
+    if (p.role === "editor") {
+      var own = document.createElement("button");
+      own.type = "button";
+      own.className = "icon-btn";
+      own.textContent = t("btn_make_owner");
+      own.addEventListener("click", function () {
+        if (!window.confirm(t("confirm_make_owner", { name: l.data.name, person: p.display_name }))) return;
+        supabaseClient.rpc("list_transfer", { p_list: l.id, p_user: p.user_id }).then(function (res) {
+          if (res.error || res.data === false) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+          loadLists().then(function () { selectListRow(l.id); });
+        });
+      });
+      li.appendChild(own);
+    }
+    var rm = document.createElement("button");
+    rm.type = "button";
+    rm.className = "icon-btn danger";
+    rm.textContent = t("btn_remove_member");
+    rm.addEventListener("click", function () {
+      if (!window.confirm(t("confirm_remove_member", { person: p.display_name }))) return;
+      supabaseClient.rpc("list_remove_member", { p_list: l.id, p_user: p.user_id }).then(function (res) {
+        if (res.error || res.data === false) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+        renderListPeople(l);
+      });
+    });
+    li.appendChild(rm);
+    return li;
+  }
+  function renderInvite(l, people) {
+    var inList = {};
+    people.forEach(function (p) { inList[p.user_id] = true; });
+    var friends = amigosFriends().filter(function (f) { return !inList[f.other_id]; });
+    el.ldInvite.hidden = false;
+    el.ldInviteFriend.innerHTML = "";
+    el.ldInviteNone.hidden = friends.length > 0;
+    el.ldInviteRow.hidden = friends.length === 0;
+    friends.forEach(function (f) {
+      var o = document.createElement("option");
+      o.value = f.other_id; o.textContent = f.display_name;
+      el.ldInviteFriend.appendChild(o);
+    });
+  }
+  function handleListInvite() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    var who = el.ldInviteFriend.value;
+    if (!l || !who) return;
+    var person = el.ldInviteFriend.options[el.ldInviteFriend.selectedIndex].textContent;
+    el.ldPeopleMsg.textContent = t("msg_guardando");
+    supabaseClient.rpc("list_add_member", { p_list: l.id, p_user: who, p_role: el.ldInviteRole.value }).then(function (res) {
+      if (res.error) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: res.error.message }); return; }
+      var r = res.data;
+      el.ldPeopleMsg.textContent = r === "added" ? t("ld_invite_added", { person: person })
+        : r === "updated" ? t("ld_invite_updated", { person: person }) : t("ld_invite_not_friend");
+      if (r === "added" || r === "updated") renderListPeopleKeepMsg(l);
+    });
+  }
+  function renderListPeopleKeepMsg(l) {
+    var msg = el.ldPeopleMsg.textContent;
+    renderListPeople(l);
+    el.ldPeopleMsg.textContent = msg;
+  }
+  function handleFriendsSeeChange() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    if (!l) return;
+    var on = el.ldFriendsSee.checked;
+    supabaseClient.from("lists").update({ friends_can_see: on }).eq("id", l.id).then(function (res) {
+      if (res.error) { el.ldFriendsSee.checked = !on; el.ldPeopleMsg.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
+      l.data.friendsCanSee = on;
+    });
+  }
+  function handleAppWideChange() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    if (!l) return;
+    var on = el.ldAppWide.checked;
+    supabaseClient.rpc("list_set_app_wide", { p_list: l.id, p_on: on }).then(function (res) {
+      if (res.error || res.data === false) { el.ldAppWide.checked = !on; el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+      l.data.appWide = on;
+    });
+  }
+
+  // ---- editing an item inside a list (owner / editor) ----
+  // Opens the item's own form on its tab; saving updates the list's version
+  // for everyone in it (never anyone's own copy).
+  function editListItem(l, row) {
+    var kind = row.item_type;
+    var data = snapshotToData(kind, row.data);
+    var origin = { listItem: { id: row.id, listId: l.id, listName: l.data.name } };
+    setMainTab(kind === "verb" ? "verbs" : kind === "word" ? "words" : "phrases");
+    if (kind === "verb") {
+      openForm("edit", data); editingId = null; formOrigin.verb = origin;
+      el.formTitle.textContent = t("form_title_edit_in_list", { name: l.data.name });
+    } else if (kind === "word") {
+      openWordForm("edit", data); editingWordId = null; formOrigin.word = origin;
+      el.wordFormTitle.textContent = t("form_title_edit_in_list", { name: l.data.name });
+    } else {
+      openPhraseForm("edit", data); editingPhraseId = null; formOrigin.phrase = origin;
+      el.phraseFormTitle.textContent = t("form_title_edit_in_list", { name: l.data.name });
+    }
+  }
+  function saveListItemEdit(li, formData, msgEl, closeFn) {
+    msgEl.textContent = t("msg_guardando");
+    supabaseClient.from("list_items").update({ data: listSnapshot(formData) }).eq("id", li.id).then(function (res) {
+      if (res.error) { msgEl.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
+      closeFn();
+      loadLists().then(function () { setMainTab("lists"); selectListRow(li.listId); });
+    });
+  }
+
+  // ---- Biblioteca ----
+  function openLibrary() {
+    el.libraryOverlay.hidden = false;
+    el.libraryList.innerHTML = "";
+    el.libraryMsg.textContent = t("msg_cargando");
+    supabaseClient.rpc("library_lists").then(function (res) {
+      if (res.error) { el.libraryMsg.textContent = t("library_unavailable"); return; }
+      var rows = res.data || [];
+      el.libraryMsg.textContent = rows.length ? "" : t("library_empty");
+      var lastSource = null;
+      rows.forEach(function (r) {
+        if (r.source !== lastSource) {
+          lastSource = r.source;
+          var h = document.createElement("li");
+          h.className = "lists-section-head";
+          h.textContent = t(r.source === "app" ? "library_section_app" : "library_section_friends");
+          el.libraryList.appendChild(h);
+        }
+        el.libraryList.appendChild(libraryRow(r));
+      });
+    });
+  }
+  function libraryRow(r) {
+    var li = document.createElement("li");
+    var row = document.createElement("div");
+    row.className = "card-row library-row";
+    var name = document.createElement("span");
+    name.className = "inf";
+    name.textContent = r.name;
+    row.appendChild(name);
+    var meta = document.createElement("span");
+    meta.className = "def";
+    var n = (r.n_verbs || 0) + (r.n_words || 0) + (r.n_phrases || 0);
+    meta.textContent = listMetaText(n, r.n_verbs || 0, r.n_words || 0, r.n_phrases || 0) + " · " +
+      (r.source === "app" ? t("library_app") : t("library_by", { name: r.owner_name }));
+    row.appendChild(meta);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "icon-btn";
+    btn.textContent = r.joined ? t("library_have") : t("btn_library_add");
+    btn.disabled = !!r.joined;
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      supabaseClient.rpc("list_join", { p_list: r.list_id }).then(function (res) {
+        var out = res && res.data;
+        if (res.error || !out || out.result === "not_found") { btn.disabled = false; el.libraryMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+        btn.textContent = t("library_added");
+        loadLists();
+      });
+    });
+    row.appendChild(btn);
+    li.appendChild(row);
+    return li;
+  }
+  function closeLibrary() { el.libraryOverlay.hidden = true; }
+
+  window.voseaLive = { // tests
+    collection: function (kind) { return knownCollection(kind).map(function (e) { return { id: e.id, text: kindText(kind, e.data), known: !!e.data.known }; }); },
+    findItemId: function (kind, text) { var e = knownCollection(kind).find(function (x) { return kindText(kind, x.data) === text; }); return e ? findItemId(kind, e.data) : null; },
+    uuidOrNull: uuidOrNull,
+    lists: function () { return allLists.map(function (l) { return { id: l.id, name: l.data.name, role: l.data.role, enabled: l.data.enabled }; }); },
+    liveListsOk: function () { return liveListsOk; }
+  };
+
+  // ---- joining from a share link ----
+  function handleShareJoin() {
+    if (!currentShareList || !currentUser) return;
+    el.shareImportBtn.disabled = true;
+    el.shareImportResult.textContent = t("msg_importando");
+    supabaseClient.rpc("list_join_by_token", { p_token: currentShareList.token }).then(function (res) {
+      if (res.error) {
+        // The SQL hasn't run yet: copy the list, as before.
+        liveListsOk = false;
+        el.shareImportBtn.disabled = false;
+        handleShareImport();
+        return;
+      }
+      var out = res.data || {};
+      if (out.result === "not_found") { el.shareImportBtn.disabled = false; el.shareImportResult.textContent = t("msg_enlace_no_existe"); return; }
+      el.shareImportResult.textContent = out.result === "owner" ? t("share_join_owner") : t("share_joined");
+      if (out.list_id) delete leftListIds[out.list_id];
+      loadLists();
     });
   }
 
@@ -17699,11 +18749,28 @@
     });
   }
 
-  function loadLists() {
+  // With Listas vivas the query also brings each item's editor and your own
+  // list_members row; before that SQL has run it fails, and the old query
+  // is used for the rest of the session.
+  function liveListsMissing(err) {
+    var m = String((err && (err.message || "") + " " + (err.details || "") + " " + (err.hint || "")) || "");
+    return /list_members|edited_by_name|edited_at|relationship/i.test(m) || (err && (err.code === "PGRST200" || err.code === "42703"));
+  }
+  function listsQuery() {
     return supabaseClient
       .from("lists")
-      .select("*, list_items(id, item_type, data)")
-      .order("created_at", { ascending: false })
+      .select(liveListsOk ? "*, list_items(id, item_type, data, edited_by_name, edited_at), list_members(user_id, role, enabled)" : "*, list_items(id, item_type, data)")
+      .order("created_at", { ascending: false });
+  }
+  function loadLists() {
+    return Promise.resolve(listsQuery())
+      .then(function (res) {
+        if (res.error && liveListsOk && liveListsMissing(res.error)) {
+          liveListsOk = false;
+          return listsQuery();
+        }
+        return res;
+      })
       .then(function (res) {
         if (res.error) throw res.error;
         saveCache("lists", res.data || []);
@@ -17713,9 +18780,8 @@
         rebuildListMembership(res.data);
         renderListsPanel();
         refreshListFilterUI();
-        renderList();
-        renderWordList();
-        renderPhraseList();
+        rebuildBorrowed(); // also redraws the three tabs
+        trackGoneLists();
         if (selectedListId) {
           var still = allLists.find(function (l) { return l.id === selectedListId; });
           if (still) selectListRow(selectedListId); else { el.listDetail.hidden = true; selectedListId = null; }
@@ -17729,116 +18795,221 @@
         markOffline("lists", cached.savedAt);
         renderListsPanel();
         refreshListFilterUI();
-        renderList();
-        renderWordList();
-        renderPhraseList();
+        rebuildBorrowed();
       });
   }
 
+  // Listas panel: your own lists first, then the ones shared with you
+  // (Listas vivas, 2026-10-23). Each row has your on/off switch (are its
+  // items in your collection?) next to the tri-state filter toggle (show
+  // only / hide this list's items), which are two different things.
   function renderListsPanel() {
     el.listsList.innerHTML = "";
     el.listsEmptyMsg.hidden = allLists.length !== 0;
-    allLists.forEach(function (l) {
-      var li = document.createElement("li");
-      // A div wrapper with two sibling buttons (not one button nested
-      // inside another, which is invalid) — same pattern listItemRow()
-      // below already uses for its own per-row action button. .card-row's
-      // existing flex/padding styling now lives on this wrapper; .list-row-
-      // main resets its own button-ness so the name/count still look and
-      // flow exactly as they did when the whole row was one <button>.
-      var wrap = document.createElement("div");
-      wrap.className = "card-row list-row";
-      wrap.dataset.listId = l.id;
-
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "list-row-main";
-
-      var name = document.createElement("span");
-      name.className = "inf";
-      name.textContent = l.data.name;
-      btn.appendChild(name);
-
-      var count = document.createElement("span");
-      count.className = "def";
-      count.textContent = listMetaText(l.data.itemCount || 0);
-      btn.appendChild(count);
-
-      btn.addEventListener("click", function () {
-        if (selectedListId === l.id) { selectedListId = null; el.listDetail.hidden = true; }
-        else selectListRow(l.id);
-      });
-
-      // The same tri-state control as the Listas picker modal's rows
-      // (renderListFilterRows above) — neutral -> include -> exclude ->
-      // neutral, same accent/danger state-glyph — so toggling the shared
-      // list filter looks and behaves identically whichever screen mason
-      // does it from. Deliberately does NOT navigate anywhere: mason found
-      // the old "Filtrar por esta lista" shortcut's jump-to-last-tab
-      // unhelpful when toggling several lists in a row from this panel, so
-      // this just updates the filter in place and leaves him on Listas.
-      var toggleBtn = document.createElement("button");
-      toggleBtn.type = "button";
-      toggleBtn.className = "list-row-filter-toggle state-" + chipVisualState(sharedListFilter, "list", l.id);
-      toggleBtn.setAttribute("aria-label", t("btn_filter_to_list") + " — " + l.data.name);
-      var glyph = document.createElement("span");
-      glyph.className = "state-glyph";
-      toggleBtn.appendChild(glyph);
-      toggleBtn.addEventListener("click", function () {
-        cycleFacetValue(sharedListFilter, "list", l.id);
-        saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
-        toggleBtn.className = "list-row-filter-toggle state-" + chipVisualState(sharedListFilter, "list", l.id);
-        toggleBtn.setAttribute("aria-label", t("btn_filter_to_list") + " — " + l.data.name);
-        ["verbs", "words", "phrases"].forEach(function (tab) { updateListsTrigger(tab); rerenderTab(tab); });
-      });
-
-      wrap.appendChild(btn);
-      wrap.appendChild(toggleBtn);
-      li.appendChild(wrap);
-      el.listsList.appendChild(li);
+    var mine = allLists.filter(function (l) { return l.data.role === "owner"; });
+    var shared = allLists.filter(function (l) { return l.data.role !== "owner"; });
+    var sections = shared.length ? [["lists_section_mine", mine], ["lists_section_shared", shared]] : [[null, mine]];
+    sections.forEach(function (sec) {
+      if (sec[0] && sec[1].length) {
+        var h = document.createElement("li");
+        h.className = "lists-section-head";
+        h.textContent = t(sec[0]);
+        el.listsList.appendChild(h);
+      }
+      sec[1].forEach(function (l) { el.listsList.appendChild(listsPanelRow(l)); });
     });
     decorateListRows();
   }
-
-  function listItemRow(row) {
+  function listsPanelRow(l) {
     var li = document.createElement("li");
+    // A div wrapper with sibling buttons (not one button nested inside
+    // another, which is invalid). .list-row-main resets its own
+    // button-ness so the name/count flow as they did when the whole row was
+    // one <button>.
     var wrap = document.createElement("div");
-    wrap.className = "card-row";
+    wrap.className = "card-row list-row" + (l.data.enabled ? "" : " is-off");
+    wrap.dataset.listId = l.id;
 
-    var main = document.createElement("span");
-    main.className = "inf";
-    main.textContent = row.item_type === "verb" ? (row.data.infinitive || "")
-      : row.item_type === "word" ? (row.data.word || "")
-      : (row.data.phrase || "");
-    wrap.appendChild(main);
-
-    var def = document.createElement("span");
-    def.className = "def";
-    def.textContent = row.data.definition || "";
-    wrap.appendChild(def);
-
-    var removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "icon-btn danger";
-    removeBtn.textContent = t("remove_btn");
-    removeBtn.addEventListener("click", function () {
-      supabaseClient.from("list_items").delete().eq("id", row.id).then(function (res) {
-        if (res.error) { el.ldShareMsg.textContent = t("msg_error_generic", { msg: res.error.message }); return; }
-        loadLists();
-      });
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "list-row-main";
+    var name = document.createElement("span");
+    name.className = "inf";
+    name.textContent = l.data.name;
+    btn.appendChild(name);
+    var count = document.createElement("span");
+    count.className = "def";
+    count.textContent = (l.data.role !== "owner" ? t("list_role_line", { role: listRoleLabel(l.data.role), owner: l.data.ownerLabel || "?" }) + " · " : "") +
+      listMetaText(l.data.itemCount || 0);
+    btn.appendChild(count);
+    btn.addEventListener("click", function () {
+      if (selectedListId === l.id) { selectedListId = null; el.listDetail.hidden = true; }
+      else selectListRow(l.id);
     });
-    wrap.appendChild(removeBtn);
+    wrap.appendChild(btn);
 
+    if (liveListsOk) wrap.appendChild(onoffButton(l, "list-onoff"));
+
+    // The same tri-state control as the Listas picker modal's rows
+    // (renderListFilterRows above): neutral -> include -> exclude ->
+    // neutral. It updates the filter in place and leaves you on Listas.
+    var toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    toggleBtn.className = "list-row-filter-toggle state-" + chipVisualState(sharedListFilter, "list", l.id);
+    toggleBtn.setAttribute("aria-label", t("btn_filter_to_list") + " — " + l.data.name);
+    var glyph = document.createElement("span");
+    glyph.className = "state-glyph";
+    toggleBtn.appendChild(glyph);
+    toggleBtn.addEventListener("click", function () {
+      cycleFacetValue(sharedListFilter, "list", l.id);
+      saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
+      toggleBtn.className = "list-row-filter-toggle state-" + chipVisualState(sharedListFilter, "list", l.id);
+      ["verbs", "words", "phrases"].forEach(function (tab) { updateListsTrigger(tab); rerenderTab(tab); });
+    });
+    wrap.appendChild(toggleBtn);
     li.appendChild(wrap);
     return li;
   }
 
+  // One item of the open list. Everyone can keep an item that isn't in
+  // their collection yet; the owner and editors can also edit it (for
+  // everyone in the list) or take it out of the list.
+  var listSelectMode = false;
+  var listSelected = {}; // list_item id -> true, in "Elegir" mode
+  function listItemRow(row, l) {
+    var li = document.createElement("li");
+    var wrap = document.createElement("div");
+    wrap.className = "card-row list-item-row";
+    var kind = row.item_type;
+    var mine = ownHas(kind, row.data);
+
+    if (listSelectMode && !mine) {
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.className = "list-item-check";
+      cb.checked = !!listSelected[row.id];
+      cb.setAttribute("aria-label", kindText(kind, row.data));
+      cb.addEventListener("change", function () {
+        if (cb.checked) listSelected[row.id] = row; else delete listSelected[row.id];
+        renderListSelectBar();
+      });
+      wrap.appendChild(cb);
+    }
+
+    var main = document.createElement("span");
+    main.className = "inf";
+    main.textContent = kindText(kind, row.data);
+    wrap.appendChild(main);
+
+    var def = document.createElement("span");
+    def.className = "def";
+    var who = editorShown(row.edited_by_name, l.data.ownerLabel);
+    def.textContent = (row.data.definition || "") + (who ? " · " + t("edited_by", { name: who }) : "");
+    wrap.appendChild(def);
+
+    var actions = document.createElement("span");
+    actions.className = "li-actions";
+    if (mine) {
+      actions.appendChild(progEl("span", "list-item-mine", t("list_in_collection")));
+    } else if (!listSelectMode) {
+      var keep = document.createElement("button");
+      keep.type = "button";
+      keep.className = "icon-btn";
+      keep.textContent = t("keep_btn_" + kind);
+      keep.addEventListener("click", function () {
+        keep.disabled = true;
+        var d = snapshotToData(kind, row.data);
+        applyProgress(kind, d);
+        keepItems([{ kind: kind, data: d }]).then(function (r) {
+          showBanner(keptMessage(r));
+          if (selectedListId === l.id) selectListRow(l.id);
+        }).catch(function (err) {
+          keep.disabled = false;
+          el.ldShareMsg.textContent = t("msg_error_guardar", { msg: (err && err.message) || err });
+        });
+      });
+      actions.appendChild(keep);
+    }
+    if (listCanEdit(l) && !listSelectMode) {
+      var edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "icon-btn";
+      edit.textContent = t("btn_edit");
+      edit.addEventListener("click", function () { editListItem(l, row); });
+      actions.appendChild(edit);
+      var removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "icon-btn danger";
+      removeBtn.textContent = t("remove_btn");
+      removeBtn.addEventListener("click", function () {
+        supabaseClient.from("list_items").delete().eq("id", row.id).then(function (res) {
+          if (res.error) { el.ldShareMsg.textContent = t("msg_error_generic", { msg: res.error.message }); return; }
+          loadLists();
+        });
+      });
+      actions.appendChild(removeBtn);
+    }
+    wrap.appendChild(actions);
+    li.appendChild(wrap);
+    return li;
+  }
+
+  function renderListSelectBar() {
+    var n = Object.keys(listSelected).length;
+    el.ldSelectBar.hidden = !listSelectMode;
+    el.ldSelectCount.textContent = t(n === 1 ? "ld_select_count_1" : "ld_select_count", { n: n });
+    el.ldKeepSelected.disabled = n === 0;
+    el.ldSelectBtn.textContent = t(listSelectMode ? "btn_list_select_cancel" : "btn_list_select");
+  }
+  function toggleListSelectMode() {
+    listSelectMode = !listSelectMode;
+    listSelected = {};
+    if (selectedListId) selectListRow(selectedListId);
+  }
+  function keepSelectedListItems() {
+    var rows = Object.keys(listSelected).map(function (k) { return listSelected[k]; });
+    if (!rows.length) return;
+    el.ldKeepSelected.disabled = true;
+    var items = rows.map(function (row) {
+      var d = snapshotToData(row.item_type, row.data);
+      applyProgress(row.item_type, d);
+      return { kind: row.item_type, data: d };
+    });
+    keepItems(items).then(function (r) {
+      showBanner(keptMessage(r));
+      listSelectMode = false;
+      listSelected = {};
+      if (selectedListId) selectListRow(selectedListId);
+    }).catch(function (err) {
+      el.ldKeepSelected.disabled = false;
+      el.ldShareMsg.textContent = t("msg_error_guardar", { msg: (err && err.message) || err });
+    });
+  }
+
+  // The open list's role line, switch and which actions it offers.
+  function renderListHead(l) {
+    var owner = l.data.role === "owner";
+    el.ldRole.textContent = owner ? t("list_role_line_owner") : t("list_role_line", { role: listRoleLabel(l.data.role), owner: l.data.ownerLabel || "?" });
+    el.ldOnoffWrap.hidden = !liveListsOk;
+    el.ldOnoffWrap.innerHTML = "";
+    if (liveListsOk) {
+      el.ldOnoffWrap.appendChild(onoffButton(l, "list-onoff"));
+      el.ldOnoffWrap.appendChild(progEl("span", "ld-onoff-text", t(l.data.enabled ? "list_onoff_hint_on" : "list_onoff_hint_off")));
+    }
+    el.ldShareBtn.hidden = !owner;
+    el.ldDelete.hidden = !owner;
+    el.ldRename.hidden = !owner;
+    el.ldLeave.hidden = owner || !liveListsOk;
+  }
+
   function selectListRow(id) {
+    if (selectedListId !== id) { listSelectMode = false; listSelected = {}; }
     selectedListId = id;
     var entry = allLists.find(function (l) { return l.id === id; });
     if (!entry) { el.listDetail.hidden = true; return; }
     el.ldName.textContent = entry.data.name;
     el.ldMeta.textContent = listMetaText(entry.data.itemCount || 0);
+    renderListHead(entry);
     el.ldShareRow.hidden = true;
     el.ldShareMsg.textContent = "";
     el.ldVerbsItems.innerHTML = "";
@@ -17847,23 +19018,27 @@
     el.ldVerbsGroup.hidden = true;
     el.ldWordsGroup.hidden = true;
     el.ldPhrasesGroup.hidden = true;
+    renderListSelectBar();
     supabaseClient.from("list_items").select("*").eq("list_id", id).then(function (res) {
+      if (selectedListId !== id) return;
       if (res.error) { el.ldShareMsg.textContent = t("msg_error_cargar_items", { msg: res.error.message }); return; }
       var rows = sortItemRows(res.data || []);
       var verbRows = rows.filter(function (r) { return r.item_type === "verb"; });
       var wordRows = rows.filter(function (r) { return r.item_type === "word"; });
       var phraseRows = rows.filter(function (r) { return r.item_type === "phrase"; });
       el.ldMeta.textContent = listMetaText(rows.length, verbRows.length, wordRows.length, phraseRows.length);
-      // Shown as separate groups (rather than one flat list) now that a
-      // single list can hold all three — e.g. a "La cocina" list mixing
-      // kitchen verbs, nouns and phrases reads much more clearly split apart.
+      // Separate groups, since one list can hold all three (a "La cocina"
+      // list mixing kitchen verbs, nouns and phrases).
       el.ldVerbsGroup.hidden = verbRows.length === 0;
       el.ldWordsGroup.hidden = wordRows.length === 0;
       el.ldPhrasesGroup.hidden = phraseRows.length === 0;
-      verbRows.forEach(function (row) { el.ldVerbsItems.appendChild(listItemRow(row)); });
-      wordRows.forEach(function (row) { el.ldWordsItems.appendChild(listItemRow(row)); });
-      phraseRows.forEach(function (row) { el.ldPhrasesItems.appendChild(listItemRow(row)); });
+      verbRows.forEach(function (row) { el.ldVerbsItems.appendChild(listItemRow(row, entry)); });
+      wordRows.forEach(function (row) { el.ldWordsItems.appendChild(listItemRow(row, entry)); });
+      phraseRows.forEach(function (row) { el.ldPhrasesItems.appendChild(listItemRow(row, entry)); });
+      var keepable = rows.some(function (r) { return !ownHas(r.item_type, r.data); });
+      el.ldSelectBtn.hidden = !keepable && !listSelectMode;
     });
+    renderListPeople(entry);
     el.listDetail.hidden = false;
     el.listDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
@@ -17977,7 +19152,8 @@
     // target regardless of which kind of item this is — e.g. adding
     // vocabulary to a "Cocina" list that already has verbs in it.
     el.listPickerList.innerHTML = "";
-    if (allLists.length === 0) {
+    var targets = allLists.filter(listCanEdit); // a Lector can't add to someone else's list
+    if (targets.length === 0) {
       var li = document.createElement("li");
       var note = document.createElement("div");
       note.className = "empty-note";
@@ -17987,7 +19163,7 @@
       li.appendChild(note);
       el.listPickerList.appendChild(li);
     } else {
-      allLists.forEach(function (l) {
+      targets.forEach(function (l) {
         var liEl = document.createElement("li");
         var btn = document.createElement("button");
         btn.type = "button";
@@ -18082,6 +19258,7 @@
     el.shareItems.innerHTML = "";
     el.shareImportResult.textContent = "";
     el.shareImportBtn.disabled = false;
+    el.shareCopyBtn.disabled = false;
     supabaseClient.rpc("get_shared_list", { p_token: token }).then(function (res) {
       if (res.error || !res.data || res.data.length === 0) {
         currentShareList = null;
@@ -18094,6 +19271,7 @@
       var rows = res.data;
       var first = rows[0];
       currentShareList = {
+        token: token,
         listId: first.list_id,
         listName: first.list_name,
         ownerLabel: first.owner_label || "",
@@ -18134,7 +19312,12 @@
       el.shareItems.appendChild(li);
     });
     el.shareLoginNote.hidden = !!currentUser;
+    // Listas vivas: "Agregar la lista" joins it (live, as Lector);
+    // "Copiar todo" is the old copy into your collection.
     el.shareImportBtn.hidden = !currentUser;
+    el.shareImportBtn.textContent = t(liveListsOk ? "btn_share_join" : "btn_import");
+    el.shareCopyBtn.hidden = !currentUser || !liveListsOk;
+    el.shareJoinNote.hidden = !currentUser || !liveListsOk;
   }
 
   function closeSharePreview() {
@@ -18168,11 +19351,11 @@
     var s = currentShareList;
 
     var existingInf = {};
-    allVerbs.forEach(function (v) { existingInf[norm(v.data.infinitive || "")] = true; });
+    ownVerbs.forEach(function (v) { existingInf[norm(v.data.infinitive || "")] = true; });
     var existingWord = {};
-    allWords.forEach(function (w) { existingWord[norm(w.data.word || "")] = true; });
+    ownWords.forEach(function (w) { existingWord[norm(w.data.word || "")] = true; });
     var existingPhrase = {};
-    allPhrases.forEach(function (p) { existingPhrase[norm(p.data.phrase || "")] = true; });
+    ownPhrases.forEach(function (p) { existingPhrase[norm(p.data.phrase || "")] = true; });
 
     var toInsertV = [], skippedV = [];
     var toInsertW = [], skippedW = [];
@@ -18188,6 +19371,7 @@
           definition: it.data.definition || "",
           part_of_speech: it.data.partOfSpeech || "sustantivo",
           gender: it.data.gender || "",
+          register: it.data.register || "neutro",
           notes: it.data.notes || "",
           example: it.data.example || ""
         });
@@ -18217,7 +19401,7 @@
     });
 
     var verbsPromise = toInsertV.length ? supabaseClient.from("verbs").insert(toInsertV) : Promise.resolve({ error: null });
-    var wordsPromise = toInsertW.length ? supabaseClient.from("words").insert(toInsertW) : Promise.resolve({ error: null });
+    var wordsPromise = toInsertW.length ? wordsWrite(toInsertW, function (r) { return supabaseClient.from("words").insert(r); }) : Promise.resolve({ error: null });
     var phrasesPromise = toInsertP.length ? supabaseClient.from("phrases").insert(toInsertP) : Promise.resolve({ error: null });
 
     Promise.all([verbsPromise, wordsPromise, phrasesPromise]).then(function (results) {
@@ -18287,7 +19471,7 @@
   // live reference — if that source document changes, this copy needs to
   // be updated by hand too, since there is no build step tying them
   // together.
-  var IMPORT_FORMAT_SPEC = "# voseá — Custom Content Import Format (v1)\n\nPaste this whole document into your preferred LLM, along with the source\nmaterial you want turned into study content (a webpage, a PDF, your own\nlist of words), and ask it to produce one JSON file matching the shape\nbelow. Then point voseá's import screen at that file.\n\nEverything imported lands in **your own** verbs/words/phrases — never the\napp's shared starter content — the same as adding an item by hand.\n\n## Top-level shape\n\n```json\n{\n  \"version\": 1,\n  \"list_name\": \"Petrofísica y Perfilaje de Pozos\",\n  \"verbs\": [ /* verb objects, see below */ ],\n  \"words\": [ /* word objects, see below */ ],\n  \"phrases\": [ /* phrase objects, see below */ ]\n}\n```\n\n- `version` — always `1` for this format. Lets the app detect and reject a\n  future incompatible format instead of silently importing garbage.\n- `list_name` — optional. If present, every verb/word/phrase below is also\n  added to a list with this exact name (a new list is created if none\n  matches; an existing one with the same name is added to instead of\n  duplicated). Omit this to just add items to your collection without\n  creating a list.\n- `verbs`, `words` and `phrases` are all optional arrays — include\n  whichever you have.\n\n## Verb object shape\n\n```json\n{\n  \"infinitive\": \"escalar\",\n  \"definition\": \"to climb; to scale\",\n  \"notes\": \"en perfilaje: escalar una curva = to set a log curve's scale\",\n  \"example\": \"Escalamos el cerro en tres horas. / Escalá la resistividad en logarítmico.\",\n  \"type\": \"-ar\",\n  \"reflexive\": false,\n  \"irregularity\": \"regular\",\n  \"pattern\": \"\",\n  \"transitivity\": \"transitivo\",\n  \"preposicion\": \"\",\n  \"auxiliar\": false,\n  \"gustar_like\": false,\n  \"personal_definition\": \"\",\n  \"personal_example\": \"\",\n  \"forms\": {\n    \"presente\":     { \"yo\": \"escalo\",    \"vos\": \"escalás\",   \"el\": \"escala\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalan\" },\n    \"preterito\":    { \"yo\": \"escalé\",    \"vos\": \"escalaste\", \"el\": \"escaló\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalaron\" },\n    \"imperfecto\":   { \"yo\": \"escalaba\",  \"vos\": \"escalabas\", \"el\": \"escalaba\",  \"nosotros\": \"escalábamos\",  \"ellos\": \"escalaban\" },\n    \"futuro\":       { \"yo\": \"escalaré\",  \"vos\": \"escalarás\", \"el\": \"escalará\",  \"nosotros\": \"escalaremos\",  \"ellos\": \"escalarán\" },\n    \"condicional\":  { \"yo\": \"escalaría\", \"vos\": \"escalarías\",\"el\": \"escalaría\", \"nosotros\": \"escalaríamos\", \"ellos\": \"escalarían\" },\n    \"subjPresente\": { \"yo\": \"escale\",    \"vos\": \"escales\",   \"el\": \"escale\",    \"nosotros\": \"escalemos\",    \"ellos\": \"escalen\" },\n    \"subjPasado\":   { \"yo\": \"escalara\",  \"vos\": \"escalaras\", \"el\": \"escalara\",  \"nosotros\": \"escaláramos\",  \"ellos\": \"escalaran\" },\n    \"imperativo\":   { \"vos\": \"escalá\", \"usted\": \"escale\", \"nosotros\": \"escalemos\", \"ustedes\": \"escalen\" },\n    \"gerundio\": \"escalando\",\n    \"participio\": \"escalado\"\n  }\n}\n```\n\nField notes:\n- `type` — one of `-ar` / `-er` / `-ir`, must match the infinitive's ending.\n- `irregularity` — optional. The app works it out from `forms` itself, and a verb can have several:\n  `cambio de raíz` (él/ellos change the stem vowel), `irregular (yo)` (the present yo breaks the\n  pattern beyond that: tengo, digo, conozco), `pretérito irregular` (tuve, dije, hice), or\n  `irregular (total)` alone (ser, ir, haber, ver). So \"decir\" is `cambio de raíz, irregular (yo),\n  pretérito irregular`. If you include it, write the tags separated by commas; when it disagrees\n  with the table, the preview warns you and the table's tags are saved.\n- `pattern` — a short free-text note on what's irregular (e.g. `\"e→i en formas acentuadas\"`), blank if fully regular.\n- `transitivity` — one of `transitivo` / `intransitivo` / `ambos`.\n- `preposicion` — a fixed preposition the verb idiomatically takes (`\"a\"`, `\"de\"`, `\"en\"`...), or `\"\"`.\n- `gustar_like` — `true` for a dative (\"tipo gustar\") verb: gustar, encantar, doler, faltar, pasar, quedar, tocar, parecer, importar... Then `definition` and `example` are the **dative** use (pasar: `\"to happen (to someone)\"`, `\"¿Qué te pasó en la mano?\"`), and `personal_definition` and `personal_example` are the use with the person as the subject, in the indicative (`\"to pass, to come by; to spend (time)\"`, `\"Paso por tu casa a las ocho.\"`). Put examples only in the example fields, never inside a definition. Every dative verb has both uses, and `forms` is the plain conjugation (yo paso, vos pasás…) — the app builds the \"me pasa / me pasan\" forms itself. Leave `personal_definition` and `personal_example` `\"\"` for any other verb.\n- `notes` and `example` — optional free text, same rules as for words (see \"Definitions, notes and examples\" below).\n- `forms` — every tense object must have all five persons: `yo`, `vos`, `el`, `nosotros`, `ellos`. `imperativo` has only `vos`/`usted`/`nosotros`/`ustedes` (no `yo` — you can't command yourself). `gerundio` and `participio` are plain strings, not person tables.\n- Impersonal weather verbs (`llover`, `nevar`) skip the person tables entirely and use `\"forms\": { \"impersonal\": { \"presente\": \"llueve\", \"subjPasado\": \"lloviera\", ... } }` instead — there's no \"yo llueve.\"\n- Reflexive verbs (e.g. `levantarse`) write `forms` WITH the reflexive pronoun already baked into every single-table cell (`\"yo\": \"me levanto\"`, NOT just `\"levanto\"`) — the app displays exactly what's stored here, it does not add the pronoun itself at display time. `imperativo` includes it too, wherever it attaches: enclitic on `vos` (`\"vos\": \"levantate\"`), proclitic on the other three (`\"usted\": \"se levante\"`, `\"nosotros\": \"nos levantemos\"`, `\"ustedes\": \"se levanten\"`).\n\n## Word object shape\n\n```json\n{\n  \"word\": \"porosidad\",\n  \"definition\": \"porosity\",\n  \"part_of_speech\": \"sustantivo\",\n  \"gender\": \"femenino\",\n  \"notes\": \"φ; se mide con los perfiles de densidad, neutrón o sónico\",\n  \"example\": \"Esta arenisca tiene buena porosidad.\"\n}\n```\n\n- `part_of_speech` — one of `sustantivo` / `adjetivo` / `adverbio` / `pronombre` / `preposición` / `conjunción` / `interjección`.\n- `gender` — one of `masculino` / `femenino` / `neutro` / `\"\"` (blank for anything ungendered, e.g. most adverbs).\n- `notes` and `example` are both optional free text; `example` is a Spanish sentence using the word, if you want one.\n\n## Phrase object shape\n\nShort common phrases/expressions — kept separate from single-word\nvocabulary because a phrase doesn't have one part of speech or gender.\nInstead it has its own two facets: what it's *for* (`function`) and how\nformal/slangy it is (`register`).\n\n```json\n{\n  \"phrase\": \"Dale\",\n  \"definition\": \"okay / sure / sounds good\",\n  \"function\": \"acuerdo\",\n  \"register\": \"coloquial\",\n  \"idiomatic\": true,\n  \"literal\": \"give it / go\",\n  \"notes\": \"\",\n  \"example\": \"\"\n}\n```\n\n- `function` — the phrase's communicative role, one of `saludo` (greeting) / `despedida` (farewell) / `cortesía` (courtesy — please, thanks, excuse me) / `acuerdo` (agreement) / `desacuerdo` (disagreement) / `sorpresa` (surprise/reaction) / `pregunta` (question) / `muletilla` (filler/discourse marker) / `otro` (other).\n- `register` — one of `neutro` (standard, textbook-safe) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires-specific slang).\n- `idiomatic` — `true` if the meaning isn't guessable word-by-word (e.g. \"ni en pedo\" doesn't mean anything about being drunk), `false` if it's a plain, literal combination of words.\n- `literal` — only meaningful when `idiomatic` is `true`: a short word-by-word gloss, so both the real meaning and the literal words are visible. Leave `\"\"` when `idiomatic` is `false`.\n- `notes` and `example` are both optional free text, same as for words.\n\n## Definitions, notes and examples (verbs, words and phrases)\n\n- Write every English field (`definition`, `literal`, English in `notes`)\n  in **American English**: American spelling (\"practice\", \"color\",\n  \"canceled\") and American words (\"check\" for a restaurant bill, \"store\",\n  \"candy\", \"cookie\", \"soccer\").\n- `definition` starts with the item's **everyday meaning**, never just\n  the list's topic: \"carrito\" is \"cart\" (not \"luggage cart\") even in an\n  airport list. One item can belong to several lists, and it has only one\n  definition.\n- When the list uses a word in a **genuinely different meaning** — not\n  just a narrower case of the everyday one — add that meaning after the\n  everyday one, with a short qualifier in parentheses:\n  `\"revoque\": \"plaster (on a wall); mudcake (in a well)\"`,\n  `\"carrera\": \"race; career; logging run (in a well)\"`. \"Carrito\" gets no\n  second meaning: an airport cart is still a cart. Keep it to one added\n  meaning. The definition is what a flashcard shows as the answer, so it\n  has to contain the meaning being studied.\n- **Verbs are the exception:** keep a verb's definition to its everyday\n  meaning (\"correr\": \"to run\") and put the list's sense in `notes` and\n  `example`. A verb's flashcards show the English of each conjugated form,\n  which is generated from the definition, so a second meaning there would\n  muddle every form.\n- The list's context also goes in `example` and `notes`. `example` gives a\n  typical sentence first; if the list's use is very different from the\n  everyday one, add a second, list-specific sentence after \" / \" (the\n  flashcards show that last sentence under the answer):\n  `\"Agarrá un carrito en la entrada del súper. / Pusimos las valijas en un carrito.\"`\n- `notes` says what the item means in the list's world when that isn't\n  obvious from the definition: `\"en perfilaje: una carrera = one logging run\"`.\n  Don't use notes for bare topic labels (\"petrofísica\", \"aeropuerto\") —\n  the list itself already says that.\n\n## ⚠️ Dialect requirement — this app uses Rioplatense Spanish (voseo)\n\nEvery verb form below MUST use **vos**, never tú. This is the single\nmost common mistake a general-purpose LLM makes here, so check it\ncarefully — a wrong-but-fluent \"tú\" conjugation will look completely\nplausible and still be wrong for this app:\n\n- Present tense **does not diphthongize** for vos, even for stem-changing\n  verbs: **vos podés** (not \"puedés\"), **vos mostrás** (not \"muestrás\"),\n  **vos pedís** (not \"pidís\"), **vos medís** (not \"midís\"). Stress falls\n  on the ending, not the stem — so vos present tense is always the\n  \"regular-looking\" stem plus `-ás`/`-és`/`-ís`.\n- Affirmative vos imperative = the infinitive's stem + its final accented\n  vowel, no `-s`: **hablá, comé, viví, tené, poné, vení, decí** — never\n  the tú-form (habla, ven, di).\n- Preterite, imperfecto, futuro, condicional, and both subjunctives all\n  use the vos-shaped ending shown in the example above (which mirrors\n  \"tú\" minus the final `-s` for most tenses, except present and imperative\n  where the difference is larger).\n- Compounds of irregular verbs keep the irregularity: **obtener → obtengo,\n  obtuve, obtendré** (not a regular pattern), because it's built on\n  \"tener.\" Same logic for any verb built on **poner**, **venir**,\n  **decir**, etc.\n- Phrases should also reflect real rioplatense usage (e.g. \"¿Vos querés\n  algo?\" not \"¿Tú quieres algo?\") — a phrase generated by an LLM defaulting\n  to Spain/Mexico Spanish will read as noticeably foreign here.\n\n## What the app checks before saving anything\n\n- The file must be valid JSON matching this shape, or the whole import is\n  rejected with an error — nothing partial gets written.\n- Every verb's `forms` must have all required tense/person cells filled in.\n- Before you confirm the import, you'll see a preview of every parsed\n  verb/word/phrase. For verbs, any cell that doesn't match the app's own\n  built-in *regular* conjugation pattern is highlighted — same highlight\n  used everywhere else in the app for irregular verbs. If the file's\n  `irregularity` doesn't match what the table gives, the preview says so:\n  usually that's the LLM having made a mistake in a form; fix it before\n  confirming. Spelling-only changes (sacar → saqué, llegar → llegue,\n  empezar → empecé, surgir → surjo) light up in the table but don't make\n  a verb irregular; describe them in `pattern`.\n- Duplicates are matched by infinitive/word/phrase (case- and\n  accent-insensitive), same as the existing \"add to list\" flow — importing\n  the same file twice won't create duplicate rows.\n";
+  var IMPORT_FORMAT_SPEC = "# voseá — Custom Content Import Format (v1)\n\nPaste this whole document into your preferred LLM, along with the source\nmaterial you want turned into study content (a webpage, a PDF, your own\nlist of words), and ask it to produce one JSON file matching the shape\nbelow. Then point voseá's import screen at that file.\n\nEverything imported lands in **your own** verbs/words/phrases — never the\napp's shared starter content — the same as adding an item by hand.\n\n## Top-level shape\n\n```json\n{\n  \"version\": 1,\n  \"list_name\": \"Petrofísica y Perfilaje de Pozos\",\n  \"verbs\": [ /* verb objects, see below */ ],\n  \"words\": [ /* word objects, see below */ ],\n  \"phrases\": [ /* phrase objects, see below */ ]\n}\n```\n\n- `version` — always `1` for this format. Lets the app detect and reject a\n  future incompatible format instead of silently importing garbage.\n- `list_name` — optional. If present, every verb/word/phrase below is also\n  added to a list with this exact name (a new list is created if none\n  matches; an existing one with the same name is added to instead of\n  duplicated). Omit this to just add items to your collection without\n  creating a list.\n- `verbs`, `words` and `phrases` are all optional arrays — include\n  whichever you have.\n\n## Verb object shape\n\n```json\n{\n  \"infinitive\": \"escalar\",\n  \"definition\": \"to climb; to scale\",\n  \"notes\": \"en perfilaje: escalar una curva = to set a log curve's scale\",\n  \"example\": \"Escalamos el cerro en tres horas. / Escalá la resistividad en logarítmico.\",\n  \"type\": \"-ar\",\n  \"reflexive\": false,\n  \"irregularity\": \"regular\",\n  \"pattern\": \"\",\n  \"transitivity\": \"transitivo\",\n  \"preposicion\": \"\",\n  \"auxiliar\": false,\n  \"gustar_like\": false,\n  \"personal_definition\": \"\",\n  \"personal_example\": \"\",\n  \"forms\": {\n    \"presente\":     { \"yo\": \"escalo\",    \"vos\": \"escalás\",   \"el\": \"escala\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalan\" },\n    \"preterito\":    { \"yo\": \"escalé\",    \"vos\": \"escalaste\", \"el\": \"escaló\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalaron\" },\n    \"imperfecto\":   { \"yo\": \"escalaba\",  \"vos\": \"escalabas\", \"el\": \"escalaba\",  \"nosotros\": \"escalábamos\",  \"ellos\": \"escalaban\" },\n    \"futuro\":       { \"yo\": \"escalaré\",  \"vos\": \"escalarás\", \"el\": \"escalará\",  \"nosotros\": \"escalaremos\",  \"ellos\": \"escalarán\" },\n    \"condicional\":  { \"yo\": \"escalaría\", \"vos\": \"escalarías\",\"el\": \"escalaría\", \"nosotros\": \"escalaríamos\", \"ellos\": \"escalarían\" },\n    \"subjPresente\": { \"yo\": \"escale\",    \"vos\": \"escales\",   \"el\": \"escale\",    \"nosotros\": \"escalemos\",    \"ellos\": \"escalen\" },\n    \"subjPasado\":   { \"yo\": \"escalara\",  \"vos\": \"escalaras\", \"el\": \"escalara\",  \"nosotros\": \"escaláramos\",  \"ellos\": \"escalaran\" },\n    \"imperativo\":   { \"vos\": \"escalá\", \"usted\": \"escale\", \"nosotros\": \"escalemos\", \"ustedes\": \"escalen\" },\n    \"gerundio\": \"escalando\",\n    \"participio\": \"escalado\"\n  }\n}\n```\n\nField notes:\n- `type` — one of `-ar` / `-er` / `-ir`, must match the infinitive's ending.\n- `irregularity` — optional. The app works it out from `forms` itself, and a verb can have several:\n  `cambio de raíz` (él/ellos change the stem vowel), `irregular (yo)` (the present yo breaks the\n  pattern beyond that: tengo, digo, conozco), `pretérito irregular` (tuve, dije, hice), or\n  `irregular (total)` alone (ser, ir, haber, ver). So \"decir\" is `cambio de raíz, irregular (yo),\n  pretérito irregular`. If you include it, write the tags separated by commas; when it disagrees\n  with the table, the preview warns you and the table's tags are saved.\n- `pattern` — a short free-text note on what's irregular (e.g. `\"e→i en formas acentuadas\"`), blank if fully regular.\n- `transitivity` — one of `transitivo` / `intransitivo` / `ambos`.\n- `preposicion` — a fixed preposition the verb idiomatically takes (`\"a\"`, `\"de\"`, `\"en\"`...), or `\"\"`.\n- `gustar_like` — `true` for a dative (\"tipo gustar\") verb: gustar, encantar, doler, faltar, pasar, quedar, tocar, parecer, importar... Then `definition` and `example` are the **dative** use (pasar: `\"to happen (to someone)\"`, `\"¿Qué te pasó en la mano?\"`), and `personal_definition` and `personal_example` are the use with the person as the subject, in the indicative (`\"to pass, to come by; to spend (time)\"`, `\"Paso por tu casa a las ocho.\"`). Put examples only in the example fields, never inside a definition. Every dative verb has both uses, and `forms` is the plain conjugation (yo paso, vos pasás…) — the app builds the \"me pasa / me pasan\" forms itself. Leave `personal_definition` and `personal_example` `\"\"` for any other verb.\n- `notes` and `example` — optional free text, same rules as for words (see \"Definitions, notes and examples\" below).\n- `forms` — every tense object must have all five persons: `yo`, `vos`, `el`, `nosotros`, `ellos`. `imperativo` has only `vos`/`usted`/`nosotros`/`ustedes` (no `yo` — you can't command yourself). `gerundio` and `participio` are plain strings, not person tables.\n- Impersonal weather verbs (`llover`, `nevar`) skip the person tables entirely and use `\"forms\": { \"impersonal\": { \"presente\": \"llueve\", \"subjPasado\": \"lloviera\", ... } }` instead — there's no \"yo llueve.\"\n- Reflexive verbs (e.g. `levantarse`) write `forms` WITH the reflexive pronoun already baked into every single-table cell (`\"yo\": \"me levanto\"`, NOT just `\"levanto\"`) — the app displays exactly what's stored here, it does not add the pronoun itself at display time. `imperativo` includes it too, wherever it attaches: enclitic on `vos` (`\"vos\": \"levantate\"`), proclitic on the other three (`\"usted\": \"se levante\"`, `\"nosotros\": \"nos levantemos\"`, `\"ustedes\": \"se levanten\"`).\n\n## Word object shape\n\n```json\n{\n  \"word\": \"porosidad\",\n  \"definition\": \"porosity\",\n  \"part_of_speech\": \"sustantivo\",\n  \"gender\": \"femenino\",\n  \"register\": \"neutro\",\n  \"notes\": \"φ; se mide con los perfiles de densidad, neutrón o sónico\",\n  \"example\": \"Esta arenisca tiene buena porosidad.\"\n}\n```\n\n- `part_of_speech` — one of `sustantivo` / `adjetivo` / `adverbio` / `pronombre` / `preposición` / `conjunción` / `interjección`.\n- `gender` — one of `masculino` / `femenino` / `neutro` / `\"\"` (blank for anything ungendered, e.g. most adverbs).\n- `register` — optional, one of `neutro` (standard) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires slang: laburo, guita, bondi). Defaults to `neutro`.\n- `notes` and `example` are both optional free text; `example` is a Spanish sentence using the word, if you want one.\n\n## Phrase object shape\n\nShort common phrases/expressions — kept separate from single-word\nvocabulary because a phrase doesn't have one part of speech or gender.\nInstead it has its own two facets: what it's *for* (`function`) and how\nformal/slangy it is (`register`).\n\n```json\n{\n  \"phrase\": \"Dale\",\n  \"definition\": \"okay / sure / sounds good\",\n  \"function\": \"acuerdo\",\n  \"register\": \"coloquial\",\n  \"idiomatic\": true,\n  \"literal\": \"give it / go\",\n  \"notes\": \"\",\n  \"example\": \"\"\n}\n```\n\n- `function` — the phrase's communicative role, one of `saludo` (greeting) / `despedida` (farewell) / `cortesía` (courtesy — please, thanks, excuse me) / `acuerdo` (agreement) / `desacuerdo` (disagreement) / `sorpresa` (surprise/reaction) / `pregunta` (question) / `muletilla` (filler/discourse marker) / `otro` (other).\n- `register` — one of `neutro` (standard, textbook-safe) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires-specific slang).\n- `idiomatic` — `true` if the meaning isn't guessable word-by-word (e.g. \"ni en pedo\" doesn't mean anything about being drunk), `false` if it's a plain, literal combination of words.\n- `literal` — only meaningful when `idiomatic` is `true`: a short word-by-word gloss, so both the real meaning and the literal words are visible. Leave `\"\"` when `idiomatic` is `false`.\n- `notes` and `example` are both optional free text, same as for words.\n\n## Definitions, notes and examples (verbs, words and phrases)\n\n- Write every English field (`definition`, `literal`, English in `notes`)\n  in **American English**: American spelling (\"practice\", \"color\",\n  \"canceled\") and American words (\"check\" for a restaurant bill, \"store\",\n  \"candy\", \"cookie\", \"soccer\").\n- `definition` starts with the item's **everyday meaning**, never just\n  the list's topic: \"carrito\" is \"cart\" (not \"luggage cart\") even in an\n  airport list. One item can belong to several lists, and it has only one\n  definition.\n- When the list uses a word in a **genuinely different meaning** — not\n  just a narrower case of the everyday one — add that meaning after the\n  everyday one, with a short qualifier in parentheses:\n  `\"revoque\": \"plaster (on a wall); mudcake (in a well)\"`,\n  `\"carrera\": \"race; career; logging run (in a well)\"`. \"Carrito\" gets no\n  second meaning: an airport cart is still a cart. Keep it to one added\n  meaning. The definition is what a flashcard shows as the answer, so it\n  has to contain the meaning being studied.\n- **Verbs are the exception:** keep a verb's definition to its everyday\n  meaning (\"correr\": \"to run\") and put the list's sense in `notes` and\n  `example`. A verb's flashcards show the English of each conjugated form,\n  which is generated from the definition, so a second meaning there would\n  muddle every form.\n- The list's context also goes in `example` and `notes`. `example` gives a\n  typical sentence first; if the list's use is very different from the\n  everyday one, add a second, list-specific sentence after \" / \" (the\n  flashcards show that last sentence under the answer):\n  `\"Agarrá un carrito en la entrada del súper. / Pusimos las valijas en un carrito.\"`\n- `notes` says what the item means in the list's world when that isn't\n  obvious from the definition: `\"en perfilaje: una carrera = one logging run\"`.\n  Don't use notes for bare topic labels (\"petrofísica\", \"aeropuerto\") —\n  the list itself already says that.\n\n## ⚠️ Dialect requirement — this app uses Rioplatense Spanish (voseo)\n\nEvery verb form below MUST use **vos**, never tú. This is the single\nmost common mistake a general-purpose LLM makes here, so check it\ncarefully — a wrong-but-fluent \"tú\" conjugation will look completely\nplausible and still be wrong for this app:\n\n- Present tense **does not diphthongize** for vos, even for stem-changing\n  verbs: **vos podés** (not \"puedés\"), **vos mostrás** (not \"muestrás\"),\n  **vos pedís** (not \"pidís\"), **vos medís** (not \"midís\"). Stress falls\n  on the ending, not the stem — so vos present tense is always the\n  \"regular-looking\" stem plus `-ás`/`-és`/`-ís`.\n- Affirmative vos imperative = the infinitive's stem + its final accented\n  vowel, no `-s`: **hablá, comé, viví, tené, poné, vení, decí** — never\n  the tú-form (habla, ven, di).\n- Preterite, imperfecto, futuro, condicional, and both subjunctives all\n  use the vos-shaped ending shown in the example above (which mirrors\n  \"tú\" minus the final `-s` for most tenses, except present and imperative\n  where the difference is larger).\n- Compounds of irregular verbs keep the irregularity: **obtener → obtengo,\n  obtuve, obtendré** (not a regular pattern), because it's built on\n  \"tener.\" Same logic for any verb built on **poner**, **venir**,\n  **decir**, etc.\n- Phrases should also reflect real rioplatense usage (e.g. \"¿Vos querés\n  algo?\" not \"¿Tú quieres algo?\") — a phrase generated by an LLM defaulting\n  to Spain/Mexico Spanish will read as noticeably foreign here.\n\n## What the app checks before saving anything\n\n- The file must be valid JSON matching this shape, or the whole import is\n  rejected with an error — nothing partial gets written.\n- Every verb's `forms` must have all required tense/person cells filled in.\n- Before you confirm the import, you'll see a preview of every parsed\n  verb/word/phrase. For verbs, any cell that doesn't match the app's own\n  built-in *regular* conjugation pattern is highlighted — same highlight\n  used everywhere else in the app for irregular verbs. If the file's\n  `irregularity` doesn't match what the table gives, the preview says so:\n  usually that's the LLM having made a mistake in a form; fix it before\n  confirming. Spelling-only changes (sacar → saqué, llegar → llegue,\n  empezar → empecé, surgir → surjo) light up in the table but don't make\n  a verb irregular; describe them in `pattern`.\n- Duplicates are matched by infinitive/word/phrase (case- and\n  accent-insensitive), same as the existing \"add to list\" flow — importing\n  the same file twice won't create duplicate rows.\n";
 
   var IMPORT_VALID_TYPES = ["-ar", "-er", "-ir"];
   var IMPORT_VALID_IRREGULARITY = ["regular", "cambio de raíz", "irregular (yo)", "pretérito irregular", "irregular (total)"];
@@ -18521,6 +19705,8 @@
     if (IMPORT_VALID_POS.indexOf(pos) === -1) rowErrors.push(t("import_err_word_bad_pos", { n: n, word: word }));
     var gender = (w.gender === undefined || w.gender === null) ? "" : w.gender;
     if (IMPORT_VALID_GENDER.indexOf(gender) === -1) rowErrors.push(t("import_err_word_bad_gender", { n: n, word: word }));
+    var wRegister = (w.register === undefined || w.register === null || w.register === "") ? "neutro" : w.register;
+    if (IMPORT_VALID_REGISTER.indexOf(wRegister) === -1) rowErrors.push(t("import_err_word_bad_register", { n: n, word: word }));
 
     if (rowErrors.length) { errorsOut.push.apply(errorsOut, rowErrors); return null; }
 
@@ -18529,6 +19715,7 @@
       definition: definition,
       partOfSpeech: pos,
       gender: gender,
+      register: wRegister,
       notes: (typeof w.notes === "string") ? w.notes.trim() : "",
       example: (typeof w.example === "string") ? w.example.trim() : ""
     };
@@ -18819,6 +20006,7 @@
           definition: w.definition,
           part_of_speech: w.partOfSpeech,
           gender: w.gender,
+          register: w.register || "neutro",
           notes: w.notes,
           example: w.example
         });
@@ -18842,7 +20030,7 @@
       });
 
       var verbsPromise = toInsertV.length ? supabaseClient.from("verbs").insert(toInsertV).select() : Promise.resolve({ data: [], error: null });
-      var wordsPromise = toInsertW.length ? supabaseClient.from("words").insert(toInsertW).select() : Promise.resolve({ data: [], error: null });
+      var wordsPromise = toInsertW.length ? wordsWrite(toInsertW, function (r) { return supabaseClient.from("words").insert(r).select(); }) : Promise.resolve({ data: [], error: null });
       var phrasesPromise = toInsertP.length ? supabaseClient.from("phrases").insert(toInsertP).select() : Promise.resolve({ data: [], error: null });
 
       return Promise.all([verbsPromise, wordsPromise, phrasesPromise]).then(function (results) {
@@ -18954,7 +20142,7 @@
       el.authScreen.hidden = true;
       el.appScreen.hidden = false;
       el.acctMenuEmail.textContent = currentUser.email || "";
-      var bootLoads = [loadUserSettings(), loadVerbs(), loadWords(), loadPhrases(), loadLists(), loadPracticeHistory(false), loadElevenVoices()];
+      var bootLoads = [loadUserSettings(), loadVerbs(), loadWords(), loadPhrases(), loadLists(), loadItemProgress(), loadPracticeHistory(false), loadElevenVoices()];
       bootAfter(bootLoads);
       loadRewards();
       loadGameRecords();
@@ -18978,6 +20166,11 @@
       if (el.welcomeOverlay) el.welcomeOverlay.hidden = true;
       if (el.qaMenu) closeQuickAdd();
       allVerbs = [];
+      ownVerbs = []; ownWords = []; ownPhrases = [];
+      borrowedCache = {}; borrowedSrc = {}; itemProgress = {};
+      liveListsOk = true; itemProgressOk = true;
+      goneQueue = []; leftListIds = {};
+      formOrigin = { verb: null, word: null, phrase: null };
       selectedId = null;
       el.detail.hidden = true;
       el.form.hidden = true;
@@ -19346,6 +20539,7 @@
   el.wordFormCancel.addEventListener("click", closeWordForm);
   el.wordForm.addEventListener("submit", handleWordSubmit);
   el.wfRaeLookup.addEventListener("click", function () { lookupInRae("word"); });
+  el.pfLookup.addEventListener("click", function () { lookupInRae("phrase"); });
   el.wdSpeak.addEventListener("click", function () {
     var entry = allWords.find(function (v) { return v.id === selectedWordId; });
     if (entry) playTts(entry.data.word, el.wdSpeak, el.wdTtsMsg);
@@ -19541,6 +20735,18 @@
   el.ldCopyLink.addEventListener("click", handleCopyLink);
   el.ldNativeShare.addEventListener("click", handleNativeShare);
   el.ldDelete.addEventListener("click", handleListDelete);
+  el.ldRename.addEventListener("click", handleListRename);
+  el.ldLeave.addEventListener("click", handleListLeave);
+  el.ldSelectBtn.addEventListener("click", toggleListSelectMode);
+  el.ldKeepSelected.addEventListener("click", keepSelectedListItems);
+  el.ldInviteBtn.addEventListener("click", handleListInvite);
+  el.ldFriendsSee.addEventListener("change", handleFriendsSeeChange);
+  el.ldAppWide.addEventListener("change", handleAppWideChange);
+  el.openLibraryBtn.addEventListener("click", openLibrary);
+  el.libraryClose.addEventListener("click", closeLibrary);
+  el.goneKeep.addEventListener("click", goneKeepClick);
+  el.goneSkip.addEventListener("click", showNextGone);
+  el.flashKeep.addEventListener("click", flashKeepClick);
 
   el.listPickerClose.addEventListener("click", closeListPicker);
   el.listPickerCreateBtn.addEventListener("click", handleListPickerCreate);
@@ -19557,7 +20763,8 @@
   });
 
   el.shareCloseBtn.addEventListener("click", closeSharePreview);
-  el.shareImportBtn.addEventListener("click", handleShareImport);
+  el.shareImportBtn.addEventListener("click", function () { if (liveListsOk) handleShareJoin(); else handleShareImport(); });
+  el.shareCopyBtn.addEventListener("click", function () { el.shareCopyBtn.disabled = true; handleShareImport(); });
 
   el.toggleImportJson.addEventListener("click", openImportJsonModal);
   el.importJsonCancelBtn.addEventListener("click", closeImportJsonModal);

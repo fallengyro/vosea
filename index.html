@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="143">
+<meta name="vosea-build" content="145">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -443,6 +443,12 @@
         <button type="button" class="chip" data-facet="gender" data-value="neutro" data-i18n-tag="neutro">neutro</button>
       </div>
       <div class="chip-group">
+        <span class="chip-label" data-i18n="chip_group_register">Registro</span>
+        <button type="button" class="chip" data-facet="register" data-value="neutro" data-i18n="register_neutro">neutro</button>
+        <button type="button" class="chip" data-facet="register" data-value="coloquial" data-i18n="register_coloquial">coloquial</button>
+        <button type="button" class="chip" data-facet="register" data-value="lunfardo" data-i18n="register_lunfardo">lunfardo</button>
+      </div>
+      <div class="chip-group">
         <span class="chip-label" data-i18n="chip_group_flags">Marcas</span>
         <button type="button" class="chip" data-facet="flag" data-value="known" data-i18n-tag="sabido">sabido</button>
       </div>
@@ -531,6 +537,14 @@
           <option value="masculino" data-i18n-tag="masculino">masculino</option>
           <option value="femenino" data-i18n-tag="femenino">femenino</option>
           <option value="neutro" data-i18n-tag="neutro">neutro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="wf-register" data-i18n="label_registro">Registro</label>
+        <select id="wf-register">
+          <option value="neutro" data-i18n="register_neutro">neutro</option>
+          <option value="coloquial" data-i18n="register_coloquial">coloquial</option>
+          <option value="lunfardo" data-i18n="register_lunfardo">lunfardo</option>
         </select>
       </div>
       <div class="field field-wide">
@@ -641,9 +655,12 @@
   <form id="phrase-form" hidden>
     <h3 id="phrase-form-title" data-i18n="form_title_add_phrase">Agregar frase</h3>
     <div class="field-grid">
-      <div class="field">
+      <div class="field field-lead">
         <label for="pf-phrase" data-i18n="label_frase">Frase</label>
-        <input type="text" id="pf-phrase" required />
+        <div class="field-input-row">
+          <input type="text" id="pf-phrase" required />
+          <button type="button" class="icon-btn" id="pf-lookup" data-i18n="btn_phrase_lookup">Completar</button>
+        </div>
       </div>
       <div class="field">
         <label for="pf-definition" data-i18n="label_definicion">Definición</label>
@@ -1026,13 +1043,14 @@
   </section>
 
   <section id="lists-panel" hidden>
-    <p class="flash-setup-note" data-i18n="lists_intro">Armá una lista con los verbos y las palabras que quieras de tu colección — podés mezclar los dos, por ejemplo todo lo útil para "la cocina" — y compartila con un enlace. Quien lo abra puede ver la lista e importarla a su propia cuenta, sin tocar el resto de tus datos.</p>
+    <p class="flash-setup-note" data-i18n="lists_intro">Armá listas con lo que quieras (verbos, palabras y frases juntos, por ejemplo todo lo de «la cocina») y compartilas. Mientras una lista está activa, sus ítems están en tu colección; apagala y se van, salvo los que te quedaste.</p>
 
     <ul class="card-list lists-list" id="lists-list"></ul>
     <p class="form-msg" id="lists-empty-msg" hidden data-i18n="lists_empty">Todavía no creaste ninguna lista.</p>
 
     <div class="toolbar-row">
       <button class="add-toggle" id="toggle-add-list" type="button" data-i18n="btn_create_list_toggle">+ Crear lista</button>
+      <button class="seed-btn" id="open-library" type="button" data-i18n="btn_library">Biblioteca</button>
       <button class="seed-btn" id="toggle-import-json" type="button" data-i18n="btn_import_json_toggle">Importar contenido (JSON)</button>
     </div>
 
@@ -1056,8 +1074,10 @@
         <div>
           <h2 id="ld-name"></h2>
           <p class="definition" id="ld-meta"></p>
+          <p class="ld-role" id="ld-role"></p>
         </div>
       </div>
+      <div class="ld-onoff" id="ld-onoff" hidden></div>
       <div class="share-link-row" id="ld-share-row" hidden>
         <input type="text" id="ld-share-link" readonly />
         <button type="button" class="icon-btn" id="ld-copy-link" data-i18n="btn_copy_link">Copiar enlace</button>
@@ -1076,8 +1096,38 @@
         <h4 data-i18n="nav_phrases">Frases</h4>
         <ul class="card-list" id="ld-phrases-items"></ul>
       </div>
+      <div class="ld-select-bar" id="ld-select-bar" hidden>
+        <span id="ld-select-count"></span>
+        <button type="button" class="btn-primary" id="ld-keep-selected" data-i18n="btn_keep_selected">Quedarme con ellos</button>
+      </div>
+      <!-- Listas vivas (2026-10-23): who's in the list, and (for the owner)
+           who can see it. See app.js's renderListPeople(). -->
+      <div class="list-detail-group ld-people-group" id="ld-people-group" hidden>
+        <h4 data-i18n="ld_people">Personas</h4>
+        <ul class="ld-people" id="ld-people"></ul>
+        <div class="ld-invite" id="ld-invite" hidden>
+          <p class="ld-invite-label" data-i18n="ld_invite_label">Agregar a un amigo</p>
+          <div class="ld-invite-row" id="ld-invite-row">
+            <select id="ld-invite-friend" data-i18n-aria-label="ld_invite_label" aria-label="Agregar a un amigo"></select>
+            <select id="ld-invite-role" data-i18n-aria-label="ld_invite_role_aria" aria-label="Rol">
+              <option value="editor" data-i18n="list_role_editor">Editor</option>
+              <option value="reader" data-i18n="list_role_reader">Lector</option>
+            </select>
+            <button type="button" class="icon-btn" id="ld-invite-btn" data-i18n="btn_invite">Agregar</button>
+          </div>
+          <p class="flash-setup-note" id="ld-invite-none" hidden data-i18n="ld_invite_none">Agregá amigos en Jugar → Amigos para compartirles la lista.</p>
+        </div>
+        <div class="ld-visibility" id="ld-visibility" hidden>
+          <label class="ld-check"><input type="checkbox" id="ld-friends-see" /> <span data-i18n="ld_friends_see">Visible para tus amigos (en su Biblioteca)</span></label>
+          <label class="ld-check" id="ld-app-wide-wrap" hidden><input type="checkbox" id="ld-app-wide" /> <span data-i18n="ld_app_wide">En la Biblioteca de todos</span></label>
+        </div>
+        <p class="form-msg" id="ld-people-msg"></p>
+      </div>
       <div class="detail-actions-footer">
+        <button class="icon-btn" id="ld-select-btn" type="button" data-i18n="btn_list_select">Elegir</button>
         <button class="icon-btn" id="ld-share-btn" type="button" data-i18n="btn_share">Compartir</button>
+        <button class="icon-btn" id="ld-rename" type="button" data-i18n="btn_list_rename">Renombrar</button>
+        <button class="icon-btn danger" id="ld-leave" type="button" hidden data-i18n="btn_list_leave">Salir de la lista</button>
         <button class="icon-btn danger" id="ld-delete" type="button" data-i18n="btn_delete_list">Eliminar lista</button>
       </div>
     </section>
@@ -1091,6 +1141,30 @@
     <button type="button" class="btn-primary" id="col-bar-btn" data-i18n="col_bar_btn">Practicar</button>
   </div>
 
+</div>
+
+<div class="modal-overlay" id="library-overlay" hidden>
+  <div class="modal-card library-card">
+    <h3 data-i18n="library_title">Biblioteca</h3>
+    <p class="flash-setup-note" data-i18n="library_intro">Listas que tus amigos hacen visibles y listas para todos. Al agregar una, sus ítems pasan a tu colección mientras la tengas activa.</p>
+    <p class="form-msg" id="library-msg"></p>
+    <ul class="card-list library-list" id="library-list"></ul>
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" id="library-close" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="gone-overlay" hidden>
+  <div class="modal-card">
+    <h3 id="gone-title"></h3>
+    <p class="flash-setup-note" id="gone-text"></p>
+    <p class="form-msg" id="gone-msg"></p>
+    <div class="form-actions">
+      <button type="button" class="btn-primary" id="gone-keep"></button>
+      <button type="button" class="btn-secondary" id="gone-skip" data-i18n="gone_skip">No, gracias</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="list-picker-overlay" hidden>
@@ -1301,7 +1375,9 @@
     <ul class="card-list" id="share-items"></ul>
     <div class="share-actions">
       <p class="flash-setup-note" id="share-login-note" hidden data-i18n="share_login_note">Iniciá sesión o creá una cuenta para importar esta lista a tu colección.</p>
-      <button type="button" class="btn-primary" id="share-import-btn" hidden data-i18n="btn_import">Importar a mi colección</button>
+      <p class="flash-setup-note" id="share-join-note" hidden data-i18n="share_join_note">Mientras la tengas activa, sus ítems están en tu colección y se actualizan si la cambian. Podés quedarte con los que quieras.</p>
+      <button type="button" class="btn-primary" id="share-import-btn" hidden>Agregar la lista</button>
+      <button type="button" class="btn-secondary" id="share-copy-btn" hidden data-i18n="btn_share_copy">Copiar todo a mi colección</button>
       <p class="form-msg" id="share-import-result"></p>
     </div>
   </div>
@@ -1395,6 +1471,7 @@
       <button type="button" class="flash-grade-opt bien" id="flash-grade-bien" aria-pressed="false" data-i18n="grade_bien">Bien</button>
     </span>
     <button type="button" class="known-toggle" id="flash-known-toggle" aria-pressed="false" data-i18n="known_toggle">Sabido</button>
+    <button type="button" class="keep-toggle" id="flash-keep" hidden></button>
   </div>
   <!-- Contrarreloj, Leer: grade AND move on (only here). -->
   <div class="cr-grade" id="cr-grade" hidden>

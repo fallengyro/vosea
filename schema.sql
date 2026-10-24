@@ -2351,3 +2351,584 @@ alter table public.voice_units drop constraint if exists voice_units_tag_check;
 alter table public.voice_units add constraint voice_units_tag_check check (char_length(tag) <= 120);
 alter table public.voice_retakes drop constraint if exists voice_retakes_tag_check;
 alter table public.voice_retakes add constraint voice_retakes_tag_check check (char_length(tag) <= 120);
+
+-- ===========================================================================
+-- 2026-10-23 — register for words (commit 124)
+-- ===========================================================================
+-- mason: the lookup should set the coloquial / lunfardo chips, and words
+-- had no register (only phrases did). This adds words.register (neutro /
+-- coloquial / lunfardo, same values as phrases.register; every existing
+-- word starts as neutro) and redefines vosea_restore_content() so a
+-- restored backup keeps each word's register. Nothing else changes.
+-- Safe to run twice.
+-- ===========================================================================
+
+alter table public.words add column if not exists register text not null default 'neutro';
+alter table public.words drop constraint if exists words_register_check;
+alter table public.words add constraint words_register_check check (register in ('neutro', 'coloquial', 'lunfardo'));
+
+create or replace function public.vosea_restore_content(p_prefer text)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  b record;
+  r jsonb; it jsonb;
+  rv public.verbs; rw public.words; rp public.phrases;
+  ins int := 0; ovw int := 0; kept int := 0;
+  lnew int := 0; lmerged int := 0; iadd int := 0;
+  lid uuid; tok text; ikey text; n int;
+  padd int := 0; radd int := 0; gadd int := 0;
+begin
+  if uid is null then raise exception 'not_signed_in'; end if;
+  if p_prefer is null or p_prefer not in ('backup', 'active') then raise exception 'bad_prefer'; end if;
+  select * into b from public.content_backups where user_id = uid;
+  if not found then raise exception 'no_backup'; end if;
+
+  for r in select * from jsonb_array_elements(b.data->'verbs') loop
+    rv := jsonb_populate_record(null::public.verbs, r);
+    select count(*) into n from public.verbs x where x.user_id = uid and vosea_norm(x.infinitive) = vosea_norm(rv.infinitive);
+    if n = 0 then
+      insert into public.verbs (user_id, infinitive, definition, notes, example, type, irregularity, pattern, reflexive, transitivity,
+                                preposicion, auxiliar, gustar_like, also_personal_use, personal_definition, personal_example, known, known_forms, forms_en, forms_en_sig, forms)
+      values (uid, rv.infinitive, coalesce(rv.definition, ''), coalesce(rv.notes, ''), coalesce(rv.example, ''), coalesce(rv.type, '-ar'),
+              coalesce(rv.irregularity, 'regular'), coalesce(rv.pattern, ''), coalesce(rv.reflexive, false),
+              coalesce(rv.transitivity, 'transitivo'), coalesce(rv.preposicion, ''), coalesce(rv.auxiliar, false),
+              coalesce(rv.gustar_like, false), coalesce(rv.also_personal_use, false), coalesce(rv.personal_definition, ''), coalesce(rv.personal_example, ''), coalesce(rv.known, false),
+              coalesce(rv.known_forms, '{}'), coalesce(rv.forms_en, '{}'), coalesce(rv.forms_en_sig, ''), coalesce(rv.forms, '{}'));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.verbs x set definition = coalesce(rv.definition, ''), notes = coalesce(rv.notes, ''),
+        example = coalesce(rv.example, ''), type = coalesce(rv.type, '-ar'),
+        irregularity = coalesce(rv.irregularity, 'regular'),
+        pattern = coalesce(rv.pattern, ''), reflexive = coalesce(rv.reflexive, false),
+        transitivity = coalesce(rv.transitivity, 'transitivo'), preposicion = coalesce(rv.preposicion, ''),
+        auxiliar = coalesce(rv.auxiliar, false), gustar_like = coalesce(rv.gustar_like, false),
+        also_personal_use = coalesce(rv.also_personal_use, false), personal_definition = coalesce(rv.personal_definition, ''),
+        personal_example = coalesce(rv.personal_example, ''),
+        known = coalesce(rv.known, false),
+        known_forms = coalesce(rv.known_forms, '{}'), forms_en = coalesce(rv.forms_en, '{}'),
+        forms_en_sig = coalesce(rv.forms_en_sig, ''), forms = coalesce(rv.forms, '{}')
+      where x.user_id = uid and vosea_norm(x.infinitive) = vosea_norm(rv.infinitive);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'words') loop
+    rw := jsonb_populate_record(null::public.words, r);
+    select count(*) into n from public.words x where x.user_id = uid and vosea_norm(x.word) = vosea_norm(rw.word);
+    if n = 0 then
+      insert into public.words (user_id, word, definition, part_of_speech, gender, register, notes, example, known)
+      values (uid, rw.word, coalesce(rw.definition, ''), coalesce(rw.part_of_speech, 'sustantivo'), coalesce(rw.gender, ''),
+              coalesce(rw.register, 'neutro'), coalesce(rw.notes, ''), coalesce(rw.example, ''), coalesce(rw.known, false));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.words x set definition = coalesce(rw.definition, ''), part_of_speech = coalesce(rw.part_of_speech, 'sustantivo'),
+        gender = coalesce(rw.gender, ''), register = coalesce(rw.register, 'neutro'), notes = coalesce(rw.notes, ''),
+        example = coalesce(rw.example, ''), known = coalesce(rw.known, false)
+      where x.user_id = uid and vosea_norm(x.word) = vosea_norm(rw.word);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'phrases') loop
+    rp := jsonb_populate_record(null::public.phrases, r);
+    select count(*) into n from public.phrases x where x.user_id = uid and vosea_norm(x.phrase) = vosea_norm(rp.phrase);
+    if n = 0 then
+      insert into public.phrases (user_id, phrase, definition, function, register, idiomatic, literal, notes, example, known)
+      values (uid, rp.phrase, coalesce(rp.definition, ''), coalesce(rp.function, 'otro'), coalesce(rp.register, 'neutro'),
+              coalesce(rp.idiomatic, false), coalesce(rp.literal, ''), coalesce(rp.notes, ''), coalesce(rp.example, ''), coalesce(rp.known, false));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.phrases x set definition = coalesce(rp.definition, ''), function = coalesce(rp.function, 'otro'),
+        register = coalesce(rp.register, 'neutro'), idiomatic = coalesce(rp.idiomatic, false), literal = coalesce(rp.literal, ''),
+        notes = coalesce(rp.notes, ''), example = coalesce(rp.example, ''), known = coalesce(rp.known, false)
+      where x.user_id = uid and vosea_norm(x.phrase) = vosea_norm(rp.phrase);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'lists') loop
+    select x.id into lid from public.lists x where x.user_id = uid and vosea_norm(x.name) = vosea_norm(r->>'name') order by x.created_at limit 1;
+    if lid is null then
+      tok := r->>'share_token';
+      if tok is null or exists (select 1 from public.lists x where x.share_token = tok) then
+        insert into public.lists (user_id, name, owner_label, share_enabled)
+        values (uid, r->>'name', coalesce(r->>'owner_label', ''), coalesce((r->>'share_enabled')::boolean, true)) returning id into lid;
+      else
+        insert into public.lists (user_id, name, owner_label, share_token, share_enabled)
+        values (uid, r->>'name', coalesce(r->>'owner_label', ''), tok, coalesce((r->>'share_enabled')::boolean, true)) returning id into lid;
+      end if;
+      lnew := lnew + 1;
+    else
+      lmerged := lmerged + 1;
+    end if;
+    for it in select * from jsonb_array_elements(coalesce(r->'items', '[]')) loop
+      ikey := vosea_norm(coalesce(it->'data'->>'infinitive', it->'data'->>'word', it->'data'->>'phrase'));
+      if exists (select 1 from public.list_items i where i.list_id = lid and i.item_type = it->>'item_type'
+                 and vosea_norm(coalesce(i.data->>'infinitive', i.data->>'word', i.data->>'phrase')) = ikey) then
+        if p_prefer = 'backup' then
+          delete from public.list_items i where i.list_id = lid and i.item_type = it->>'item_type'
+            and vosea_norm(coalesce(i.data->>'infinitive', i.data->>'word', i.data->>'phrase')) = ikey;
+          insert into public.list_items (list_id, item_type, data) values (lid, it->>'item_type', it->'data');
+        end if;
+      else
+        insert into public.list_items (list_id, item_type, data) values (lid, it->>'item_type', it->'data');
+        iadd := iadd + 1;
+      end if;
+    end loop;
+    lid := null;
+  end loop;
+
+  -- progress (2026-10-10): history only ever grows, so it's merged by id
+  -- whatever p_prefer says: rows the app already has are left alone, the
+  -- rest come back. Older backups (version 1) have none of this.
+  insert into public.practice_log
+    select (jsonb_populate_record(null::public.practice_log, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'practice', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics padd = row_count;
+  insert into public.rewards
+    select (jsonb_populate_record(null::public.rewards, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'rewards', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics radd = row_count;
+  insert into public.game_records
+    select (jsonb_populate_record(null::public.game_records, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'records', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics gadd = row_count;
+
+  return jsonb_build_object('inserted', ins, 'overwritten', ovw, 'kept', kept,
+                            'lists_created', lnew, 'lists_merged', lmerged, 'list_items_added', iadd,
+                            'practice_added', padd, 'rewards_added', radd, 'records_added', gadd);
+end;
+$$;
+
+-- ===========================================================================
+-- 2026-10-23 — live lists (commit 126)
+-- ===========================================================================
+-- mason: "allow sharing or maintaining of lists, without permanently adding
+-- the content to your database… have the content behave as though it is in
+-- my content dataset so long as the list is 'on'." His decisions: lists are
+-- live; you can keep single items for good; shared ownership with
+-- permissions (Dueño / Editor / Lector); a share link only gives Lector;
+-- edit access goes to a person picked from Amigos; a list you add starts
+-- on; kept items just join your collection; the owner can hand a list to
+-- one of its editors. Plan: claude/vosea-live-lists-plan.md.
+--
+-- What this adds:
+--   1. lists.friends_can_see (the list shows in your friends' Biblioteca)
+--      and lists.app_wide (in everyone's Biblioteca; only an app owner with
+--      can_view_usage can set it, through list_set_app_wide()).
+--   2. list_members: one row per person per list, with their role and their
+--      own on/off switch. The owner has a row too (role 'owner'), added by a
+--      trigger; existing lists get one below. lists.user_id stays the owner.
+--   3. Reading and writing a list follows the role:
+--        lists       — the owner and members can read; only the owner can
+--                      change it (name, owner_label, share_enabled,
+--                      friends_can_see), and only through those columns.
+--        list_items  — members, and anyone the list is visible to in their
+--                      Biblioteca, can read; owner and editors can add,
+--                      edit and remove. Each item records who last saved it.
+--        list_members — you see your own rows, and an owner sees the rows
+--                      of their lists; names come from list_people(). Every
+--                      change goes through the functions below.
+--   4. item_progress: your Sabido marks for items you have through a list
+--      but not in your own collection (keyed like practice_log: kind + the
+--      normalised Spanish text). Private per person.
+--   5. Functions: list_join_by_token, list_join, library_lists, list_people,
+--      list_add_member, list_set_member_role, list_remove_member,
+--      list_transfer, list_set_enabled, list_set_app_wide.
+--   6. vosea_delete_content() also leaves the lists you were in and clears
+--      item_progress.
+-- Nothing is copied or deleted from anyone's verbs / words / phrases.
+-- Safe to run twice.
+-- ===========================================================================
+
+-- 1. lists: who can find it --------------------------------------------------
+alter table public.lists add column if not exists friends_can_see boolean not null default false;
+alter table public.lists add column if not exists app_wide boolean not null default false;
+
+-- 2. list_members -------------------------------------------------------------
+create table if not exists public.list_members (
+  list_id uuid not null references public.lists(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null default 'reader',
+  enabled boolean not null default true,
+  added_at timestamptz not null default now(),
+  primary key (list_id, user_id)
+);
+alter table public.list_members drop constraint if exists list_members_role_check;
+alter table public.list_members add constraint list_members_role_check check (role in ('owner', 'editor', 'reader'));
+create index if not exists list_members_user_idx on public.list_members (user_id);
+alter table public.list_members enable row level security;
+
+-- Every list has its owner as a member (their on/off switch lives there).
+create or replace function public.vosea_list_owner_member()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.list_members (list_id, user_id, role, enabled)
+  values (new.id, new.user_id, 'owner', true)
+  on conflict (list_id, user_id) do update set role = 'owner';
+  return new;
+end $$;
+drop trigger if exists lists_owner_member on public.lists;
+create trigger lists_owner_member after insert on public.lists
+  for each row execute function public.vosea_list_owner_member();
+
+insert into public.list_members (list_id, user_id, role, enabled)
+select l.id, l.user_id, 'owner', true from public.lists l
+on conflict (list_id, user_id) do update set role = 'owner';
+
+-- Your role in a list: 'owner', 'editor', 'reader' or null. Security definer
+-- so the policies below can use it without looking at each other (which
+-- would recurse).
+create or replace function public.vosea_list_role(p_list uuid)
+returns text language sql stable security definer set search_path = public as $$
+  select case
+    when exists (select 1 from public.lists l where l.id = p_list and l.user_id = auth.uid()) then 'owner'
+    else (select m.role from public.list_members m
+          where m.list_id = p_list and m.user_id = auth.uid() and m.role in ('editor', 'reader'))
+  end;
+$$;
+
+-- Whether a list is in your Biblioteca: app-wide, or a friend's list they
+-- made visible to friends.
+create or replace function public.vosea_list_visible(p_list uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.lists l
+    where l.id = p_list and (
+      l.app_wide
+      or (l.friends_can_see and exists (
+        select 1 from public.friendships f
+        where f.status = 'accepted'
+          and ((f.requester = auth.uid() and f.addressee = l.user_id)
+            or (f.addressee = auth.uid() and f.requester = l.user_id))))));
+$$;
+
+-- An app owner who can publish to everyone's Biblioteca.
+create or replace function public.vosea_is_publisher()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.app_owners o where o.user_id = auth.uid() and o.can_view_usage);
+$$;
+
+-- 3. policies -----------------------------------------------------------------
+drop policy if exists "select own lists" on public.lists;
+create policy "select own lists" on public.lists
+  for select using (auth.uid() = user_id or public.vosea_list_role(id) is not null);
+
+drop policy if exists "insert own lists" on public.lists;
+create policy "insert own lists" on public.lists
+  for insert with check (auth.uid() = user_id and app_wide = false);
+
+drop policy if exists "update own lists" on public.lists;
+create policy "update own lists" on public.lists
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- The owner changes the list only through these columns; who owns it and
+-- whether it's app-wide go through list_transfer() / list_set_app_wide().
+revoke update on public.lists from anon, authenticated;
+grant update (name, owner_label, share_enabled, friends_can_see) on public.lists to authenticated;
+
+alter table public.list_items add column if not exists edited_by_name text not null default '';
+alter table public.list_items add column if not exists edited_at timestamptz;
+
+drop policy if exists "select own list items" on public.list_items;
+create policy "select own list items" on public.list_items
+  for select using (public.vosea_list_role(list_id) is not null or public.vosea_list_visible(list_id));
+
+drop policy if exists "insert own list items" on public.list_items;
+create policy "insert own list items" on public.list_items
+  for insert with check (public.vosea_list_role(list_id) in ('owner', 'editor'));
+
+drop policy if exists "update list items" on public.list_items;
+create policy "update list items" on public.list_items
+  for update using (public.vosea_list_role(list_id) in ('owner', 'editor'))
+  with check (public.vosea_list_role(list_id) in ('owner', 'editor'));
+
+drop policy if exists "delete own list items" on public.list_items;
+create policy "delete own list items" on public.list_items
+  for delete using (public.vosea_list_role(list_id) in ('owner', 'editor'));
+
+revoke update on public.list_items from anon, authenticated;
+grant update (data) on public.list_items to authenticated;
+
+-- Who saved an item last ("editado por Laura"): the person's display name.
+create or replace function public.vosea_list_item_stamp()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is not null then
+    new.edited_by_name := coalesce((select p.display_name from public.profiles p where p.user_id = auth.uid()), '');
+    new.edited_at := now();
+  end if;
+  return new;
+end $$;
+drop trigger if exists list_items_stamp on public.list_items;
+create trigger list_items_stamp before insert or update on public.list_items
+  for each row execute function public.vosea_list_item_stamp();
+
+drop policy if exists "select list members" on public.list_members;
+create policy "select list members" on public.list_members
+  for select using (user_id = auth.uid() or public.vosea_list_role(list_id) = 'owner');
+revoke insert, update, delete on public.list_members from anon, authenticated;
+
+-- 4. item_progress --------------------------------------------------------------
+create table if not exists public.item_progress (
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  item_kind text not null,
+  item_key text not null,
+  known boolean not null default false,
+  known_forms jsonb not null default '{}',
+  updated_at timestamptz not null default now(),
+  primary key (user_id, item_kind, item_key)
+);
+alter table public.item_progress drop constraint if exists item_progress_kind_check;
+alter table public.item_progress add constraint item_progress_kind_check check (item_kind in ('verb', 'word', 'phrase'));
+alter table public.item_progress drop constraint if exists item_progress_shape_check;
+alter table public.item_progress add constraint item_progress_shape_check
+  check (char_length(item_key) between 1 and 200 and jsonb_typeof(known_forms) = 'object');
+alter table public.item_progress enable row level security;
+drop policy if exists "select own progress" on public.item_progress;
+create policy "select own progress" on public.item_progress for select using (auth.uid() = user_id);
+drop policy if exists "insert own progress" on public.item_progress;
+create policy "insert own progress" on public.item_progress for insert with check (auth.uid() = user_id);
+drop policy if exists "update own progress" on public.item_progress;
+create policy "update own progress" on public.item_progress for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "delete own progress" on public.item_progress;
+create policy "delete own progress" on public.item_progress for delete using (auth.uid() = user_id);
+
+-- 5. functions --------------------------------------------------------------------
+-- A person's display name (profiles is private to its owner).
+create or replace function public.vosea_display_name(p_user uuid)
+returns text language sql stable security definer set search_path = public as $$
+  select coalesce((select display_name from public.profiles where user_id = p_user), '?');
+$$;
+revoke execute on function public.vosea_display_name(uuid) from public, anon, authenticated;
+
+-- Join a list from its share link, as Lector. { result, list_id }:
+--   joined / already (you were in it) / owner (it's yours) / not_found
+create or replace function public.list_join_by_token(p_token text)
+returns json language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid(); l public.lists;
+begin
+  if me is null then raise exception 'sign_in_required'; end if;
+  select * into l from public.lists where share_token = p_token and share_enabled = true;
+  if not found then return json_build_object('result', 'not_found'); end if;
+  if l.user_id = me then return json_build_object('result', 'owner', 'list_id', l.id); end if;
+  if exists (select 1 from public.list_members where list_id = l.id and user_id = me) then
+    update public.list_members set enabled = true where list_id = l.id and user_id = me;
+    return json_build_object('result', 'already', 'list_id', l.id);
+  end if;
+  insert into public.list_members (list_id, user_id, role, enabled) values (l.id, me, 'reader', true);
+  return json_build_object('result', 'joined', 'list_id', l.id);
+end $$;
+
+-- Join a list from your Biblioteca, as Lector.
+create or replace function public.list_join(p_list uuid)
+returns json language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid(); owner uuid;
+begin
+  if me is null then raise exception 'sign_in_required'; end if;
+  select user_id into owner from public.lists where id = p_list;
+  if not found or not public.vosea_list_visible(p_list) then
+    if owner = me then return json_build_object('result', 'owner', 'list_id', p_list); end if;
+    return json_build_object('result', 'not_found');
+  end if;
+  if owner = me then return json_build_object('result', 'owner', 'list_id', p_list); end if;
+  if exists (select 1 from public.list_members where list_id = p_list and user_id = me) then
+    update public.list_members set enabled = true where list_id = p_list and user_id = me;
+    return json_build_object('result', 'already', 'list_id', p_list);
+  end if;
+  insert into public.list_members (list_id, user_id, role, enabled) values (p_list, me, 'reader', true);
+  return json_build_object('result', 'joined', 'list_id', p_list);
+end $$;
+
+-- Your Biblioteca: app-wide lists and your friends' visible lists (not your
+-- own), with how many of each kind, and whether you're already in it.
+create or replace function public.library_lists()
+returns table (list_id uuid, name text, owner_name text, source text,
+               n_verbs int, n_words int, n_phrases int, joined boolean)
+language sql stable security definer set search_path = public as $$
+  select l.id, l.name, public.vosea_display_name(l.user_id),
+         case when l.app_wide then 'app' else 'friend' end,
+         (select count(*)::int from public.list_items i where i.list_id = l.id and i.item_type = 'verb'),
+         (select count(*)::int from public.list_items i where i.list_id = l.id and i.item_type = 'word'),
+         (select count(*)::int from public.list_items i where i.list_id = l.id and i.item_type = 'phrase'),
+         exists (select 1 from public.list_members m where m.list_id = l.id and m.user_id = auth.uid())
+  from public.lists l
+  where auth.uid() is not null and l.user_id <> auth.uid() and public.vosea_list_visible(l.id)
+  order by (not l.app_wide), lower(l.name);
+$$;
+
+-- The people in a list. The owner sees everyone; others see the owner and
+-- the editors, plus themselves (Lectores who joined by link may be
+-- strangers to each other).
+create or replace function public.list_people(p_list uuid)
+returns table (user_id uuid, display_name text, role text, is_me boolean, added_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+declare my_role text := public.vosea_list_role(p_list);
+begin
+  if my_role is null then return; end if;
+  return query
+    select m.user_id, public.vosea_display_name(m.user_id), m.role, m.user_id = auth.uid(), m.added_at
+    from public.list_members m
+    where m.list_id = p_list and (my_role = 'owner' or m.role in ('owner', 'editor') or m.user_id = auth.uid())
+    order by case m.role when 'owner' then 0 when 'editor' then 1 else 2 end, lower(public.vosea_display_name(m.user_id));
+end $$;
+
+-- How many Lectores a list has (for everyone in it).
+create or replace function public.list_reader_count(p_list uuid)
+returns int language sql stable security definer set search_path = public as $$
+  select case when public.vosea_list_role(p_list) is null then 0
+    else (select count(*)::int from public.list_members m where m.list_id = p_list and m.role = 'reader') end;
+$$;
+
+-- The owner adds a friend, as Editor or Lector (or changes their role if
+-- they're already in it). Result: added / updated / not_friend / not_owner.
+create or replace function public.list_add_member(p_list uuid, p_user uuid, p_role text)
+returns text language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid();
+begin
+  if me is null then raise exception 'sign_in_required'; end if;
+  if p_role not in ('editor', 'reader') then raise exception 'bad_role'; end if;
+  if public.vosea_list_role(p_list) is distinct from 'owner' then return 'not_owner'; end if;
+  if p_user = me then return 'not_friend'; end if;
+  if not exists (select 1 from public.friendships f where f.status = 'accepted'
+                 and ((f.requester = me and f.addressee = p_user) or (f.addressee = me and f.requester = p_user))) then
+    return 'not_friend';
+  end if;
+  if exists (select 1 from public.list_members where list_id = p_list and user_id = p_user) then
+    update public.list_members set role = p_role where list_id = p_list and user_id = p_user;
+    return 'updated';
+  end if;
+  insert into public.list_members (list_id, user_id, role, enabled) values (p_list, p_user, p_role, true);
+  return 'added';
+end $$;
+
+-- The owner makes someone in the list an Editor or a Lector.
+create or replace function public.list_set_member_role(p_list uuid, p_user uuid, p_role text)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if p_role not in ('editor', 'reader') then raise exception 'bad_role'; end if;
+  if public.vosea_list_role(p_list) is distinct from 'owner' then return false; end if;
+  update public.list_members set role = p_role where list_id = p_list and user_id = p_user and role <> 'owner';
+  return found;
+end $$;
+
+-- The owner removes someone, or you leave a list (an owner can't leave:
+-- they delete the list or hand it over first).
+create or replace function public.list_remove_member(p_list uuid, p_user uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid(); my_role text := public.vosea_list_role(p_list);
+begin
+  if me is null or my_role is null then return false; end if;
+  if p_user = me then
+    if my_role = 'owner' then return false; end if;
+  elsif my_role <> 'owner' then
+    return false;
+  end if;
+  delete from public.list_members where list_id = p_list and user_id = p_user and role <> 'owner';
+  return found;
+end $$;
+
+-- The owner hands the list to one of its editors; the old owner stays on
+-- as an editor.
+create or replace function public.list_transfer(p_list uuid, p_user uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid();
+begin
+  if me is null or public.vosea_list_role(p_list) is distinct from 'owner' then return false; end if;
+  if not exists (select 1 from public.list_members where list_id = p_list and user_id = p_user and role = 'editor') then
+    return false;
+  end if;
+  update public.lists set user_id = p_user, owner_label = public.vosea_display_name(p_user), app_wide = false
+    where id = p_list;
+  update public.list_members set role = 'owner' where list_id = p_list and user_id = p_user;
+  insert into public.list_members (list_id, user_id, role, enabled) values (p_list, me, 'editor', true)
+    on conflict (list_id, user_id) do update set role = 'editor';
+  return true;
+end $$;
+
+-- Your own on/off switch for a list you're in (owner included).
+create or replace function public.list_set_enabled(p_list uuid, p_enabled boolean)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  update public.list_members set enabled = coalesce(p_enabled, true)
+    where list_id = p_list and user_id = auth.uid();
+  if not found and exists (select 1 from public.lists where id = p_list and user_id = auth.uid()) then
+    insert into public.list_members (list_id, user_id, role, enabled) values (p_list, auth.uid(), 'owner', coalesce(p_enabled, true));
+    return true;
+  end if;
+  return found;
+end $$;
+
+-- Put one of your lists in everyone's Biblioteca (app owners only).
+create or replace function public.list_set_app_wide(p_list uuid, p_on boolean)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if not public.vosea_is_publisher() then return false; end if;
+  update public.lists set app_wide = coalesce(p_on, false) where id = p_list and user_id = auth.uid();
+  return found;
+end $$;
+
+revoke execute on function public.vosea_list_owner_member() from public, anon, authenticated;
+revoke execute on function public.vosea_list_item_stamp() from public, anon, authenticated;
+revoke execute on function public.list_join_by_token(text) from public, anon;
+revoke execute on function public.list_join(uuid) from public, anon;
+revoke execute on function public.library_lists() from public, anon;
+revoke execute on function public.list_people(uuid) from public, anon;
+revoke execute on function public.list_reader_count(uuid) from public, anon;
+revoke execute on function public.list_add_member(uuid, uuid, text) from public, anon;
+revoke execute on function public.list_set_member_role(uuid, uuid, text) from public, anon;
+revoke execute on function public.list_remove_member(uuid, uuid) from public, anon;
+revoke execute on function public.list_transfer(uuid, uuid) from public, anon;
+revoke execute on function public.list_set_enabled(uuid, boolean) from public, anon;
+revoke execute on function public.list_set_app_wide(uuid, boolean) from public, anon;
+revoke execute on function public.vosea_is_publisher() from public, anon;
+grant execute on function public.list_join_by_token(text) to authenticated;
+grant execute on function public.list_join(uuid) to authenticated;
+grant execute on function public.library_lists() to authenticated;
+grant execute on function public.list_people(uuid) to authenticated;
+grant execute on function public.list_reader_count(uuid) to authenticated;
+grant execute on function public.list_add_member(uuid, uuid, text) to authenticated;
+grant execute on function public.list_set_member_role(uuid, uuid, text) to authenticated;
+grant execute on function public.list_remove_member(uuid, uuid) to authenticated;
+grant execute on function public.list_transfer(uuid, uuid) to authenticated;
+grant execute on function public.list_set_enabled(uuid, boolean) to authenticated;
+grant execute on function public.list_set_app_wide(uuid, boolean) to authenticated;
+grant execute on function public.vosea_is_publisher() to authenticated;
+grant execute on function public.vosea_list_role(uuid) to authenticated;
+grant execute on function public.vosea_list_visible(uuid) to authenticated;
+
+-- 6. Borrar contenido also leaves the lists you were in -------------------------
+create or replace function public.vosea_delete_content()
+returns jsonb
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  nv int; nw int; np int; nl int;
+begin
+  if uid is null then raise exception 'not_signed_in'; end if;
+  delete from public.lists where user_id = uid;   get diagnostics nl = row_count;
+  perform public.list_remove_member(m.list_id, uid) from public.list_members m where m.user_id = uid and m.role <> 'owner';
+  delete from public.item_progress where user_id = uid;
+  delete from public.verbs where user_id = uid;   get diagnostics nv = row_count;
+  delete from public.words where user_id = uid;   get diagnostics nw = row_count;
+  delete from public.phrases where user_id = uid; get diagnostics np = row_count;
+  return jsonb_build_object('verbs', nv, 'words', nw, 'phrases', np, 'lists', nl);
+end;
+$$;
