@@ -1204,6 +1204,24 @@
       settings_quiet_off: "Apagado",
       settings_quiet_on: "Activado",
       settings_quiet_note: "Silencia toda la pronunciación de la app (por ejemplo, en un avión). Solo en este dispositivo.",
+      settings_push_label: "Notificaciones",
+      settings_push_off: "Apagadas",
+      settings_push_on: "Activadas",
+      settings_push_note: "Solo en este dispositivo. Te avisa cuando alguien te manda una solicitud de amistad, te agrega a una lista o te reta. Nunca por algo que hiciste vos.",
+      push_g_friends: "Amigos",
+      push_g_friends_sub: "solicitudes y amistades nuevas",
+      push_g_lists: "Listas",
+      push_g_lists_sub: "cuando te agregan, cambia tu rol o te pasan una lista",
+      push_g_retos: "Te reto",
+      push_g_retos_sub: "retos nuevos y resultados",
+      push_ios_home: "En iPhone, primero agregá voseá a la pantalla de inicio (Compartir → Agregar a inicio) y abrila desde ahí.",
+      push_unsupported: "Este navegador no puede recibir notificaciones.",
+      push_denied: "Las notificaciones están bloqueadas para voseá. Activalas en la configuración del navegador o del teléfono, y después volvé a intentar.",
+      push_dismissed: "No se activaron. Podés volver a intentar cuando quieras.",
+      push_not_ready: "Las notificaciones todavía no están listas en el servidor.",
+      push_failed: "No se pudieron activar las notificaciones. Probá de nuevo.",
+      push_on_done: "Listo: vas a recibir notificaciones en este dispositivo.",
+      push_off_done: "Notificaciones apagadas en este dispositivo.",
       settings_diag_label: "Ayudar a mejorar el reconocimiento de voz",
       settings_diag_off: "No",
       settings_diag_on: "Sí",
@@ -2456,6 +2474,24 @@
       settings_quiet_off: "Off",
       settings_quiet_on: "On",
       settings_quiet_note: "Mutes all pronunciation audio in the app (on a plane, say). This device only.",
+      settings_push_label: "Notifications",
+      settings_push_off: "Off",
+      settings_push_on: "On",
+      settings_push_note: "This device only. Lets you know when someone sends you a friend request, adds you to a list, or challenges you. Never for something you did yourself.",
+      push_g_friends: "Friends",
+      push_g_friends_sub: "requests and new friends",
+      push_g_lists: "Lists",
+      push_g_lists_sub: "when you're added, your role changes, or a list is handed to you",
+      push_g_retos: "Te reto",
+      push_g_retos_sub: "new challenges and results",
+      push_ios_home: "On iPhone, first add voseá to your Home Screen (Share → Add to Home Screen) and open it from there.",
+      push_unsupported: "This browser can't receive notifications.",
+      push_denied: "Notifications are blocked for voseá. Turn them on in your browser or phone settings, then try again.",
+      push_dismissed: "They weren't turned on. You can try again anytime.",
+      push_not_ready: "Notifications aren't set up on the server yet.",
+      push_failed: "Couldn't turn on notifications. Try again.",
+      push_on_done: "Done: you'll get notifications on this device.",
+      push_off_done: "Notifications are off on this device.",
       settings_diag_label: "Help improve speech recognition",
       settings_diag_off: "No",
       settings_diag_on: "Yes",
@@ -3044,6 +3080,7 @@
     backupInfo = null;
     renderBackupStatus();
     refreshBackupStatus();
+    refreshPushSettings();
     el.settingsOverlay.hidden = false;
   }
 
@@ -4254,6 +4291,7 @@
     currentLang = lang;
     try { localStorage.setItem(LANG_LOCAL_KEY, lang); } catch (e) {}
     refreshAllTranslatedViews();
+    pushLangChanged();
     if (currentUser) {
       supabaseClient.from("user_settings")
         .upsert({ user_id: currentUser.id, lang: lang, updated_at: new Date().toISOString() }, { onConflict: "user_id" })
@@ -5565,7 +5603,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "148";
+  var VOSEA_BUILD = "149";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -16134,6 +16172,7 @@
     var call = byEmail ? supabaseClient.rpc("friend_request_email", { p_email: raw }) : supabaseClient.rpc("friend_request", { p_code: code });
     call.then(function (res) {
       el.amAdd.disabled = false;
+      if (!res.error) pushFlush();
       if (res.error) {
         var missing = byEmail && /friend_request_email|function/i.test(res.error.message || "");
         amigoMsg(missing ? t("am_email_unavailable") : t("am_error", { msg: res.error.message }), true);
@@ -16151,6 +16190,7 @@
   function amigoAccept(f) {
     supabaseClient.rpc("friend_accept", { p_id: f.id }).then(function (res) {
       if (res.error) { amigoMsg(t("am_error", { msg: res.error.message }), true); return; }
+      pushFlush();
       amigoMsg(t("am_now_friends", { name: f.display_name }));
       loadAmigos(true);
     });
@@ -16342,6 +16382,7 @@
         el.amInviteMsg.textContent = res.error ? t("am_error", { msg: res.error.message }) : t("am_invite_bad");
         return;
       }
+      if (d.result === "friends") pushFlush();
       el.amInviteTitle.textContent = t(d.result === "already" ? "am_invite_already" : "am_invite_done", { name: d.name || amInvite.name });
       el.amInviteText.textContent = t("am_invite_done_text");
       el.amInviteAdd.hidden = true;
@@ -16402,7 +16443,7 @@
     if (!f) return;
     var done = function (res) {
       if (res && res.error) { showBanner(t("am_error", { msg: res.error.message })); return; }
-      if (accept) showBanner(t("am_now_friends", { name: f.display_name }));
+      if (accept) { showBanner(t("am_now_friends", { name: f.display_name })); pushFlush(); }
       loadAmigos(true);
     };
     if (accept) supabaseClient.rpc("friend_accept", { p_id: f.id }).then(done);
@@ -16439,6 +16480,318 @@
       drawAmigos();
     });
   }
+
+  // ================= Notificaciones (2026-10-23, commit 131) =================
+  // mason: web push, "events now, reminder later". This device can turn on
+  // notifications in Configuración; then it hears about:
+  //   Amigos   a friend request, a request accepted, someone used your link
+  //   Listas   you were added to a list, your role changed, a list handed to you
+  //   Te reto  a new challenge, your challenge was played
+  // Never for something you did yourself. The database queues them
+  // (push_outbox, from triggers); the push-send Edge Function sends them.
+  // The app calls push-send right after any action that can queue one
+  // (pushFlush), and once at startup to sweep up anything left waiting.
+  // iPhone: only once voseá is on the home screen (iOS 16.4+).
+  // Each device has its own switch and groups (push_subscriptions.prefs);
+  // this device's choice is also kept locally so the app can re-send its
+  // subscription at every start (browsers rotate them now and then).
+  var PUSH_ON_KEY = "vosea-push-on";      // + ":" + user id → { prefs }
+  var PUSH_GROUPS = ["friends", "lists", "retos"];
+  var push = { sub: null, prefs: null, busy: false, key: null, flushOff: false, flushTimer: 0, checked: false };
+  var pushOpen = null; // a ?open=… deep link waiting for sign-in
+
+  function pushEls() {
+    return {
+      field: document.getElementById("push-field"),
+      on: document.getElementById("settings-push-on"),
+      off: document.getElementById("settings-push-off"),
+      groups: document.getElementById("push-groups"),
+      msg: document.getElementById("push-msg"),
+      g: {
+        friends: document.getElementById("push-g-friends"),
+        lists: document.getElementById("push-g-lists"),
+        retos: document.getElementById("push-g-retos"),
+      },
+    };
+  }
+  function pushIsIos() {
+    var ua = navigator.userAgent || "";
+    return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  }
+  function pushStandalone() {
+    try { if (window.matchMedia("(display-mode: standalone)").matches) return true; } catch (e) {}
+    return navigator.standalone === true;
+  }
+  function pushSupported() {
+    return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  }
+  // what's in the way, if anything: "ios_home" / "unsupported" / "denied" / ""
+  function pushBlocker() {
+    if (pushIsIos() && !pushStandalone()) return "ios_home";
+    if (!pushSupported()) return "unsupported";
+    if (Notification.permission === "denied") return "denied";
+    return "";
+  }
+  function pushDevice() {
+    var ua = navigator.userAgent || "";
+    if (/iPhone/.test(ua)) return "iPhone";
+    if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "iPad";
+    if (/Android/.test(ua)) return "Android";
+    if (/Macintosh/.test(ua)) return "Mac";
+    if (/Windows/.test(ua)) return "Windows";
+    if (/Linux/.test(ua)) return "Linux";
+    return "";
+  }
+  function pushLocalKey() { return currentUser ? PUSH_ON_KEY + ":" + currentUser.id : null; }
+  function pushLocal() {
+    var k = pushLocalKey(); if (!k) return null;
+    try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v && v.prefs ? v : null; } catch (e) { return null; }
+  }
+  function pushSaveLocal(prefs) {
+    var k = pushLocalKey(); if (!k) return;
+    try { if (prefs) localStorage.setItem(k, JSON.stringify({ prefs: prefs })); else localStorage.removeItem(k); } catch (e) {}
+  }
+  function pushDefaultPrefs() { return { friends: true, lists: true, retos: true }; }
+  function pushKeyBytes(b64) {
+    var s = String(b64 || "").replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    var bin = atob(s), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function pushSameKey(a, b) {
+    if (!a || !b) return false;
+    a = new Uint8Array(a);
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+  function pushRegistration() {
+    if (!("serviceWorker" in navigator)) return Promise.resolve(null);
+    // ready never settles if the worker can't install; don't hang on it
+    return Promise.race([navigator.serviceWorker.ready, new Promise(function (ok) { setTimeout(function () { ok(null); }, 8000); })]);
+  }
+  function pushCurrentSub() {
+    if (!pushSupported()) return Promise.resolve(null);
+    return pushRegistration().then(function (reg) { return reg && reg.pushManager ? reg.pushManager.getSubscription() : null; }).catch(function () { return null; });
+  }
+  function pushGetKey() {
+    if (push.key) return Promise.resolve(push.key);
+    return Promise.resolve(supabaseClient.functions.invoke("push-send", { body: { action: "key" } })).then(function (res) {
+      var k = res && !res.error && res.data && res.data.key;
+      if (!k) throw new Error("push_not_ready");
+      push.key = k;
+      return k;
+    });
+  }
+  function pushRegister(sub, prefs) {
+    var j = sub.toJSON ? sub.toJSON() : sub;
+    return Promise.resolve(supabaseClient.rpc("push_subscribe", {
+      p_endpoint: j.endpoint, p_p256dh: j.keys && j.keys.p256dh, p_auth: j.keys && j.keys.auth,
+      p_device: pushDevice(), p_lang: currentLang, p_prefs: prefs,
+    })).then(function (res) {
+      if (res && res.error) throw new Error("push_not_ready");
+      return true;
+    });
+  }
+
+  // ---- Configuración ----
+  function pushMsg(key, warn) {
+    var e = pushEls(); if (!e.msg) return;
+    e.msg.textContent = key ? t(key) : "";
+    e.msg.classList.toggle("is-warn", !!warn);
+  }
+  function renderPush() {
+    var e = pushEls(); if (!e.field) return;
+    var on = !!(push.sub && push.prefs);
+    var block = pushBlocker();
+    e.on.classList.toggle("active", on); e.on.setAttribute("aria-pressed", on ? "true" : "false");
+    e.off.classList.toggle("active", !on); e.off.setAttribute("aria-pressed", on ? "false" : "true");
+    e.on.disabled = push.busy || (!!block && !on);
+    e.off.disabled = push.busy;
+    e.groups.hidden = !on;
+    PUSH_GROUPS.forEach(function (g) {
+      if (!e.g[g]) return;
+      e.g[g].checked = !!(push.prefs && push.prefs[g] !== false);
+      e.g[g].disabled = push.busy;
+    });
+    if (push.busy) return;
+    if (block === "ios_home") pushMsg("push_ios_home", true);
+    else if (block === "unsupported") pushMsg("push_unsupported", true);
+    else if (block === "denied" && !on) pushMsg("push_denied", true);
+  }
+  function refreshPushSettings() {
+    pushMsg("");
+    renderPush();
+    return pushCurrentSub().then(function (sub) {
+      var local = pushLocal();
+      push.sub = sub;
+      push.prefs = sub && local && Notification.permission === "granted" ? local.prefs : null;
+      renderPush();
+    });
+  }
+  function pushTurnOn() {
+    if (push.busy || !currentUser) return;
+    var block = pushBlocker();
+    if (block) { renderPush(); return; }
+    push.busy = true; pushMsg(""); renderPush();
+    // asked first, straight from the tap (iPhone only asks from a tap)
+    var perm = Notification.permission === "granted" ? Promise.resolve("granted") : Promise.resolve(Notification.requestPermission());
+    var prefs = (pushLocal() && pushLocal().prefs) || pushDefaultPrefs();
+    perm.then(function (p) {
+      if (p !== "granted") throw new Error(p === "denied" ? "push_denied" : "push_dismissed");
+      return Promise.all([pushGetKey(), pushRegistration()]);
+    }).then(function (r) {
+      var key = pushKeyBytes(r[0]), reg = r[1];
+      if (!reg || !reg.pushManager) throw new Error("push_unsupported");
+      return reg.pushManager.getSubscription().then(function (old) {
+        // made with another key (the server's keys were changed): start over
+        if (old && old.options && old.options.applicationServerKey && !pushSameKey(old.options.applicationServerKey, key)) {
+          return old.unsubscribe().then(function () { return null; }, function () { return null; });
+        }
+        return old;
+      }).then(function (old) {
+        return old || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+      });
+    }).then(function (sub) {
+      return pushRegister(sub, prefs).then(function () { return sub; });
+    }).then(function (sub) {
+      push.sub = sub; push.prefs = prefs; push.busy = false;
+      pushSaveLocal(prefs);
+      renderPush();
+      pushMsg("push_on_done");
+    }).catch(function (err) {
+      push.busy = false;
+      var m = err && err.message;
+      renderPush();
+      if (m === "push_denied") pushMsg("push_denied", true);
+      else if (m === "push_dismissed") pushMsg("push_dismissed");
+      else if (m === "push_not_ready") pushMsg("push_not_ready", true);
+      else if (m === "push_unsupported") pushMsg("push_unsupported", true);
+      else { console.warn("[push] subscribe:", err); pushMsg("push_failed", true); }
+    });
+  }
+  function pushTurnOff() {
+    if (push.busy) return;
+    var sub = push.sub;
+    pushSaveLocal(null);
+    push.prefs = null;
+    if (!sub) { renderPush(); return; }
+    push.busy = true; pushMsg(""); renderPush();
+    var endpoint = sub.endpoint;
+    Promise.resolve(supabaseClient.rpc("push_unsubscribe", { p_endpoint: endpoint })).catch(function () {}).then(function () {
+      return Promise.resolve(sub.unsubscribe()).catch(function () {});
+    }).then(function () {
+      push.sub = null; push.busy = false;
+      renderPush();
+      pushMsg("push_off_done");
+    });
+  }
+  function pushSetGroup(group, on) {
+    if (!push.sub || !push.prefs) return;
+    var prefs = Object.assign({}, push.prefs); prefs[group] = !!on;
+    push.prefs = prefs;
+    pushSaveLocal(prefs);
+    Promise.resolve(supabaseClient.rpc("push_set_prefs", { p_endpoint: push.sub.endpoint, p_prefs: prefs, p_lang: currentLang })).then(function (res) {
+      if (res && res.error) pushMsg("push_failed", true);
+    });
+  }
+  // the notifications come in the app's language
+  function pushLangChanged() {
+    if (!push.sub || !push.prefs || !currentUser) return;
+    Promise.resolve(supabaseClient.rpc("push_set_prefs", { p_endpoint: push.sub.endpoint, p_prefs: push.prefs, p_lang: currentLang })).catch(function () {});
+  }
+
+  // ---- at sign-in / sign-out ----
+  // Re-sends this device's subscription (keys can rotate), when it was on.
+  function pushAfterSignIn() {
+    var local = pushLocal();
+    if (!local || !pushSupported() || Notification.permission !== "granted") return Promise.resolve();
+    return pushCurrentSub().then(function (sub) {
+      if (!sub) { pushSaveLocal(null); return; }
+      push.sub = sub; push.prefs = local.prefs;
+      return pushRegister(sub, local.prefs).catch(function () {});
+    });
+  }
+  // Signing out stops this device's notifications (for whoever signs in next).
+  function pushBeforeSignOut() {
+    var done = pushCurrentSub().then(function (sub) {
+      if (!sub) return;
+      pushSaveLocal(null);
+      return Promise.resolve(supabaseClient.rpc("push_unsubscribe", { p_endpoint: sub.endpoint })).catch(function () {}).then(function () {
+        return Promise.resolve(sub.unsubscribe()).catch(function () {});
+      });
+    }).catch(function () {});
+    push.sub = null; push.prefs = null;
+    return Promise.race([done, new Promise(function (ok) { setTimeout(ok, 2500); })]);
+  }
+
+  // ---- sending what our own actions queued ----
+  function pushFlush() {
+    if (push.flushOff || !currentUser) return;
+    clearTimeout(push.flushTimer);
+    push.flushTimer = setTimeout(function () {
+      Promise.resolve(supabaseClient.functions.invoke("push-send", { body: {} })).then(function (res) {
+        var st = res && res.error && res.error.context && res.error.context.status;
+        // not deployed / not set up yet: stop asking for this session
+        if (st === 404 || st === 503) push.flushOff = true;
+      }, function () {});
+    }, 400);
+  }
+
+  // ---- opening from a notification ----
+  (function readPushOpen() {
+    var q = null;
+    try { q = new URLSearchParams(window.location.search); } catch (e) { return; }
+    var open = q.get("open");
+    if (!open || !/^(amigos|retos|list)$/.test(open)) return;
+    pushOpen = { open: open, id: q.get("id") || "" };
+    try {
+      var u = new URL(window.location.href);
+      u.searchParams.delete("open"); u.searchParams.delete("id");
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    } catch (e) {}
+  })();
+  function pushHandleOpen(what) {
+    what = what || pushOpen;
+    pushOpen = null;
+    if (!what || !currentUser) { if (what) pushOpen = what; return; }
+    closeSettings();
+    if (what.open === "list" && /^[0-9a-f-]{8,40}$/i.test(what.id)) {
+      setMainTab("lists");
+      loadLists(true).then(function () { selectListRow(what.id); });
+    } else if (what.open === "amigos" || what.open === "retos") {
+      openAmigosPage();
+      if (what.open === "retos") loadRetos(true).then(function () {
+        var a = document.getElementById("rt-area");
+        if (a && !a.hidden && a.scrollIntoView) try { a.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {}
+      });
+    }
+  }
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", function (evt) {
+      var d = evt.data || {};
+      if (d.type === "vosea-open") {
+        var q = new URLSearchParams(d.search || "");
+        var open = q.get("open");
+        if (open && /^(amigos|retos|list)$/.test(open)) pushHandleOpen({ open: open, id: q.get("id") || "" });
+      } else if (d.type === "vosea-push-changed" && currentUser) {
+        pushAfterSignIn();
+      }
+    });
+  }
+
+  (function wirePush() {
+    var e = pushEls(); if (!e.field) return;
+    e.on.addEventListener("click", pushTurnOn);
+    e.off.addEventListener("click", pushTurnOff);
+    PUSH_GROUPS.forEach(function (g) {
+      if (e.g[g]) e.g[g].addEventListener("change", function () { pushSetGroup(g, e.g[g].checked); });
+    });
+  })();
+
+  // test hooks
+  window.voseaPush = { state: function () { return push; }, flush: pushFlush, handleOpen: pushHandleOpen, pending: function () { return pushOpen; } };
 
   // ================= Te reto (2026-10-06) =================
   // The third game (mockup te_reto_maqueta.png; mason: "the same 20 cards,
@@ -16692,6 +17045,7 @@
       if (reto !== r) return;
       if (res.error || (r.kind === "answer" && res.data === false)) { r.phase = "error"; r.error = res.error ? res.error.message : t("rt_expired_now"); drawRtPanel(); return; }
       r.phase = "end";
+      pushFlush();
       // show the result at once (the reload below brings the stored row)
       if (r.kind === "answer") r.challenge = Object.assign({}, r.challenge, { recipient_result: { bien: r.bien, ms: r.ms, grades: grades }, completed_at: new Date().toISOString() });
       loadRetos(true).then(function () {
@@ -18772,6 +19126,7 @@
     sel.addEventListener("change", function () {
       supabaseClient.rpc("list_set_member_role", { p_list: l.id, p_user: p.user_id, p_role: sel.value }).then(function (res) {
         if (res.error || res.data === false) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+        pushFlush();
         renderListPeople(l);
       });
     });
@@ -18785,6 +19140,7 @@
         if (!window.confirm(t("confirm_make_owner", { name: l.data.name, person: p.display_name }))) return;
         supabaseClient.rpc("list_transfer", { p_list: l.id, p_user: p.user_id }).then(function (res) {
           if (res.error || res.data === false) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+          pushFlush();
           loadLists().then(function () { selectListRow(l.id); });
         });
       });
@@ -18828,6 +19184,7 @@
     supabaseClient.rpc("list_add_member", { p_list: l.id, p_user: who, p_role: el.ldInviteRole.value }).then(function (res) {
       if (res.error) { el.ldPeopleMsg.textContent = t("msg_error_generic", { msg: res.error.message }); return; }
       var r = res.data;
+      if (r === "added" || r === "updated") pushFlush();
       el.ldPeopleMsg.textContent = r === "added" ? t("ld_invite_added", { person: person })
         : r === "updated" ? t("ld_invite_updated", { person: person }) : t("ld_invite_not_friend");
       if (r === "added" || r === "updated") renderListPeopleKeepMsg(l);
@@ -20650,8 +21007,10 @@
       loadRewards();
       loadGameRecords();
       loadUsageRole();
-      loadAmigos().then(amigoHandlePendingInvite);
+      loadAmigos().then(amigoHandlePendingInvite).then(function () { pushHandleOpen(); });
       loadRetos();
+      pushAfterSignIn();
+      setTimeout(pushFlush, 3000); // anything left waiting from before
       if (el.hoyPanel && !el.hoyPanel.hidden) {
         renderHoy();
         loadPracticeHistory(false).then(function () { renderHoySoon(); playCheckRacha(); });
@@ -20843,7 +21202,7 @@
   el.usageClose.addEventListener("click", closeUsage);
   el.acctMenuLogout.addEventListener("click", function () {
     closeAcctMenu();
-    supabaseClient.auth.signOut();
+    pushBeforeSignOut().then(function () { supabaseClient.auth.signOut(); });
   });
   // Only this one document-level listener is needed for the outside-click
   // close, since the account menu is the only popover of its kind in the

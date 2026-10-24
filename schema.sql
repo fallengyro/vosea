@@ -3189,3 +3189,192 @@ grant execute on function public.friend_invite_info(text) to authenticated;
 grant execute on function public.friend_accept_invite(text) to authenticated;
 grant execute on function public.friend_new_invite() to authenticated;
 grant execute on function public.friend_request_email(text) to authenticated;
+
+-- ===========================================================================
+-- 2026-10-23 — push notifications (commit 131)
+-- ===========================================================================
+-- mason: "let's build it" (web push). First build: events only (the daily
+-- reminder comes later). What notifies whom:
+--   friend_request  someone sent you a friend request (code or email)
+--   friend_accepted someone accepted your request
+--   friend_joined   someone used your invite link: you're friends
+--   list_added      someone added you to a list (as Editor or Lector)
+--   list_role       your role in a list changed
+--   list_owner      a list was handed to you
+--   reto_new        a friend challenged you
+--   reto_done       your friend played the challenge you sent
+--
+-- How it fits together:
+--   * push_subscriptions: one row per device that turned notifications on
+--     (the browser's endpoint and keys, the app language, and which groups
+--     it wants: friends / lists / retos). Private to each person; written
+--     through push_subscribe() / push_unsubscribe() / push_set_prefs().
+--   * push_outbox: triggers on friendships, list_members, lists and
+--     challenges add a row for each event above. Nobody can read or write it
+--     except the push-send Edge Function (service role), so a notification
+--     can only come from something that really happened in the database.
+--   * The app calls push-send right after it does one of those things (and
+--     once at startup); push-send sends that caller's pending rows, plus
+--     anyone's rows that have been waiting over a minute, and deletes
+--     subscriptions the browser says are gone.
+-- Nothing is ever sent for something you did yourself.
+-- Safe to run twice.
+-- ===========================================================================
+
+create table if not exists public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  device text not null default '',
+  lang text not null default 'es',
+  prefs jsonb not null default '{"friends": true, "lists": true, "retos": true}',
+  created_at timestamptz not null default now(),
+  last_ok_at timestamptz,
+  fail_count int not null default 0
+);
+alter table public.push_subscriptions drop constraint if exists push_subscriptions_shape_check;
+alter table public.push_subscriptions add constraint push_subscriptions_shape_check
+  check (endpoint ~ '^https://' and char_length(endpoint) <= 1000 and char_length(p256dh) between 80 and 100
+         and char_length(auth) between 16 and 32 and char_length(device) <= 60 and lang in ('es', 'en')
+         and jsonb_typeof(prefs) = 'object');
+create index if not exists push_subscriptions_user_idx on public.push_subscriptions (user_id);
+alter table public.push_subscriptions enable row level security;
+drop policy if exists "select own push" on public.push_subscriptions;
+create policy "select own push" on public.push_subscriptions for select using (auth.uid() = user_id);
+revoke insert, update, delete on public.push_subscriptions from anon, authenticated;
+
+-- This device's subscription (a browser endpoint belongs to one person at a
+-- time: signing in with another account on the same phone moves it).
+create or replace function public.push_subscribe(p_endpoint text, p_p256dh text, p_auth text, p_device text, p_lang text, p_prefs jsonb)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'sign_in_required'; end if;
+  delete from public.push_subscriptions where endpoint = p_endpoint and user_id <> auth.uid();
+  insert into public.push_subscriptions (user_id, endpoint, p256dh, auth, device, lang, prefs)
+  values (auth.uid(), p_endpoint, p_p256dh, p_auth, left(coalesce(p_device, ''), 60),
+          case when p_lang = 'en' then 'en' else 'es' end,
+          coalesce(p_prefs, '{"friends": true, "lists": true, "retos": true}'::jsonb))
+  on conflict (endpoint) do update set p256dh = excluded.p256dh, auth = excluded.auth, device = excluded.device,
+    lang = excluded.lang, prefs = excluded.prefs, fail_count = 0;
+  return true;
+end $$;
+
+create or replace function public.push_unsubscribe(p_endpoint text)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  delete from public.push_subscriptions where endpoint = p_endpoint and user_id = auth.uid();
+  return found;
+end $$;
+
+create or replace function public.push_set_prefs(p_endpoint text, p_prefs jsonb, p_lang text)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  update public.push_subscriptions
+    set prefs = coalesce(p_prefs, prefs), lang = case when p_lang = 'en' then 'en' when p_lang = 'es' then 'es' else lang end
+    where endpoint = p_endpoint and user_id = auth.uid();
+  return found;
+end $$;
+
+revoke execute on function public.push_subscribe(text, text, text, text, text, jsonb) from public, anon;
+revoke execute on function public.push_unsubscribe(text) from public, anon;
+revoke execute on function public.push_set_prefs(text, jsonb, text) from public, anon;
+grant execute on function public.push_subscribe(text, text, text, text, text, jsonb) to authenticated;
+grant execute on function public.push_unsubscribe(text) to authenticated;
+grant execute on function public.push_set_prefs(text, jsonb, text) to authenticated;
+
+-- The outbox ----------------------------------------------------------------
+create table if not exists public.push_outbox (
+  id bigint generated always as identity primary key,
+  target uuid not null references auth.users(id) on delete cascade,
+  actor uuid,
+  kind text not null,
+  data jsonb not null default '{}',
+  created_at timestamptz not null default now(),
+  sent_at timestamptz
+);
+create index if not exists push_outbox_pending_idx on public.push_outbox (created_at) where sent_at is null;
+alter table public.push_outbox enable row level security;
+revoke all on public.push_outbox from anon, authenticated;
+
+create or replace function public.vosea_push(p_target uuid, p_kind text, p_data jsonb)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_target is null or p_target = auth.uid() then return; end if; -- never for your own doing
+  if not exists (select 1 from public.push_subscriptions where user_id = p_target) then return; end if;
+  insert into public.push_outbox (target, actor, kind, data) values (p_target, auth.uid(), p_kind, coalesce(p_data, '{}'));
+end $$;
+revoke execute on function public.vosea_push(uuid, text, jsonb) from public, anon, authenticated;
+
+-- friendships
+create or replace function public.vosea_push_friendships()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    if new.status = 'pending' then
+      perform public.vosea_push(new.addressee, 'friend_request', jsonb_build_object('who', new.requester));
+    elsif new.status = 'accepted' then
+      -- an invite link: the inviter is the requester
+      perform public.vosea_push(new.requester, 'friend_joined', jsonb_build_object('who', new.addressee));
+    end if;
+  elsif tg_op = 'UPDATE' and old.status = 'pending' and new.status = 'accepted' then
+    perform public.vosea_push(case when auth.uid() = new.requester then new.addressee else new.requester end,
+      'friend_accepted', jsonb_build_object('who', coalesce(auth.uid(), new.addressee)));
+  end if;
+  return null;
+end $$;
+drop trigger if exists friendships_push on public.friendships;
+create trigger friendships_push after insert or update on public.friendships
+  for each row execute function public.vosea_push_friendships();
+
+-- list_members (added, role changed) and lists (handed over)
+create or replace function public.vosea_push_list_members()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare nm text;
+begin
+  select name into nm from public.lists where id = new.list_id;
+  if tg_op = 'INSERT' then
+    if new.role in ('editor', 'reader') and new.added_by is not null and new.added_by <> new.user_id then
+      perform public.vosea_push(new.user_id, 'list_added', jsonb_build_object('who', new.added_by, 'list', new.list_id, 'name', nm, 'role', new.role));
+    end if;
+  elsif tg_op = 'UPDATE' and old.role is distinct from new.role and new.role in ('editor', 'reader') and old.role <> 'owner' then
+    perform public.vosea_push(new.user_id, 'list_role', jsonb_build_object('list', new.list_id, 'name', nm, 'role', new.role));
+  end if;
+  return null;
+end $$;
+drop trigger if exists list_members_push on public.list_members;
+create trigger list_members_push after insert or update on public.list_members
+  for each row execute function public.vosea_push_list_members();
+
+create or replace function public.vosea_push_lists()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if old.user_id is distinct from new.user_id then
+    perform public.vosea_push(new.user_id, 'list_owner', jsonb_build_object('who', old.user_id, 'list', new.id, 'name', new.name));
+  end if;
+  return null;
+end $$;
+drop trigger if exists lists_push on public.lists;
+create trigger lists_push after update on public.lists
+  for each row execute function public.vosea_push_lists();
+
+-- challenges
+create or replace function public.vosea_push_challenges()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    perform public.vosea_push(new.recipient, 'reto_new', jsonb_build_object('who', new.sender, 'title', new.title));
+  elsif tg_op = 'UPDATE' and old.recipient_result is null and new.recipient_result is not null then
+    perform public.vosea_push(new.sender, 'reto_done', jsonb_build_object('who', new.recipient, 'title', new.title));
+  end if;
+  return null;
+end $$;
+drop trigger if exists challenges_push on public.challenges;
+create trigger challenges_push after insert or update on public.challenges
+  for each row execute function public.vosea_push_challenges();
+
+revoke execute on function public.vosea_push_friendships() from public, anon, authenticated;
+revoke execute on function public.vosea_push_list_members() from public, anon, authenticated;
+revoke execute on function public.vosea_push_lists() from public, anon, authenticated;
+revoke execute on function public.vosea_push_challenges() from public, anon, authenticated;

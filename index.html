@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="148">
+<meta name="vosea-build" content="149">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1282,6 +1282,20 @@
       </div>
     </div>
     <p class="flash-setup-note" data-i18n="settings_quiet_note">Silencia toda la pronunciación de la app (por ejemplo, en un avión). Solo en este dispositivo.</p>
+    <div class="field push-field" id="push-field">
+      <label data-i18n="settings_push_label">Notificaciones</label>
+      <div class="lang-toggle">
+        <button type="button" class="lang-option" id="settings-push-off" data-i18n="settings_push_off">Apagadas</button>
+        <button type="button" class="lang-option" id="settings-push-on" data-i18n="settings_push_on">Activadas</button>
+      </div>
+      <div class="push-groups" id="push-groups" hidden>
+        <label class="backup-choice-opt"><input type="checkbox" id="push-g-friends" /> <span><strong data-i18n="push_g_friends">Amigos</strong> <span class="backup-choice-sub" data-i18n="push_g_friends_sub">solicitudes y amistades nuevas</span></span></label>
+        <label class="backup-choice-opt"><input type="checkbox" id="push-g-lists" /> <span><strong data-i18n="push_g_lists">Listas</strong> <span class="backup-choice-sub" data-i18n="push_g_lists_sub">cuando te agregan, cambia tu rol o te pasan una lista</span></span></label>
+        <label class="backup-choice-opt"><input type="checkbox" id="push-g-retos" /> <span><strong data-i18n="push_g_retos">Te reto</strong> <span class="backup-choice-sub" data-i18n="push_g_retos_sub">retos nuevos y resultados</span></span></label>
+      </div>
+      <p class="diag-msg push-msg" id="push-msg" role="status" aria-live="polite"></p>
+    </div>
+    <p class="flash-setup-note" data-i18n="settings_push_note">Solo en este dispositivo. Te avisa cuando alguien te manda una solicitud de amistad, te agrega a una lista o te reta. Nunca por algo que hiciste vos.</p>
     <div class="field diag-field">
       <label data-i18n="settings_diag_label">Ayudar a mejorar el reconocimiento de voz</label>
       <div class="lang-toggle">

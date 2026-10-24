@@ -2917,3 +2917,10 @@
   .am-new-link[hidden] { display: none; }
   .ld-invite-new { margin-top: 8px; }
   .am-toast { flex-wrap: wrap; }
+
+/* Notificaciones (2026-10-23, commit 131) */
+.push-groups { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 2px; }
+#settings-overlay .field label.backup-choice-opt input[type="checkbox"] { margin-top: 3px; accent-color: var(--accent); }
+.push-msg { margin-top: 8px; }
+.push-msg:empty { display: none; }
+.push-msg.is-warn { color: var(--danger); }

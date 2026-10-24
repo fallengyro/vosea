@@ -12,7 +12,7 @@
 // from cache immediately if we have it (fast, works offline), and in the
 // background fetch a fresh copy to store for next time.
 
-var CACHE_NAME = "vosea-shell-v148";
+var CACHE_NAME = "vosea-shell-v149";
 
 var SHELL_FILES = [
   "./",
@@ -96,4 +96,53 @@ self.addEventListener("fetch", function (event) {
       });
     })
   );
+});
+
+// ---- Push notifications (2026-10-23) ----------------------------------------
+// The push-send Edge Function sends Declarative Web Push JSON:
+//   { web_push: 8030, notification: { title, body, lang, navigate, tag } }
+// Safari 18.4+ shows that by itself; everywhere else this handler shows it.
+// Tapping a notification opens (or focuses) the app at notification.navigate,
+// e.g. ?open=amigos, ?open=list&id=…, ?open=retos.
+self.addEventListener("push", function (event) {
+  var msg = {};
+  try { msg = event.data ? event.data.json() : {}; } catch (e) { msg = {}; }
+  var n = msg.notification || {};
+  var title = n.title || "voseá";
+  event.waitUntil(self.registration.showNotification(title, {
+    body: n.body || "",
+    lang: n.lang || "es",
+    tag: n.tag || undefined,
+    icon: "./icons/icon-192.png",
+    badge: "./icons/icon-192.png",
+    data: { url: n.navigate || "./" },
+  }));
+});
+
+self.addEventListener("notificationclick", function (event) {
+  event.notification.close();
+  var target = (event.notification.data && event.notification.data.url) || "./";
+  var url = new URL(target, self.registration.scope);
+  if (url.origin !== self.location.origin) url = new URL("./", self.registration.scope);
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (wins) {
+      for (var i = 0; i < wins.length; i++) {
+        var w = wins[i];
+        if (new URL(w.url).origin === url.origin) {
+          // the app is open: tell it where to go, and bring it forward
+          w.postMessage({ type: "vosea-open", search: url.search });
+          return w.focus();
+        }
+      }
+      return self.clients.openWindow(url.href);
+    })
+  );
+});
+
+// The browser replaced this device's subscription: the app sends the new one
+// to the database the next time it opens (it re-registers at every start).
+self.addEventListener("pushsubscriptionchange", function (event) {
+  event.waitUntil(self.clients.matchAll({ type: "window" }).then(function (wins) {
+    wins.forEach(function (w) { w.postMessage({ type: "vosea-push-changed" }); });
+  }));
 });
