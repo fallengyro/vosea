@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="153">
+<meta name="vosea-build" content="154">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1164,7 +1164,7 @@
 <div class="modal-overlay" id="library-overlay" hidden>
   <div class="modal-card library-card">
     <h3 data-i18n="library_title">Biblioteca</h3>
-    <p class="flash-setup-note" data-i18n="library_intro">Listas que tus amigos hacen visibles y listas para todos. Al agregar una, sus ítems pasan a tu colección mientras la tengas activa.</p>
+    <p class="flash-setup-note" data-i18n="library_intro">Listas publicadas por tus amigos, por vos y para todos. Al agregar una, te llevás tu propia lista: sus ítems están en tu colección mientras la tengas encendida.</p>
     <p class="form-msg" id="library-msg"></p>
     <ul class="card-list library-list" id="library-list"></ul>
     <div class="form-actions">
@@ -1177,7 +1177,7 @@
 <div class="modal-overlay" id="publish-overlay" hidden>
   <div class="modal-card">
     <h3 data-i18n="publish_title">Publicar en la Biblioteca</h3>
-    <p class="flash-setup-note" data-i18n="publish_intro">Quien la vea en su Biblioteca puede agregarla como Lector. Las personas que ya están en la lista siguen igual.</p>
+    <p class="flash-setup-note" data-i18n="publish_intro">La Biblioteca guarda una copia de la lista tal como está ahora, y quien la agregue se lleva su propia lista. Si después la cambiás, tocá Listo otra vez para actualizar la copia.</p>
     <div class="publish-options" role="radiogroup">
       <label class="publish-opt"><input type="radio" name="publish-level" value="none" /> <span><b data-i18n="publish_none">No publicada</b><small data-i18n="publish_none_sub">Solo entran quienes agregues o a quienes les mandes el enlace.</small></span></label>
       <label class="publish-opt"><input type="radio" name="publish-level" value="friends" /> <span><b data-i18n="publish_friends">Tus amigos</b><small data-i18n="publish_friends_sub">La ven en su Biblioteca.</small></span></label>

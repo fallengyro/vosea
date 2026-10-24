@@ -1079,7 +1079,7 @@
       ld_invite_not_friend: "Solo podés agregar a tus amigos.",
       btn_library: "Biblioteca",
       library_title: "Biblioteca",
-      library_intro: "Listas que tus amigos hacen visibles y listas para todos. Al agregar una, sus ítems pasan a tu colección mientras la tengas activa.",
+      library_intro: "Listas publicadas por tus amigos, por vos y para todos. Al agregar una, te llevás tu propia lista: sus ítems están en tu colección mientras la tengas encendida.",
       library_empty: "Todavía no hay listas para vos acá.",
       library_by: "de {name}",
       library_app: "para todos",
@@ -1141,7 +1141,7 @@
       lookup_writer_reason: " (motivo: {why})",
       btn_publish: "Publicar…",
       publish_title: "Publicar en la Biblioteca",
-      publish_intro: "Quien la vea en su Biblioteca puede agregarla como Lector. Las personas que ya están en la lista siguen igual.",
+      publish_intro: "La Biblioteca guarda una copia de la lista tal como está ahora, y quien la agregue se lleva su propia lista. Si después la cambiás, tocá Listo otra vez para actualizar la copia.",
       publish_none: "No publicada",
       publish_none_sub: "Solo entran quienes agregues o a quienes les mandes el enlace.",
       publish_friends: "Tus amigos",
@@ -1181,6 +1181,13 @@
       btn_native_share: "Compartir…",
       btn_share: "Compartir",
       btn_delete_list: "Eliminar lista",
+      btn_remove_my_list: "Quitar de mis listas",
+      confirm_remove_published: "«{name}» sale de tus listas. La copia en la Biblioteca se queda, y podés volver a agregarla desde ahí cuando quieras.",
+      publish_done_updated: "Listo: la copia en la Biblioteca está al día.",
+      publish_empty: "La lista está vacía: agregale algo antes de publicarla.",
+      library_remove: "Quitar",
+      confirm_library_remove: "¿Sacar «{name}» de la Biblioteca? Las listas que otros ya hicieron con ella siguen siendo suyas.",
+      library_gone: "esta lista ya no está en la Biblioteca",
       list_picker_new_label: "O creá una lista nueva",
       placeholder_new_list_name: "ej. Adjetivos de comida",
       btn_create_and_add: "Crear y agregar",
@@ -2355,7 +2362,7 @@
       ld_invite_not_friend: "You can only add your friends.",
       btn_library: "Library",
       library_title: "Library",
-      library_intro: "Lists your friends make visible, and lists for everyone. When you add one, its items join your collection while it's on.",
+      library_intro: "Lists published by your friends, by you, and for everyone. When you add one, you get your own list: its items are in your collection while it's on.",
       library_empty: "There aren't any lists for you here yet.",
       library_by: "by {name}",
       library_app: "for everyone",
@@ -2417,7 +2424,7 @@
       lookup_writer_reason: " (reason: {why})",
       btn_publish: "Publish…",
       publish_title: "Publish to the Library",
-      publish_intro: "Anyone who sees it in their Library can add it as a Reader. People already in the list stay as they are.",
+      publish_intro: "The Library keeps a copy of the list as it is now, and anyone who adds it gets their own list. If you change it later, tap Done again to update the copy.",
       publish_none: "Not published",
       publish_none_sub: "Only people you add, or send the link to, can join.",
       publish_friends: "Your friends",
@@ -2457,6 +2464,13 @@
       btn_native_share: "Share…",
       btn_share: "Share",
       btn_delete_list: "Delete list",
+      btn_remove_my_list: "Remove from my lists",
+      confirm_remove_published: "“{name}” will leave your lists. Its copy stays in the Library, and you can add it back from there anytime.",
+      publish_done_updated: "Done: the Library copy is up to date.",
+      publish_empty: "The list is empty: add something before publishing it.",
+      library_remove: "Remove",
+      confirm_library_remove: "Take “{name}” out of the Library? Lists other people already made from it stay theirs.",
+      library_gone: "this list isn't in the Library anymore",
       list_picker_new_label: "Or create a new list",
       placeholder_new_list_name: "e.g., Food adjectives",
       btn_create_and_add: "Create and add",
@@ -5615,7 +5629,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "153";
+  var VOSEA_BUILD = "154";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -19215,7 +19229,27 @@
   //   all     — in everyone's (app_wide on; only app owners: Todos is hidden
   //             for everyone else, and list_set_app_wide() checks it too)
   // Publishing never touches the share link or the people already in it.
-  function publishLevel(l) { return l.data.appWide ? "all" : l.data.friendsCanSee ? "friends" : "none"; }
+  // The Biblioteca keeps copies (2026-10-24, commit 136): mason wants it to
+  // be "a repository to gather lists that aren't tied to the account", so he
+  // can clear his lists and keep only the ones he's working on. Publicar
+  // saves a frozen copy (library_entries); publishing again refreshes it;
+  // removing your list keeps it; Agregar makes you your own list from it.
+  // myEntries: your copies by the list they came from. Before the SQL has
+  // run (libraryOk false) publishing works the old live way.
+  var myEntries = {}, libraryOk = false;
+  function loadMyEntries() {
+    if (!currentUser) return Promise.resolve();
+    return Promise.resolve(supabaseClient.from("library_entries").select("id, source_list, level, updated_at")).then(function (res) {
+      if (res.error) { libraryOk = false; return; }
+      libraryOk = true;
+      myEntries = {};
+      (res.data || []).forEach(function (e) { if (e.source_list) myEntries[e.source_list] = e; });
+    }, function () { libraryOk = false; });
+  }
+  function publishLevel(l) {
+    if (libraryOk) { var e = myEntries[l.id]; return e ? e.level : "none"; }
+    return l.data.appWide ? "all" : l.data.friendsCanSee ? "friends" : "none";
+  }
   function canPublishAll() { return !!(usageRole && usageRole.can_view_usage); }
   function openPublish() {
     var l = allLists.find(function (x) { return x.id === selectedListId; });
@@ -19233,6 +19267,7 @@
     var picked = el.publishOverlay.querySelector('input[name="publish-level"]:checked');
     if (!l || !picked) return;
     var level = picked.value, from = publishLevel(l);
+    if (libraryOk) { savePublishCopy(l, level, from); return; }
     if (level === from) { closePublish(); return; }
     el.publishSave.disabled = true;
     el.publishMsg.textContent = t("msg_guardando");
@@ -19258,6 +19293,29 @@
       el.publishSave.disabled = false;
       el.publishMsg.textContent = t("msg_error_guardar", { msg: (err && err.message) || err });
       renderListHead(l);
+    });
+  }
+
+  // Publicar with copies: saving always refreshes the copy (that's how a
+  // change reaches the Biblioteca); No publicada takes it out.
+  function savePublishCopy(l, level, from) {
+    if (level === "none" && from === "none") { closePublish(); return; }
+    el.publishSave.disabled = true;
+    el.publishMsg.textContent = t("msg_guardando");
+    Promise.resolve(supabaseClient.rpc("library_publish", { p_list: l.id, p_level: level })).then(function (res) {
+      var out = (res && !res.error && res.data) || {};
+      el.publishSave.disabled = false;
+      if (res.error) { el.publishMsg.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
+      if (out.result === "empty") { el.publishMsg.textContent = t("publish_empty"); return; }
+      if (out.result === "not_allowed" || out.result === "not_owner") { el.publishMsg.textContent = t("msg_error_guardar", { msg: out.result }); return; }
+      if (out.result === "removed") delete myEntries[l.id];
+      else myEntries[l.id] = { id: out.entry, source_list: l.id, level: level, updated_at: new Date().toISOString() };
+      closePublish();
+      renderListHead(l);
+      el.ldShareMsg.textContent = t(level === from ? "publish_done_updated" : "publish_done_" + level);
+    }, function (err) {
+      el.publishSave.disabled = false;
+      el.publishMsg.textContent = t("msg_error_guardar", { msg: (err && err.message) || err });
     });
   }
 
@@ -19362,6 +19420,9 @@
     supabaseClient.rpc("library_lists").then(function (res) {
       if (res.error) { el.libraryMsg.textContent = t("library_unavailable"); return; }
       var rows = res.data || [];
+      if (rows.length && rows[0].entry_id) { renderLibraryRows(rows); return; }
+      if (!rows.length && libraryOk) { el.libraryMsg.textContent = t("library_empty"); return; }
+      // (before the Biblioteca SQL: the old live lists)
       // Your own published lists (2026-10-24, commits 134–135): library_lists()
       // leaves them out (you can't join your own list), so publishing looked
       // like it did nothing. mason: "published just means it goes to the
@@ -19422,6 +19483,77 @@
       });
     });
     row.appendChild(btn);
+    li.appendChild(row);
+    return li;
+  }
+  // Copies (commit 136). Yours say "publicada por vos"; Agregar makes you a
+  // list from the copy (yours too, after you removed your list), and the
+  // publisher can take a copy out with Quitar.
+  function renderLibraryRows(rows) {
+    el.libraryMsg.textContent = "";
+    var lastSource = null;
+    rows.forEach(function (r) {
+      if (r.source !== lastSource) {
+        lastSource = r.source;
+        var h = document.createElement("li");
+        h.className = "lists-section-head";
+        h.textContent = t(r.source === "app" ? "library_section_app" : "library_section_friends");
+        el.libraryList.appendChild(h);
+      }
+      el.libraryList.appendChild(libraryCopyRow(r));
+    });
+  }
+  function libraryCopyRow(r) {
+    var li = document.createElement("li");
+    var row = document.createElement("div");
+    row.className = "card-row library-row";
+    var name = document.createElement("span");
+    name.className = "inf";
+    name.textContent = r.name;
+    row.appendChild(name);
+    var meta = document.createElement("span");
+    meta.className = "def";
+    var n = (r.n_verbs || 0) + (r.n_words || 0) + (r.n_phrases || 0);
+    meta.textContent = listMetaText(n, r.n_verbs || 0, r.n_words || 0, r.n_phrases || 0) + " · " +
+      (r.mine ? t("library_mine") : r.source === "app" ? t("library_app") : t("library_by", { name: r.owner_name }));
+    row.appendChild(meta);
+    var acts = document.createElement("span");
+    acts.className = "library-acts";
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "icon-btn";
+    btn.textContent = r.added ? t(r.mine ? "library_yours" : "library_have") : t("btn_library_add");
+    btn.disabled = !!r.added;
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      Promise.resolve(supabaseClient.rpc("library_add", { p_entry: r.entry_id })).then(function (res) {
+        var out = (res && !res.error && res.data) || {};
+        if (res.error || out.result === "not_found") { btn.disabled = false; el.libraryMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || t("library_gone") }); return; }
+        btn.textContent = out.result === "already" ? t("library_have") : t("library_added");
+        loadLists();
+      });
+    });
+    acts.appendChild(btn);
+    if (r.mine) {
+      var rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "icon-btn danger library-remove";
+      rm.textContent = t("library_remove");
+      rm.addEventListener("click", function () {
+        if (!window.confirm(t("confirm_library_remove", { name: r.name }))) return;
+        rm.disabled = true;
+        Promise.resolve(supabaseClient.rpc("library_remove", { p_entry: r.entry_id })).then(function (res) {
+          if (res.error || res.data === false) { rm.disabled = false; el.libraryMsg.textContent = t("msg_error_generic", { msg: (res.error && res.error.message) || "?" }); return; }
+          Object.keys(myEntries).forEach(function (k) { if (myEntries[k].id === r.entry_id) delete myEntries[k]; });
+          li.remove();
+          if (!el.libraryList.querySelector(".library-row")) { el.libraryList.innerHTML = ""; el.libraryMsg.textContent = t("library_empty"); }
+          var sel = selectedListId && allLists.find(function (l) { return l.id === selectedListId; });
+          if (sel) renderListHead(sel);
+        });
+      });
+      acts.appendChild(rm);
+    }
+    row.appendChild(acts);
     li.appendChild(row);
     return li;
   }
@@ -19665,6 +19797,10 @@
           var still = allLists.find(function (l) { return l.id === selectedListId; });
           if (still) selectListRow(selectedListId); else { el.listDetail.hidden = true; selectedListId = null; }
         }
+        return loadMyEntries().then(function () {
+          var sel = selectedListId && allLists.find(function (l) { return l.id === selectedListId; });
+          if (sel) renderListHead(sel);
+        });
       })
       .catch(function (err) {
         var cached = readCache("lists");
@@ -19881,6 +20017,7 @@
     el.ldPublished.hidden = !liveListsOk || level === "none";
     el.ldPublished.textContent = level === "all" ? t("ld_published_all") : level === "friends" ? t("ld_published_friends") : "";
     el.ldDelete.hidden = !owner;
+    el.ldDelete.textContent = t(owner && libraryOk && level !== "none" ? "btn_remove_my_list" : "btn_delete_list");
     el.ldRename.hidden = !owner;
     el.ldLeave.hidden = owner || !liveListsOk;
   }
@@ -19959,9 +20096,13 @@
 
   function handleListDelete() {
     if (!selectedListId) return;
-    if (!window.confirm(t("confirm_delete_list"))) return;
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    var published = !!(libraryOk && myEntries[selectedListId]);
+    if (!window.confirm(published ? t("confirm_remove_published", { name: l ? l.data.name : "" }) : t("confirm_delete_list"))) return;
+    var gone = selectedListId;
     supabaseClient.from("lists").delete().eq("id", selectedListId).then(function (res) {
       if (res.error) { showBanner(t("msg_no_pudo_eliminar", { msg: res.error.message })); return; }
+      delete myEntries[gone];
       el.listDetail.hidden = true;
       selectedListId = null;
       loadLists();

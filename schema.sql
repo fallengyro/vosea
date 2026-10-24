@@ -3378,3 +3378,197 @@ revoke execute on function public.vosea_push_friendships() from public, anon, au
 revoke execute on function public.vosea_push_list_members() from public, anon, authenticated;
 revoke execute on function public.vosea_push_lists() from public, anon, authenticated;
 revoke execute on function public.vosea_push_challenges() from public, anon, authenticated;
+
+-- ===========================================================================
+-- 2026-10-24 — the Biblioteca keeps copies (commit 136)
+-- ===========================================================================
+-- mason: "the idea of publishing is so that there is a repository to gather
+-- lists that aren't tied to the account. this way i can clear lists i have
+-- and only keep the ones i am actively working on, meanwhile the content
+-- from inactive lists is still available." He picked:
+--   * a frozen copy: Publicar saves a snapshot of the list to the
+--     Biblioteca. Later edits don't reach it until you publish again
+--     (Publicar → Listo refreshes it). Deleting your list doesn't touch it.
+--   * on a published list, the delete button is "Quitar de mis listas":
+--     your list goes, the copy stays.
+-- Agregar in the Biblioteca makes you your own list from the copy (its items
+-- live only in that list, like an import with "Solo en la lista"; on/off as
+-- usual). The publisher can take a copy out of the Biblioteca there, or by
+-- setting the list back to "No publicada".
+-- Share links (Compartir) are unchanged: they still put people in your
+-- live list.
+-- Lists published before this (lists.app_wide / friends_can_see) become
+-- copies here, and those two flags are cleared; anyone who had already
+-- joined one of them stays in it.
+-- Run after the 2026-10-23 live-lists SQL. Safe to run twice.
+-- ===========================================================================
+
+create table if not exists public.library_entries (
+  id uuid primary key default gen_random_uuid(),
+  publisher uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  source_list uuid references public.lists(id) on delete set null,
+  name text not null,
+  level text not null,
+  items jsonb not null default '[]',
+  n_verbs int not null default 0,
+  n_words int not null default 0,
+  n_phrases int not null default 0,
+  published_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.library_entries drop constraint if exists library_entries_shape_check;
+alter table public.library_entries add constraint library_entries_shape_check
+  check (char_length(name) between 1 and 200 and level in ('all', 'friends') and jsonb_typeof(items) = 'array');
+create unique index if not exists library_entries_source_idx on public.library_entries (source_list) where source_list is not null;
+create index if not exists library_entries_publisher_idx on public.library_entries (publisher);
+alter table public.library_entries enable row level security;
+-- You can read your own entries (the app shows each list's level from them);
+-- everyone else's come through library_lists().
+drop policy if exists "select own library entries" on public.library_entries;
+create policy "select own library entries" on public.library_entries for select using (publisher = auth.uid());
+revoke insert, update, delete on public.library_entries from anon, authenticated;
+
+-- Which Biblioteca copy a list of yours was made from (Agregar).
+alter table public.lists add column if not exists from_entry uuid references public.library_entries(id) on delete set null;
+
+-- Whether you can see an entry: everyone's, or a friend's for friends.
+create or replace function public.vosea_entry_visible(p_entry uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.library_entries e
+    where e.id = p_entry and (
+      e.publisher = auth.uid()
+      or e.level = 'all'
+      or (e.level = 'friends' and exists (
+        select 1 from public.friendships f
+        where f.status = 'accepted'
+          and ((f.requester = auth.uid() and f.addressee = e.publisher)
+            or (f.addressee = auth.uid() and f.requester = e.publisher))))));
+$$;
+
+-- The list's items as a copy: [{ item_type, data }], oldest first.
+create or replace function public.vosea_list_snapshot(p_list uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('item_type', i.item_type, 'data', i.data) order by i.created_at, i.id), '[]'::jsonb)
+  from public.list_items i where i.list_id = p_list;
+$$;
+
+-- Publish (or refresh) your list's copy, or take it out ('none').
+-- { result }: published / updated / removed / not_owner / not_allowed (Todos
+-- needs an app owner) / empty (no items).
+create or replace function public.library_publish(p_list uuid, p_level text)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  me uuid := auth.uid();
+  l public.lists;
+  snap jsonb;
+  e public.library_entries;
+begin
+  if me is null then raise exception 'sign_in_required'; end if;
+  select * into l from public.lists where id = p_list;
+  if not found or l.user_id <> me then return json_build_object('result', 'not_owner'); end if;
+  if p_level = 'none' then
+    delete from public.library_entries where source_list = p_list and publisher = me;
+    return json_build_object('result', 'removed');
+  end if;
+  if p_level not in ('all', 'friends') then raise exception 'bad_level'; end if;
+  if p_level = 'all' and not public.vosea_is_publisher() then return json_build_object('result', 'not_allowed'); end if;
+  snap := public.vosea_list_snapshot(p_list);
+  if jsonb_array_length(snap) = 0 then return json_build_object('result', 'empty'); end if;
+  select * into e from public.library_entries where source_list = p_list;
+  if found then
+    update public.library_entries set name = l.name, level = p_level, items = snap, updated_at = now(),
+      n_verbs = (select count(*) from jsonb_array_elements(snap) x where x->>'item_type' = 'verb'),
+      n_words = (select count(*) from jsonb_array_elements(snap) x where x->>'item_type' = 'word'),
+      n_phrases = (select count(*) from jsonb_array_elements(snap) x where x->>'item_type' = 'phrase')
+      where id = e.id;
+    return json_build_object('result', 'updated', 'entry', e.id);
+  end if;
+  insert into public.library_entries (publisher, source_list, name, level, items, n_verbs, n_words, n_phrases)
+  values (me, p_list, l.name, p_level, snap,
+    (select count(*) from jsonb_array_elements(snap) x where x->>'item_type' = 'verb'),
+    (select count(*) from jsonb_array_elements(snap) x where x->>'item_type' = 'word'),
+    (select count(*) from jsonb_array_elements(snap) x where x->>'item_type' = 'phrase'))
+  returning * into e;
+  return json_build_object('result', 'published', 'entry', e.id);
+end $$;
+
+-- The Biblioteca: everyone's copies, your friends' copies for friends, and
+-- your own. added = you have a list made from it.
+drop function if exists public.library_lists();
+create function public.library_lists()
+returns table (entry_id uuid, name text, owner_name text, source text,
+               n_verbs int, n_words int, n_phrases int, mine boolean, added boolean, updated_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select e.id, e.name, public.vosea_display_name(e.publisher),
+         case when e.level = 'all' then 'app' else 'friend' end,
+         e.n_verbs, e.n_words, e.n_phrases, e.publisher = auth.uid(),
+         exists (select 1 from public.lists l where l.user_id = auth.uid() and (l.from_entry = e.id or l.id = e.source_list)),
+         e.updated_at
+  from public.library_entries e
+  where auth.uid() is not null and public.vosea_entry_visible(e.id)
+  order by (e.level <> 'all'), lower(e.name);
+$$;
+
+-- Agregar: a list of your own with the copy's items. { result, list }:
+-- added / already / not_found.
+create or replace function public.library_add(p_entry uuid)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  me uuid := auth.uid();
+  e public.library_entries;
+  nl uuid;
+  have uuid;
+begin
+  if me is null then raise exception 'sign_in_required'; end if;
+  select * into e from public.library_entries where id = p_entry;
+  if not found or not public.vosea_entry_visible(p_entry) then return json_build_object('result', 'not_found'); end if;
+  select id into have from public.lists where user_id = me and (from_entry = e.id or id = e.source_list) limit 1;
+  if have is not null then return json_build_object('result', 'already', 'list', have); end if;
+  insert into public.lists (user_id, name, owner_label, from_entry)
+  values (me, e.name, coalesce(public.vosea_display_name(me), ''), e.id)
+  returning id into nl;
+  insert into public.list_items (list_id, item_type, data, created_at)
+  select nl, x->>'item_type', x->'data', now() + n * interval '1 microsecond'
+  from jsonb_array_elements(e.items) with ordinality t(x, n);
+  -- your own copy back after you removed your list: it's the source again,
+  -- so Publicar refreshes this same copy
+  if e.publisher = me and e.source_list is null then
+    update public.library_entries set source_list = nl where id = e.id;
+  end if;
+  return json_build_object('result', 'added', 'list', nl);
+end $$;
+
+-- The publisher takes a copy out of the Biblioteca. Lists people made from
+-- it stay theirs.
+create or replace function public.library_remove(p_entry uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  delete from public.library_entries where id = p_entry and publisher = auth.uid();
+  return found;
+end $$;
+
+revoke execute on function public.vosea_entry_visible(uuid) from public, anon;
+revoke execute on function public.vosea_list_snapshot(uuid) from public, anon, authenticated;
+revoke execute on function public.library_publish(uuid, text) from public, anon;
+revoke execute on function public.library_lists() from public, anon;
+revoke execute on function public.library_add(uuid) from public, anon;
+revoke execute on function public.library_remove(uuid) from public, anon;
+grant execute on function public.vosea_entry_visible(uuid) to authenticated;
+grant execute on function public.library_publish(uuid, text) to authenticated;
+grant execute on function public.library_lists() to authenticated;
+grant execute on function public.library_add(uuid) to authenticated;
+grant execute on function public.library_remove(uuid) to authenticated;
+
+-- Lists published the old way become copies; the old flags are cleared.
+insert into public.library_entries (publisher, source_list, name, level, items, n_verbs, n_words, n_phrases)
+select l.user_id, l.id, l.name, case when l.app_wide then 'all' else 'friends' end, s.snap,
+  (select count(*) from jsonb_array_elements(s.snap) x where x->>'item_type' = 'verb'),
+  (select count(*) from jsonb_array_elements(s.snap) x where x->>'item_type' = 'word'),
+  (select count(*) from jsonb_array_elements(s.snap) x where x->>'item_type' = 'phrase')
+from public.lists l
+cross join lateral (select public.vosea_list_snapshot(l.id) as snap) s
+where (l.app_wide or l.friends_can_see)
+  and jsonb_array_length(s.snap) > 0
+  and not exists (select 1 from public.library_entries e where e.source_list = l.id);
+update public.lists set app_wide = false, friends_can_see = false where app_wide or friends_can_see;
