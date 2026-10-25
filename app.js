@@ -1238,6 +1238,8 @@
       settings_title: "Configuración",
       set_g_app: "La app",
       fab_verb: "Verbo",
+      col_top: "Arriba",
+      col_top_aria: "Volver arriba",
       fab_word: "Palabra",
       fab_phrase: "Frase",
       fab_verb_aria: "Agregar un verbo",
@@ -2578,6 +2580,8 @@
       settings_title: "Settings",
       set_g_app: "The app",
       fab_verb: "Verb",
+      col_top: "Top",
+      col_top_aria: "Back to the top",
       fab_word: "Word",
       fab_phrase: "Phrase",
       fab_verb_aria: "Add a verb",
@@ -5780,7 +5784,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "167";
+  var VOSEA_BUILD = "168";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -22364,7 +22368,14 @@
       ui.sumBtn = mk("button", "col-sum-btn"); ui.sumBtn.type = "button";
       var pl = mk("span", null, t("col_sum_practice")); pl.setAttribute("data-i18n", "col_sum_practice"); ui.sumBtn.appendChild(pl);
       ui.sumBtn.addEventListener("click", function () { openDeckBuilder(tab); });
-      ui.sum.appendChild(ui.sumText); ui.sum.appendChild(ui.sumBtn);
+      // "↑ Arriba" (2026-10-26, mason): shown once the row is stuck to the
+      // top, so a long list is one tap from its start
+      ui.sumTop = mk("button", "col-sum-top"); ui.sumTop.type = "button";
+      ui.sumTop.setAttribute("data-i18n-aria-label", "col_top_aria"); ui.sumTop.setAttribute("aria-label", t("col_top_aria"));
+      ui.sumTop.appendChild(mk("span", "col-sum-top-ico", "↑"));
+      var tl = mk("span", null, t("col_top")); tl.setAttribute("data-i18n", "col_top"); ui.sumTop.appendChild(tl);
+      ui.sumTop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+      ui.sum.appendChild(ui.sumText); ui.sum.appendChild(ui.sumTop); ui.sum.appendChild(ui.sumBtn);
       card.parentNode.insertBefore(ui.sum, card.nextSibling);
       // the sheet
       ui.overlay = mk("div", "fsheet-overlay"); ui.overlay.hidden = true; ui.overlay.id = tab + "-fsheet";

@@ -3169,3 +3169,8 @@ body.has-col-fab #verbs-panel, body.has-col-fab #words-panel, body.has-col-fab #
 .ver-opt.is-list .ver-opt-sub { padding-left: 24px; }
 .ver-foot { display: flex; justify-content: flex-end; border-top: 1px solid var(--line); margin-top: 4px; padding: 6px 4px 2px; }
 .ver-done { border: 0; background: var(--accent-deep); color: var(--accent-ink, #fff); border-radius: 999px; padding: 7px 16px; font: 700 13.5px "Public Sans", sans-serif; cursor: pointer; }
+
+/* "↑ Arriba" in the count + Practicar row, only while it's stuck to the top */
+.col-sum-top { display: none; margin-left: auto; align-items: center; gap: 4px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 7px 12px; font: 600 13px "Public Sans", sans-serif; cursor: pointer; }
+.col-sum-top-ico { font-size: 14px; line-height: 1; }
+.col-sum.is-stuck .col-sum-top { display: inline-flex; }
