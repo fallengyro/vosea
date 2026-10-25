@@ -237,6 +237,22 @@
       irr_auto_hint: "según la tabla de conjugación",
       chip_group_transitivity: "Transitividad",
       chip_group_flags: "Marcas",
+      fbar_btn: "Filtros",
+      fbar_remove: "Sacar {what}",
+      fbar_n_of: "{n} de {total} {what}",
+      fbar_pos: "{i} de {n}",
+      fbar_prev: "Anterior",
+      fbar_next: "Siguiente",
+      fsheet_show: "Mostrar solo",
+      fsheet_hide: "Ocultar",
+      fsheet_note_show: "Tocá lo que querés ver.",
+      fsheet_note_hide: "Tocá lo que querés sacar de la lista.",
+      fsheet_done: "Ver {what}",
+      fsheet_add: "Agregar estas {n} a una lista",
+      col_sum_practice: "Practicar ›",
+      chip_group_progress: "Progreso",
+      chip_prog_hard: "me cuestan",
+      chip_prog_new: "nuevas",
       chip_group_category: "Categoría",
       chip_group_gender: "Género",
       chip_group_function: "Función",
@@ -1532,6 +1548,22 @@
       irr_auto_hint: "from the conjugation table",
       chip_group_transitivity: "Transitivity",
       chip_group_flags: "Flags",
+      fbar_btn: "Filters",
+      fbar_remove: "Remove {what}",
+      fbar_n_of: "{n} of {total} {what}",
+      fbar_pos: "{i} of {n}",
+      fbar_prev: "Previous",
+      fbar_next: "Next",
+      fsheet_show: "Show only",
+      fsheet_hide: "Hide",
+      fsheet_note_show: "Tap what you want to see.",
+      fsheet_note_hide: "Tap what you want to take out of the list.",
+      fsheet_done: "See {what}",
+      fsheet_add: "Add these {n} to a list",
+      col_sum_practice: "Practice ›",
+      chip_group_progress: "Progress",
+      chip_prog_hard: "struggling",
+      chip_prog_new: "new",
       chip_group_category: "Category",
       chip_group_gender: "Gender",
       chip_group_function: "Function",
@@ -4929,7 +4961,8 @@
     type: { include: new Set(), exclude: new Set() },
     irregularity: { include: new Set(), exclude: new Set() },
     transitivity: { include: new Set(), exclude: new Set() },
-    flag: { include: new Set(), exclude: new Set() }
+    flag: { include: new Set(), exclude: new Set() },
+    progress: { include: new Set(), exclude: new Set() }
   };
 
   var allWords = [];      // [{id, data}] — vocabulario (nouns, adjectives, etc.)
@@ -4940,7 +4973,8 @@
     pos: { include: new Set(), exclude: new Set() },
     gender: { include: new Set(), exclude: new Set() },
     register: { include: new Set(), exclude: new Set() },
-    flag: { include: new Set(), exclude: new Set() }
+    flag: { include: new Set(), exclude: new Set() },
+    progress: { include: new Set(), exclude: new Set() }
   };
 
   var allPhrases = [];    // [{id, data}] — short common phrases/expressions
@@ -4950,7 +4984,8 @@
   var activePhraseFilters = {
     function: { include: new Set(), exclude: new Set() },
     register: { include: new Set(), exclude: new Set() },
-    flag: { include: new Set(), exclude: new Set() }
+    flag: { include: new Set(), exclude: new Set() },
+    progress: { include: new Set(), exclude: new Set() }
   };
 
   // The "Listas" facet — unlike every filter above, this ONE is shared
@@ -5641,7 +5676,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "156";
+  var VOSEA_BUILD = "157";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -5969,7 +6004,14 @@
       if (!chip || !containerEl.contains(chip)) return;
       var facet = chip.getAttribute("data-facet");
       var value = chip.getAttribute("data-value");
-      cycleFacetValue(activeFilters, facet, value);
+      // In the Filtros sheet (commit 139) a tap shows or hides, by the
+      // sheet's Mostrar solo / Ocultar switch; elsewhere it still cycles.
+      var mode = containerEl.__chipMode, st = activeFilters[facet];
+      if (mode && st) {
+        var side = mode === "hide" ? "exclude" : "include", other = mode === "hide" ? "include" : "exclude";
+        if (st[side].has(value)) st[side].delete(value);
+        else { st[other].delete(value); st[side].add(value); }
+      } else cycleFacetValue(activeFilters, facet, value);
       refreshChipVisuals(containerEl, activeFilters);
       clearBtnEl.hidden = !anyFilterActive(activeFilters);
       saveFilters(storageKey, activeFilters);
@@ -6058,6 +6100,7 @@
   }
 
   function verbPassesFacets(v, ignoreExcludes) {
+    if (!progressFacetOk(activeVerbFilters, "verb", v.data.infinitive, ignoreExcludes)) return false;
     if (!facetOk(activeVerbFilters, "type", v.data.type || "", ignoreExcludes)) return false;
     if (!facetOkAny(activeVerbFilters, "irregularity", verbIrregularities(v.data), ignoreExcludes)) return false;
     if (!facetOk(activeVerbFilters, "transitivity", v.data.transitivity || "transitivo", ignoreExcludes)) return false;
@@ -7413,6 +7456,7 @@
       return false;
     }, ignoreExcludes)) return false;
     if (!listFacetOk(sharedListFilter, wordListMembership[norm(v.data.word || "")], ignoreExcludes)) return false;
+    if (!progressFacetOk(activeWordFilters, "word", v.data.word, ignoreExcludes)) return false;
     return true;
   }
 
@@ -7716,6 +7760,7 @@
 
   function phrasePassesFacets(v, ignoreExcludes) {
     if (!facetOk(activePhraseFilters, "function", v.data.function || "", ignoreExcludes)) return false;
+    if (!progressFacetOk(activePhraseFilters, "phrase", v.data.phrase, ignoreExcludes)) return false;
     if (!facetOk(activePhraseFilters, "register", v.data.register || "", ignoreExcludes)) return false;
     if (!flagOk(activePhraseFilters, "flag", function (value) {
       if (value === "idiomatic") return !!v.data.idiomatic;
@@ -17401,6 +17446,7 @@
       practiceHistory.error = null;
       practiceHistory.loading = null;
       renderHoySoon();
+      if (typeof progressFacetActive === "function" && progressFacetActive()) { renderList(); renderWordList(); renderPhraseList(); }
       return practiceAllRows();
     }, function (err) {
       console.warn("[progreso] couldn't load the practice log:", err && err.message);
@@ -21728,6 +21774,329 @@
   el.addFilteredPhrasesToList.addEventListener("click", function () {
     openListPicker("phrase", filteredPhrases.map(function (p) { return p.data; }));
   });
+
+  // ================= Colección on a phone: Filtros sheet (2026-10-25, commit 139) =================
+  // mason picked option 1A from the review mockups:
+  //   * the filter chips live in a sheet behind one "Filtros" button (with
+  //     the number of filters on); what you picked shows under the search as
+  //     chips you take off with ×;
+  //   * in the sheet, "Mostrar solo" / "Ocultar" instead of tapping a chip
+  //     twice to exclude it;
+  //   * "Agregar estas N a una lista" moves into the sheet;
+  //   * a Progreso group: sabido, me cuestan (missed in the last 14 days and
+  //     not learned yet), nuevas (never practiced);
+  //   * a count + Practicar row replaces the floating Practicar bar;
+  //   * on a phone the list is the page (no inner box) and an item opens as
+  //     its own screen, with ‹ back and ‹ › to step through the list.
+  // The chips, their facets, saving and "Limpiar filtros" are the same as
+  // before; the sheet just holds them.
+  var FSHEET_TABS = ["verbs", "words", "phrases"];
+  function fsheetConf(tab) {
+    if (tab === "verbs") return { tab: tab, panel: "verbs-panel", filtersEl: el.verbFilters, active: activeVerbFilters, items: function () { return filtered; }, all: function () { return allVerbs; },
+      addBtn: el.addFilteredToList, detail: el.detail, list: el.list, sel: function () { return selectedId; }, select: selectVerb, deselect: deselectVerb, one: "col_n_verbs_one", many: "col_n_verbs", back: "nav_verbs" };
+    if (tab === "words") return { tab: tab, panel: "words-panel", filtersEl: el.wordFilters, active: activeWordFilters, items: function () { return filteredWords; }, all: function () { return allWords; },
+      addBtn: el.addFilteredWordsToList, detail: el.wordDetail, list: el.wordList, sel: function () { return selectedWordId; }, select: selectWord, deselect: deselectWord, one: "col_n_words_one", many: "col_n_words", back: "nav_words" };
+    return { tab: tab, panel: "phrases-panel", filtersEl: el.phraseFilters, active: activePhraseFilters, items: function () { return filteredPhrases; }, all: function () { return allPhrases; },
+      addBtn: el.addFilteredPhrasesToList, detail: el.phraseDetail, list: el.phraseList, sel: function () { return selectedPhraseId; }, select: selectPhrase, deselect: deselectPhrase, one: "col_n_phrases_one", many: "col_n_phrases", back: "nav_phrases" };
+  }
+  var fsheetUi = {}; // tab -> { btn, n, pills, overlay, sub, done, add, note, mode, sum, sumText, sumBtn, back }
+
+  // "me cuestan" / "nuevas", from the practice log (the same model as
+  // Progreso). Recomputed only when the log changes.
+  var progStatusMemo = { sig: null, seen: null, hard: null };
+  function itemProgressStatus(kind, text) {
+    var rows = practiceHistory.rows;
+    if (!rows) return [];
+    if (!progStatusMemo) progStatusMemo = { sig: null };
+    var sig = (practiceHistory.userId || "") + ":" + rows.length + ":" + practiceQueue.length;
+    if (progStatusMemo.sig !== sig) {
+      var P = computeProgress(practiceAllRows());
+      var since = P.today - PROG_STRUGGLE_DAYS + 1;
+      var seen = {}, hard = {};
+      Object.keys(P.items).forEach(function (k) { seen[k] = true; });
+      Object.keys(P.units).forEach(function (k) {
+        var u = P.units[k];
+        if (u.learned) return;
+        if (u.events.some(function (e) { return e.day >= since && e.grade === "otra"; })) hard[u.kind + "|" + u.itemKey] = true;
+      });
+      progStatusMemo = { sig: sig, seen: seen, hard: hard };
+    }
+    var key = kind + "|" + practiceNorm(text || "");
+    if (!progStatusMemo.seen[key]) return ["nueva"];
+    return progStatusMemo.hard[key] ? ["cuesta"] : [];
+  }
+  function progressFacetOk(filters, kind, text, ignoreExcludes) {
+    var st = filters.progress;
+    if (!st || (!st.include.size && !st.exclude.size)) return true;
+    return facetOkAny(filters, "progress", itemProgressStatus(kind, text), ignoreExcludes);
+  }
+  function progressFacetActive() {
+    return [activeVerbFilters, activeWordFilters, activePhraseFilters].some(function (f) { return f.progress && (f.progress.include.size + f.progress.exclude.size) > 0; });
+  }
+
+  function fsheetCount(tab) {
+    var c = fsheetConf(tab), n = 0;
+    Object.keys(c.active).forEach(function (f) { n += c.active[f].include.size + c.active[f].exclude.size; });
+    return n + sharedListFilter.list.include.size + sharedListFilter.list.exclude.size;
+  }
+  function fsheetChipLabel(c, facet, value) {
+    var chip = c.filtersEl.querySelector('.chip[data-facet="' + facet + '"][data-value="' + (window.CSS && CSS.escape ? CSS.escape(value) : value) + '"]');
+    return chip ? chip.textContent.trim() : value;
+  }
+  function fsheetRefresh(tab) {
+    var ui = fsheetUi[tab]; if (!ui) return;
+    var c = fsheetConf(tab);
+    var n = fsheetCount(tab);
+    ui.n.textContent = String(n);
+    ui.n.hidden = !n;
+    ui.btn.classList.toggle("on", n > 0);
+    // what's on, as chips with ×
+    ui.pills.innerHTML = "";
+    function pill(label, exclude, off) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip fbar-pill " + (exclude ? "exclude" : "active");
+      b.appendChild(document.createTextNode(label + " "));
+      var x = document.createElement("span"); x.className = "fbar-x"; x.textContent = "×"; x.setAttribute("aria-hidden", "true");
+      b.appendChild(x);
+      b.setAttribute("aria-label", t("fbar_remove", { what: label }));
+      b.addEventListener("click", off);
+      ui.pills.appendChild(b);
+    }
+    Object.keys(c.active).forEach(function (facet) {
+      ["include", "exclude"].forEach(function (side) {
+        c.active[facet][side].forEach(function (value) {
+          pill(fsheetChipLabel(c, facet, value), side === "exclude", function () {
+            c.active[facet][side].delete(value);
+            refreshChipVisuals(c.filtersEl, c.active);
+            saveFilters(filtersStorageKey(tab), c.active);
+            rerenderTab(tab);
+            updateListsTrigger(tab);
+          });
+        });
+      });
+    });
+    ["include", "exclude"].forEach(function (side) {
+      sharedListFilter.list[side].forEach(function (id) {
+        var l = allLists.find(function (x) { return x.id === id; });
+        pill(l ? l.data.name : "?", side === "exclude", function () {
+          sharedListFilter.list[side].delete(id);
+          saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
+          renderList(); renderWordList(); renderPhraseList();
+          FSHEET_TABS.forEach(updateListsTrigger);
+        });
+      });
+    });
+    ui.pills.hidden = !ui.pills.children.length;
+    // the Listas group: one chip per list, same Mostrar solo / Ocultar
+    // as the rest (the old picker asked for a double tap)
+    if (ui.listChips) {
+      ui.listChips.innerHTML = "";
+      allLists.slice().sort(function (a, b) { return a.data.name.localeCompare(b.data.name); }).forEach(function (l) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip";
+        b.setAttribute("data-list-id", l.id);
+        b.textContent = l.data.name;
+        b.classList.toggle("active", sharedListFilter.list.include.has(l.id));
+        b.classList.toggle("exclude", sharedListFilter.list.exclude.has(l.id));
+        ui.listChips.appendChild(b);
+      });
+      ui.listChips.parentNode.hidden = !allLists.length;
+    }
+    // the count + Practicar row, and the sheet's buttons
+    var shown = c.items().length, total = c.all().length;
+    var noun = colPartLine(total, c.one, c.many).replace(/^\S+\s/, "");
+    ui.sumText.textContent = shown < total ? t("fbar_n_of", { n: shown, total: total, what: noun }) : colPartLine(total, c.one, c.many);
+    ui.sum.hidden = !total;
+    ui.sub.textContent = t("fbar_n_of", { n: shown, total: total, what: noun });
+    ui.done.textContent = t("fsheet_done", { what: colPartLine(shown, c.one, c.many) });
+    ui.add.textContent = t("fsheet_add", { n: shown });
+    ui.add.hidden = !shown;
+    // the item screen's ‹ › and "4 de 34"
+    fsheetDetailNav(tab);
+  }
+  function fsheetSetMode(tab, mode) {
+    var ui = fsheetUi[tab], c = fsheetConf(tab);
+    c.filtersEl.__chipMode = mode;
+    ui.mode.querySelectorAll("button").forEach(function (b) {
+      var on = b.getAttribute("data-mode") === mode;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    ui.note.textContent = t(mode === "hide" ? "fsheet_note_hide" : "fsheet_note_show");
+    c.filtersEl.classList.toggle("is-hide-mode", mode === "hide");
+  }
+  function openFsheet(tab) {
+    var ui = fsheetUi[tab]; if (!ui) return;
+    fsheetSetMode(tab, "show");
+    fsheetRefresh(tab);
+    ui.overlay.hidden = false;
+    document.body.classList.add("fsheet-open");
+  }
+  function closeFsheet(tab) {
+    var ui = fsheetUi[tab]; if (!ui) return;
+    ui.overlay.hidden = true;
+    document.body.classList.remove("fsheet-open");
+  }
+
+  // ---- an item as its own screen (phones) ----
+  function fsheetIsPhone() { try { return window.matchMedia("(max-width: 640px)").matches; } catch (e) { return false; } }
+  function fsheetDetailNav(tab) {
+    var ui = fsheetUi[tab]; if (!ui || !ui.back) return;
+    var c = fsheetConf(tab), items = c.items(), id = c.sel();
+    var i = items.findIndex(function (x) { return x.id === id; });
+    ui.backPos.textContent = i >= 0 ? t("fbar_pos", { i: i + 1, n: items.length }) : "";
+    ui.backPrev.disabled = i <= 0;
+    ui.backNext.disabled = i < 0 || i >= items.length - 1;
+  }
+  function fsheetStep(tab, d) {
+    var c = fsheetConf(tab), items = c.items(), id = c.sel();
+    var i = items.findIndex(function (x) { return x.id === id; });
+    var nx = items[i + d];
+    if (nx) { c.select(nx.id); fsheetUi[tab].lastId = nx.id; fsheetDetailNav(tab); window.scrollTo(0, 0); }
+  }
+  function fsheetDetailChanged(tab) {
+    var c = fsheetConf(tab), panel = document.getElementById(c.panel);
+    if (!panel) return;
+    var open = !c.detail.hidden;
+    var was = panel.classList.contains("is-item");
+    panel.classList.toggle("is-item", open);
+    if (open) fsheetUi[tab].lastId = c.sel();
+    if (open && !was && fsheetIsPhone()) {
+      setTimeout(function () { window.scrollTo({ top: 0, behavior: "instant" }); }, 30);
+    } else if (!open && was && fsheetIsPhone()) {
+      // back on the list, at the item you were last looking at
+      var id = fsheetUi[tab].lastId;
+      setTimeout(function () {
+        var row = id && c.list.querySelector('.card-row[data-item-id="' + id + '"]');
+        if (row && row.scrollIntoView) row.scrollIntoView({ block: "center", behavior: "instant" });
+      }, 30);
+    }
+    fsheetDetailNav(tab);
+  }
+
+  (function setupFilterSheets() {
+    FSHEET_TABS.forEach(function (tab) {
+      var c = fsheetConf(tab);
+      if (!c.filtersEl) return;
+      var card = c.filtersEl.closest(".search-card");
+      var panel = document.getElementById(c.panel);
+      if (!card || !panel) return;
+      var ui = fsheetUi[tab] = {};
+      function mk(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; }
+      // the bar under the search: Filtros (n) + what's on
+      var bar = mk("div", "fbar");
+      ui.btn = mk("button", "fbar-btn"); ui.btn.type = "button"; ui.btn.id = tab + "-fbar-btn";
+      ui.btn.appendChild(mk("span", "fbar-ico", "☰"));
+      var lab = mk("span", null, t("fbar_btn")); lab.setAttribute("data-i18n", "fbar_btn"); ui.btn.appendChild(lab);
+      ui.n = mk("span", "fbar-n"); ui.n.hidden = true; ui.btn.appendChild(ui.n);
+      ui.btn.addEventListener("click", function () { openFsheet(tab); });
+      bar.appendChild(ui.btn);
+      ui.pills = mk("div", "fbar-pills"); ui.pills.id = tab + "-fbar-pills"; ui.pills.hidden = true;
+      bar.appendChild(ui.pills);
+      var hiddenRow = card.querySelector(".hidden-count-row");
+      card.insertBefore(bar, c.filtersEl);
+      // the count + Practicar row under the card
+      ui.sum = mk("div", "col-sum"); ui.sum.id = tab + "-sum";
+      ui.sumText = mk("span", "col-sum-text");
+      ui.sumBtn = mk("button", "col-sum-btn"); ui.sumBtn.type = "button";
+      var pl = mk("span", null, t("col_sum_practice")); pl.setAttribute("data-i18n", "col_sum_practice"); ui.sumBtn.appendChild(pl);
+      ui.sumBtn.addEventListener("click", openDeckBuilder);
+      ui.sum.appendChild(ui.sumText); ui.sum.appendChild(ui.sumBtn);
+      card.parentNode.insertBefore(ui.sum, card.nextSibling);
+      // the sheet
+      ui.overlay = mk("div", "fsheet-overlay"); ui.overlay.hidden = true; ui.overlay.id = tab + "-fsheet";
+      var sheet = mk("div", "fsheet"); sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-modal", "true");
+      sheet.appendChild(mk("div", "fsheet-grab"));
+      var head = mk("div", "fsheet-head");
+      var h = mk("h3", null, t("fbar_btn")); h.setAttribute("data-i18n", "fbar_btn"); head.appendChild(h);
+      var x = mk("button", "fsheet-x", "×"); x.type = "button"; x.setAttribute("aria-label", t("close"));
+      x.addEventListener("click", function () { closeFsheet(tab); });
+      head.appendChild(x);
+      sheet.appendChild(head);
+      ui.sub = mk("p", "fsheet-sub"); sheet.appendChild(ui.sub);
+      ui.mode = mk("div", "fsheet-mode");
+      [["show", "fsheet_show"], ["hide", "fsheet_hide"]].forEach(function (m) {
+        var b = mk("button", null, t(m[1])); b.type = "button"; b.setAttribute("data-mode", m[0]); b.setAttribute("data-i18n", m[1]);
+        b.addEventListener("click", function () { fsheetSetMode(tab, m[0]); });
+        ui.mode.appendChild(b);
+      });
+      sheet.appendChild(ui.mode);
+      ui.note = mk("p", "fsheet-note"); sheet.appendChild(ui.note);
+      sheet.appendChild(c.filtersEl); // the chips themselves move in here
+      // Progreso: sabido (moved from Marcas), me cuestan, nuevas
+      var known = c.filtersEl.querySelector('.chip[data-facet="flag"][data-value="known"]');
+      var g = mk("div", "chip-group fsheet-progress");
+      var gl = mk("span", "chip-label", t("chip_group_progress")); gl.setAttribute("data-i18n", "chip_group_progress"); g.appendChild(gl);
+      if (known) g.appendChild(known);
+      [["cuesta", "chip_prog_hard"], ["nueva", "chip_prog_new"]].forEach(function (p) {
+        var b = mk("button", "chip", t(p[1])); b.type = "button"; b.setAttribute("data-facet", "progress"); b.setAttribute("data-value", p[0]); b.setAttribute("data-i18n", p[1]);
+        g.appendChild(b);
+      });
+      var listsGroup = c.filtersEl.querySelector('[id$="-lists-group"]');
+      if (listsGroup) {
+        ui.listChips = mk("span", "fsheet-listchips");
+        listsGroup.appendChild(ui.listChips);
+        ui.listChips.addEventListener("click", function (e) {
+          var chip = e.target.closest(".chip[data-list-id]");
+          if (!chip) return;
+          var id = chip.getAttribute("data-list-id"), st = sharedListFilter.list;
+          var side = c.filtersEl.__chipMode === "hide" ? "exclude" : "include", other = side === "include" ? "exclude" : "include";
+          if (st[side].has(id)) st[side].delete(id); else { st[other].delete(id); st[side].add(id); }
+          saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
+          renderList(); renderWordList(); renderPhraseList();
+          FSHEET_TABS.forEach(updateListsTrigger);
+        });
+      }
+      c.filtersEl.insertBefore(g, listsGroup || c.filtersEl.querySelector(".chip-clear"));
+      // a Marcas group left empty (Vocabulario only had Sabido) goes
+      c.filtersEl.querySelectorAll(".chip-group").forEach(function (gr) {
+        if (gr !== g && !gr.querySelector(".chip, .lists-trigger")) gr.hidden = true;
+      });
+      refreshChipVisuals(c.filtersEl, c.active);
+      var acts = mk("div", "fsheet-actions");
+      ui.done = mk("button", "btn-primary fsheet-done"); ui.done.type = "button";
+      ui.done.addEventListener("click", function () { closeFsheet(tab); });
+      ui.add = mk("button", "btn-secondary fsheet-add"); ui.add.type = "button";
+      ui.add.addEventListener("click", function () { closeFsheet(tab); if (c.addBtn) c.addBtn.click(); });
+      acts.appendChild(ui.done); acts.appendChild(ui.add);
+      sheet.appendChild(acts);
+      ui.overlay.appendChild(sheet);
+      ui.overlay.addEventListener("click", function (e) { if (e.target === ui.overlay) closeFsheet(tab); });
+      panel.appendChild(ui.overlay);
+      if (hiddenRow) card.appendChild(hiddenRow);
+      // the item screen's top bar (shown on phones)
+      ui.back = mk("div", "dback");
+      var bb = mk("button", "dback-btn"); bb.type = "button";
+      var bl = mk("span", null, t(c.back)); bl.setAttribute("data-i18n", c.back);
+      bb.appendChild(document.createTextNode("‹ ")); bb.appendChild(bl);
+      bb.addEventListener("click", function () { c.deselect(); });
+      ui.back.appendChild(bb);
+      var nav = mk("span", "dback-nav");
+      ui.backPrev = mk("button", "dback-step", "‹"); ui.backPrev.type = "button"; ui.backPrev.setAttribute("aria-label", t("fbar_prev"));
+      ui.backPos = mk("span", "dback-pos");
+      ui.backNext = mk("button", "dback-step", "›"); ui.backNext.type = "button"; ui.backNext.setAttribute("aria-label", t("fbar_next"));
+      ui.backPrev.addEventListener("click", function () { fsheetStep(tab, -1); });
+      ui.backNext.addEventListener("click", function () { fsheetStep(tab, 1); });
+      nav.appendChild(ui.backPrev); nav.appendChild(ui.backPos); nav.appendChild(ui.backNext);
+      ui.back.appendChild(nav);
+      c.detail.insertBefore(ui.back, c.detail.firstChild);
+      new MutationObserver(function () { fsheetDetailChanged(tab); }).observe(c.detail, { attributes: true, attributeFilter: ["hidden"] });
+      fsheetSetMode(tab, "show");
+    });
+    // keep the bar, the count row and the sheet in step with every render
+    var rl = renderList, rw = renderWordList, rp = renderPhraseList;
+    renderList = function () { var r = rl.apply(this, arguments); fsheetRefresh("verbs"); return r; };
+    renderWordList = function () { var r = rw.apply(this, arguments); fsheetRefresh("words"); return r; };
+    renderPhraseList = function () { var r = rp.apply(this, arguments); fsheetRefresh("phrases"); return r; };
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape") return;
+      FSHEET_TABS.forEach(function (tab) { if (fsheetUi[tab] && !fsheetUi[tab].overlay.hidden) closeFsheet(tab); });
+    });
+    FSHEET_TABS.forEach(fsheetRefresh);
+  })();
+  window.voseaFilters = { open: openFsheet, close: closeFsheet, status: itemProgressStatus }; // tests
 
   el.flashSrcVerbs.addEventListener("change", function () {
     activeFlashSources.verbs = el.flashSrcVerbs.checked;
