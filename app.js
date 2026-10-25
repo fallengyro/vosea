@@ -134,6 +134,8 @@
       col_n_words_one: "1 palabra",
       col_n_phrases: "{n} frases",
       col_n_phrases_one: "1 frase",
+      col_n_topics: "{n} temas",
+      col_n_topics_one: "1 tema",
       hoy_k_practice: "Practicar",
       hoy_k_learn: "Aprender",
       hoy_k_play: "Jugar",
@@ -1483,6 +1485,8 @@
       col_n_words_one: "1 word",
       col_n_phrases: "{n} phrases",
       col_n_phrases_one: "1 phrase",
+      col_n_topics: "{n} topics",
+      col_n_topics_one: "1 topic",
       hoy_k_practice: "Practice",
       hoy_k_learn: "Learn",
       hoy_k_play: "Play",
@@ -5786,7 +5790,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "171";
+  var VOSEA_BUILD = "172";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -13079,6 +13083,8 @@
   // height is measured from the rows themselves.
   function fitTopicList() {
     var list = el.topicList;
+    // (2026-10-26) the list is the page now, like Colección: no box
+    if (list) { list.style.height = ""; return; }
     if (!list || !list.offsetParent) return;
     var rows = list.children;
     if (rows.length <= 5) { list.style.height = ""; return; }
@@ -13166,7 +13172,7 @@
     renderTopicList();
     scrollTopicRowIntoList(id);
     renderItemHistory("topic");
-    if (!quiet) el.topicDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    // (2026-10-26: the Tema is a card over the list; nothing to scroll to)
   }
   function renderTopicRanges() {
     var tp = topicById(selectedTopicId);
@@ -20034,6 +20040,7 @@
     return activePhraseFilters;
   }
   function rerenderTab(tab) {
+    if (tab === "topics") { renderTopicList(); return; }
     if (tab === "verbs") renderList();
     else if (tab === "words") renderWordList();
     else renderPhraseList();
@@ -22182,6 +22189,12 @@
       addBtn: el.addFilteredToList, detail: el.detail, list: el.list, sel: function () { return selectedId; }, select: selectVerb, deselect: deselectVerb, one: "col_n_verbs_one", many: "col_n_verbs", back: "nav_verbs" };
     if (tab === "words") return { tab: tab, panel: "words-panel", filtersEl: el.wordFilters, active: activeWordFilters, items: function () { return filteredWords; }, all: function () { return allWords; },
       addBtn: el.addFilteredWordsToList, detail: el.wordDetail, list: el.wordList, sel: function () { return selectedWordId; }, select: selectWord, deselect: deselectWord, one: "col_n_words_one", many: "col_n_words", back: "nav_words" };
+    // Temas (2026-10-26, mason: "the same appearance and behaviors that we
+    // just implemented for the content items"): Filtros sheet, sticky count
+    // row with ↑ Arriba (no Practicar: each Tema has its own), and a Tema as
+    // a card over the list. No Progreso chips, no Ver, no + button.
+    if (tab === "topics") return { tab: tab, topics: true, panel: "topics-panel", filtersEl: el.topicFilters, active: activeTopicFilters, items: function () { return TOPICS.filter(topicPassesFilters); }, all: function () { return TOPICS; },
+      addBtn: null, detail: el.topicDetail, list: el.topicList, sel: function () { return selectedTopicId; }, select: selectTopic, deselect: deselectTopic, one: "col_n_topics_one", many: "col_n_topics", back: "nav_topics" };
     return { tab: tab, panel: "phrases-panel", filtersEl: el.phraseFilters, active: activePhraseFilters, items: function () { return filteredPhrases; }, all: function () { return allPhrases; },
       addBtn: el.addFilteredPhrasesToList, detail: el.phraseDetail, list: el.phraseList, sel: function () { return selectedPhraseId; }, select: selectPhrase, deselect: deselectPhrase, one: "col_n_phrases_one", many: "col_n_phrases", back: "nav_phrases" };
   }
@@ -22257,7 +22270,7 @@
             refreshChipVisuals(c.filtersEl, c.active);
             saveFilters(filtersStorageKey(tab), c.active);
             rerenderTab(tab);
-            updateListsTrigger(tab);
+            if (tab !== "topics") updateListsTrigger(tab);
           });
         });
       });
@@ -22445,11 +22458,13 @@
   var itemSheetBg = document.createElement("div");
   itemSheetBg.className = "item-sheet-bg"; itemSheetBg.hidden = true;
   document.body.appendChild(itemSheetBg);
+  // which main tab each part lives on (Temas joined 2026-10-26)
+  var ITEM_SHEET_TABS = { verbs: "col", words: "col", phrases: "col", topics: "topics" };
   function itemSheetOpenTab() {
     var found = null;
-    ["verbs", "words", "phrases"].forEach(function (tab) {
+    Object.keys(ITEM_SHEET_TABS).forEach(function (tab) {
       var c = fsheetConf(tab), panel = document.getElementById(c.panel);
-      if (!found && panel && !panel.hidden && !c.detail.hidden && !panel.classList.contains("is-form") && currentTab === "col" && !el.appScreen.hidden) found = tab;
+      if (!found && panel && !panel.hidden && !c.detail.hidden && !panel.classList.contains("is-form") && currentTab === ITEM_SHEET_TABS[tab] && !el.appScreen.hidden) found = tab;
     });
     return found;
   }
@@ -22507,7 +22522,7 @@
   }
 
   (function setupFilterSheets() {
-    FSHEET_TABS.forEach(function (tab) {
+    FSHEET_TABS.concat(["topics"]).forEach(function (tab) {
       var c = fsheetConf(tab);
       if (!c.filtersEl) return;
       var card = c.filtersEl.closest(".search-card");
@@ -22541,6 +22556,7 @@
       var tl = mk("span", null, t("col_top")); tl.setAttribute("data-i18n", "col_top"); ui.sumTop.appendChild(tl);
       ui.sumTop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
       ui.sum.appendChild(ui.sumText); ui.sum.appendChild(ui.sumTop); ui.sum.appendChild(ui.sumBtn);
+      if (c.topics) ui.sumBtn.hidden = true; // each Tema has its own Practicar
       card.parentNode.insertBefore(ui.sum, card.nextSibling);
       // the sheet
       ui.overlay = mk("div", "fsheet-overlay"); ui.overlay.hidden = true; ui.overlay.id = tab + "-fsheet";
@@ -22555,6 +22571,7 @@
       ui.sub = mk("p", "fsheet-sub"); sheet.appendChild(ui.sub);
       sheet.appendChild(c.filtersEl); // the chips themselves move in here
       // Progreso: sabido (moved from Marcas), me cuestan, nuevas
+      if (!c.topics) {
       var known = c.filtersEl.querySelector('.chip[data-facet="flag"][data-value="known"]');
       var g = mk("div", "chip-group fsheet-progress");
       var gl = mk("span", "chip-label", t("chip_group_progress")); gl.setAttribute("data-i18n", "chip_group_progress"); g.appendChild(gl);
@@ -22569,6 +22586,7 @@
       c.filtersEl.querySelectorAll(".chip-group").forEach(function (gr) {
         if (gr !== g && !gr.querySelector(".chip, .lists-trigger")) gr.hidden = true;
       });
+      }
       // "Limpiar filtros" lives in the header, next to ×, so turning the first
       // filter on doesn't add a row and move the sheet (2026-10-26)
       var clr = c.filtersEl.querySelector(".chip-clear");
@@ -22580,6 +22598,7 @@
       ui.add = mk("button", "btn-secondary fsheet-add"); ui.add.type = "button";
       ui.add.addEventListener("click", function () { closeFsheet(tab); if (c.addBtn) c.addBtn.click(); });
       acts.appendChild(ui.done); acts.appendChild(ui.add);
+      if (!c.addBtn) ui.add.hidden = true;
       sheet.appendChild(acts);
       ui.overlay.appendChild(sheet);
       ui.overlay.addEventListener("click", function (e) { if (e.target === ui.overlay) closeFsheet(tab); });
@@ -22608,18 +22627,20 @@
       itemSheetSwipe(c, ui.back);
       c.detail.insertBefore(ui.back, c.detail.firstChild);
       new MutationObserver(function () { fsheetDetailChanged(tab); }).observe(c.detail, { attributes: true, attributeFilter: ["hidden"] });
-      fsheetSetVer(tab);
+      if (!c.topics) fsheetSetVer(tab);
     });
     // keep the bar, the count row and the sheet in step with every render
     var rl = renderList, rw = renderWordList, rp = renderPhraseList;
     renderList = function () { var r = rl.apply(this, arguments); fsheetRefresh("verbs"); return r; };
     renderWordList = function () { var r = rw.apply(this, arguments); fsheetRefresh("words"); return r; };
     renderPhraseList = function () { var r = rp.apply(this, arguments); fsheetRefresh("phrases"); return r; };
+    var rt = renderTopicList;
+    renderTopicList = function () { var r = rt.apply(this, arguments); fsheetRefresh("topics"); return r; };
     document.addEventListener("keydown", function (e) {
       if (e.key !== "Escape") return;
-      FSHEET_TABS.forEach(function (tab) { if (fsheetUi[tab] && !fsheetUi[tab].overlay.hidden) closeFsheet(tab); });
+      FSHEET_TABS.concat(["topics"]).forEach(function (tab) { if (fsheetUi[tab] && !fsheetUi[tab].overlay.hidden) closeFsheet(tab); });
     });
-    FSHEET_TABS.forEach(fsheetRefresh);
+    FSHEET_TABS.concat(["topics"]).forEach(fsheetRefresh);
   })();
   // ================= Searching several words (2026-10-25, commit 142) =================
   // mason picked mockup 3B, without the lookup: type a comma (or Enter) and
@@ -22894,9 +22915,9 @@
   // (2026-10-26) an item is a card over the list now: going to another part
   // or tab closes it
   function itemSheetCloseHidden() {
-    ["verbs", "words", "phrases"].forEach(function (tab) {
+    Object.keys(ITEM_SHEET_TABS).forEach(function (tab) {
       var c = fsheetConf(tab), panel = document.getElementById(c.panel);
-      if (panel && !c.detail.hidden && (panel.hidden || currentTab !== "col")) c.deselect();
+      if (panel && !c.detail.hidden && (panel.hidden || currentTab !== ITEM_SHEET_TABS[tab])) c.deselect();
     });
     itemSheetUpdate();
   }
@@ -22913,7 +22934,7 @@
   var colStuckRaf = 0;
   function colStuckCheck() {
     colStuckRaf = 0;
-    ["verbs", "words", "phrases"].forEach(function (tab) {
+    ["verbs", "words", "phrases", "topics"].forEach(function (tab) {
       var ui = fsheetUi[tab];
       if (!ui || !ui.sum || ui.sum.hidden) return;
       var r = ui.sum.getBoundingClientRect();

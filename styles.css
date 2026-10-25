@@ -3001,19 +3001,19 @@ body.fsheet-open { overflow: hidden; }
    over the list (2026-10-26, mason: "the way 'practice' looks when
    launched"): a sheet from the bottom on a phone, a centered card on
    desktop, over a dimmed list that stays where it was. */
-#card-list, #word-list, #phrase-list { height: auto !important; max-height: none !important; overflow: visible !important; }
-#card-list::after, #word-list::after, #phrase-list::after { display: none !important; }
+#card-list, #word-list, #phrase-list, #topic-list { height: auto !important; max-height: none !important; overflow: visible !important; }
+#card-list::after, #word-list::after, #phrase-list::after, #topic-list::after { display: none !important; }
 .item-sheet-bg { position: fixed; inset: 0; z-index: 90; background: rgba(28, 35, 51, .45); }
 .item-sheet-bg[hidden] { display: none; }
 body.item-sheet-open { overflow: hidden; }
-#detail, #word-detail, #phrase-detail { position: fixed; z-index: 91; margin: 0 !important; overflow-y: auto; overscroll-behavior: contain;
+#detail, #word-detail, #phrase-detail, #topic-detail { position: fixed; z-index: 91; margin: 0 !important; overflow-y: auto; overscroll-behavior: contain;
   background: var(--paper); border: 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .25); box-sizing: border-box; transition: transform .18s ease-out; }
 @media (max-width: 640px) {
-  #detail, #word-detail, #phrase-detail { left: 0; right: 0; bottom: 0; max-height: 92vh; border-radius: 20px 20px 0 0; padding: 0 16px calc(22px + env(safe-area-inset-bottom)); }
-  #detail:not([hidden]), #word-detail:not([hidden]), #phrase-detail:not([hidden]) { animation: item-sheet-up .2s ease-out; }
+  #detail, #word-detail, #phrase-detail, #topic-detail { left: 0; right: 0; bottom: 0; max-height: 92vh; border-radius: 20px 20px 0 0; padding: 0 16px calc(22px + env(safe-area-inset-bottom)); }
+  #detail:not([hidden]), #word-detail:not([hidden]), #phrase-detail:not([hidden]), #topic-detail:not([hidden]) { animation: item-sheet-up .2s ease-out; }
 }
 @media (min-width: 641px) {
-  #detail, #word-detail, #phrase-detail { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); max-height: 84vh; border-radius: 14px; padding: 0 22px 22px; box-shadow: 0 10px 30px rgba(28, 35, 51, .3); transition: none; }
+  #detail, #word-detail, #phrase-detail, #topic-detail { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); max-height: 84vh; border-radius: 14px; padding: 0 22px 22px; box-shadow: 0 10px 30px rgba(28, 35, 51, .3); transition: none; }
 }
 @keyframes item-sheet-up { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
 /* the card's top row: ‹ N de M › and Cerrar, staying put when it scrolls */
