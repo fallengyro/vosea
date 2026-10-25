@@ -5784,7 +5784,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "169";
+  var VOSEA_BUILD = "170";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -12187,6 +12187,116 @@
       tip: L("En inglés las vocales sin acento se apagan; en español no: cada una suena clara.",
              "In English unstressed vowels fade; in Spanish they don't: each one stays clear.")
     },
+    // ---- Diptongos (2026-10-26, mason: "as a native English speaker,
+    // diphthongs were new to me") — nine parts: the diphthongs by family,
+    // the tilde that splits them, two strong vowels that never join, e→ie /
+    // o→ue in verbs (and vos, which keeps the stem), and three together ----
+    {
+      id: "diptongos", type: "gen", name: L("Diptongos", "Diphthongs"),
+      desc: L("Dos vocales en una sílaba: bien, aire, ciudad… y cuándo se separan.", "Two vowels in one syllable: bien, aire, ciudad… and when they split."),
+      tag: L("diptongos", "diphthongs"),
+      ranges: [
+        wordRange("ai", L("ai · ei · oi", "ai · ei · oi"), L("a, e, o + i (o y al final): una sola sílaba, que termina en una «i» corta", "a, e, o + i (or y at the end): one syllable, ending in a short “ee”"),
+          [W("[ai]re", "AI·re", L("«AI-re»: la ai suena como «eye» en inglés.", "«EYE-re»: the ai sounds like English «eye».")),
+           W("b[ai]le", "BAI·le", L("«BAI-le», como «bye» + le. El baile = the dance.", "«BYE-le», like «bye» + le. El baile = the dance.")),
+           W("h[ay]", "HAY", L("La h no suena y la y del final es una i: «AI», como «ay». Hay pan, hay gente: existe, está.", "The h is silent and the final y is an i: «eye». Hay = there is, there are.")),
+           W("s[ei]s", "SEIS", L("e + i en una sílaba: «SEIS». Decí la e entera antes de la i.", "e + i in one syllable: «say» + s (not the vowel of English «says»). Say a full e before the i.")),
+           W("r[ei]na", "REI·na", L("«RREI-na»: r inicial vibrante y ei junta, como «ray».", "«RRAY-na»: rolled initial r, and ei together, like «ray».")),
+           W("l[ey]", "LEY", L("«LEI», como «lay». La y del final suena i.", "«lay». The final y sounds like i.")),
+           W("h[oy]", "HOY", L("«OI», como «boy» sin la b.", "«oy», like «boy» without the b.")),
+           W("v[oy]", "VOY", L("«BOI»: la v suena b, y oy como en «boy». Voy = I go.", "«boy»: the v sounds like b. Voy = I go.")),
+           W("[oi]go", "OI·go", L("«OI-go»: o + i en una sílaba. Oigo = I hear (de oír).", "«OY-go»: o + i in one syllable. Oigo = I hear (from oír)."))]),
+        wordRange("au", L("au · eu", "au · eu"), L("a, e + u: una sola sílaba, que termina en una «u» corta", "a, e + u: one syllable, ending in a short “oo”"),
+          [W("[au]to", "AU·to", L("«AU-to», como «ow» en «how». Acá el auto es el coche.", "«OW-to», like the «ow» in «how». Here auto is the word for car.")),
+           W("c[au]sa", "CAU·sa", L("«CAU-sa», como «cow» + sa.", "«COW-sa», like «cow» + sa.")),
+           W("[au]la", "AU·la", L("«AU-la»: el aula = the classroom (femenina, pero «el aula»).", "«OW-la»: el aula = the classroom (feminine, but «el aula»).")),
+           W("j[au]la", "JAU·la", L("«HAU-la»: j fuerte, y au junta. Jaula = cage.", "«HOW-la»: a strong j, and au together. Jaula = cage.")),
+           W("L[au]ra", "LAU·ra", L("«LAU-ra», con au como en «how»; no «LO-ra» como en inglés.", "«LOW-ra», au as in «how»; not «LOR-a» as in English.")),
+           W("[eu]ro", "EU·ro", L("e + u: «EU-ro». No existe en inglés: decí una e y deslizá a la u. Nunca «IU-ro».", "e + u in one syllable: start on «eh» and glide to «oo». English doesn't have it. Never «YOO-ro».")),
+           W("[Eu]ropa", "eu·RO·pa", L("«eu-RO-pa»: la misma eu, sin la «iu» del inglés.", "«eu-RO-pa»: the same eu glide, without the English «yoo».")),
+           W("d[eu]da", "DEU·da", L("«DEU-da»: deuda = debt.", "«DEU-da», eu gliding in one syllable: deuda = debt."))]),
+        wordRange("ia", L("ia · ie · io", "ia · ie · io"), L("i + vocal: la i se vuelve una «y» rápida, en la misma sílaba", "i + vowel: the i becomes a quick “y,” in the same syllable"),
+          [W("p[ia]no", "PIA·no", L("Dos sílabas: «PIA-no», no «pi-A-no».", "Two syllables: «PYA-no», not «pee-AH-no».")),
+           W("grac[ia]s", "GRA·cias", L("Dos sílabas: «GRA-sias», con la ia junta.", "Two syllables: «GRA-syas», not «GRA-see-ahs».")),
+           W("famil[ia]", "fa·MI·lia", L("La ia final es una sola sílaba: «fa-MI-lia».", "The final ia is one syllable: «fa-MEE-lya».")),
+           W("b[ie]n", "BIEN", L("Una sola sílaba: «BIEN», no «bi-EN».", "One syllable: «byen», not «bee-EN».")),
+           W("t[ie]ne", "TIE·ne", L("«TIE-ne»: la ie, rápida, en una sílaba.", "«TYE-ne»: a quick ie, in one syllable.")),
+           W("c[ie]lo", "CIE·lo", L("«SIE-lo»: ci suena si, y ie va junta.", "«SYE-lo»: ci sounds like si, and ie goes together.")),
+           W("rad[io]", "RA·dio", L("«RA-dio»: io en una sílaba.", "«RA-dyo»: io in one syllable.")),
+           W("nov[io]", "NO·vio", L("«NO-bio»: v como b, io junta. Novio = boyfriend.", "«NO-byo»: v as b, io together. Novio = boyfriend.")),
+           W("D[io]s", "DIOS", L("Una sola sílaba: «DIOS». «¡Dios mío!»", "One syllable: «dyos». «¡Dios mío!» = oh my God!"))]),
+        wordRange("ua", L("ua · ue · uo", "ua · ue · uo"), L("u + vocal: la u se vuelve una «w» rápida, en la misma sílaba", "u + vowel: the u becomes a quick “w,” in the same syllable"),
+          [W("ag[ua]", "A·gua", L("«A-gua», con ua como «wa». El agua (femenina).", "«AH-gwa», ua as «wa». El agua (feminine).")),
+           W("c[ua]tro", "CUA·tro", L("Dos sílabas: «CUA-tro», como «kwa».", "Two syllables: «KWA-tro».")),
+           W("c[ua]ndo", "CUAN·do", L("«CUAN-do»: ua junta, nunca «cu-AN-do».", "«KWAN-do»: ua together, never «koo-AN-do».")),
+           W("b[ue]no", "BUE·no", L("«BUE-no», como «bweh». «Bueno…» también sirve para empezar a hablar.", "«BWEH-no». «Bueno…» is also how people start talking.")),
+           W("p[ue]rta", "PUER·ta", L("«PUER-ta»: ue junta, como «pwer».", "«PWER-ta»: ue together.")),
+           W("f[ue]go", "FUE·go", L("«FUE-go»: fuego = fire.", "«FWEH-go»: fuego = fire.")),
+           W("n[ue]vo", "NUE·vo", L("«NUE-bo»: ue junta y v como b.", "«NWEH-bo»: ue together, and v as b.")),
+           W("antig[uo]", "an·TI·guo", L("La uo final, una sílaba: «an-TI-guo».", "The final uo is one syllable: «an-TEE-gwo».")),
+           W("c[uo]ta", "CUO·ta", L("«CUO-ta»: acá se paga mucho «en cuotas» (in installments).", "«KWO-ta»: here people pay for a lot «en cuotas» (in installments)."))]),
+        wordRange("iu", L("iu · ui", "iu · ui"), L("i + u, u + i: una sola sílaba; la fuerza va en la segunda", "i + u, u + i: one syllable; the second vowel is the strong one"),
+          [W("c[iu]dad", "ciu·DAD", L("«siu-DAD»: ciu, una sola sílaba.", "«syoo-DAD»: ciu is one syllable.")),
+           W("v[iu]da", "VIU·da", L("«BIU-da»: v como b, iu junta. Viuda = widow.", "«BYOO-da»: v as b, iu together. Viuda = widow.")),
+           W("tr[iu]nfo", "TRIUN·fo", L("«TRIUN-fo»: triunfo = victory.", "«TRYOON-fo»: triunfo = victory.")),
+           W("m[uy]", "MUY", L("Una sola sílaba: «MUI». Nunca «mu-I».", "One syllable: «mwee». Never «moo-EE».")),
+           W("c[ui]dado", "cui·DA·do", L("«kui-DA-do»: ¡Cuidado! = careful!", "«kwee-DA-do»: ¡Cuidado! = careful!")),
+           W("r[ui]do", "RUI·do", L("«RRUI-do»: r vibrante, ui junta. Ruido = noise.", "«RRWEE-do»: rolled r, ui together. Ruido = noise.")),
+           W("L[ui]s", "LUIS", L("Una sola sílaba: «LUIS», no «LU-is».", "One syllable: «lwees», not «LOO-is».")),
+           W("f[ui]", "FUI", L("«FUI»: una sílaba, sin tilde. Fui = I went, I was.", "«fwee»: one syllable, no accent mark. Fui = I went, I was."))]),
+        wordRange("hiato", L("la tilde los separa", "the accent mark splits them"), L("con tilde en la i o la u, no hay diptongo: dos sílabas, la fuerza en la de la tilde", "an accent mark on the i or u breaks the diphthong: two syllables, stressed on the marked one"),
+          [W("d[í]a", "DÍ·a", L("Dos sílabas: «DÍ-a». Sin tilde, «dia» sería una sola.", "Two syllables: «DEE-a». Without the accent mark, «dia» would be one.")),
+           W("fr[í]o", "FRÍ·o", L("«FRÍ-o»: hace frío = it's cold. La tilde separa la i de la o.", "«FREE-o»: hace frío = it's cold. The accent mark splits the i from the o.")),
+           W("r[í]o", "RÍ·o", L("«RRÍ-o»: r inicial vibrante. El Río de la Plata.", "«RREE-o»: a rolled initial r. El Río de la Plata.")),
+           W("pa[í]s", "pa·ÍS", L("Dos sílabas: «pa-ÍS». Sin tilde sería una: «PAIS».", "Two syllables: «pa-EES». Without the accent mark it would be one: «pice».")),
+           W("ma[í]z", "ma·ÍZ", L("«ma-ÍS»: dos sílabas, y la z suena s.", "«ma-EES»: two syllables, and the z sounds like s.")),
+           W("Ra[ú]l", "ra·ÚL", L("«rra-ÚL»: dos sílabas, no «RAUL» en una.", "«rra-OOL»: two syllables, not «rowl» in one.")),
+           W("ba[ú]l", "ba·ÚL", L("«ba-ÚL»: acá el baúl es también el del auto (the trunk).", "«ba-OOL»: here the baúl is also the trunk of a car.")),
+           W("todav[í]a", "to·da·VÍ·a", L("«to-da-VÍ-a»: la tilde separa ía. Todavía = still, yet.", "«to-da-VEE-a»: the accent mark splits ía. Todavía = still, yet.")),
+           W("o[í]do", "o·Í·do", L("«o-Í-do»: tres sílabas. Oído = ear, hearing.", "«o-EE-do»: three syllables. Oído = ear, hearing.")),
+           W("ser[ia]", "SE·ria", L("Sin tilde, dos sílabas: «SE-ria» = serious (una persona seria). Con tilde, sería = would be.", "No accent mark, two syllables: «SEH-rya» = serious. With one, sería = would be.")),
+           W("ser[í]a", "se·RÍ·a", L("Con tilde, tres sílabas: «se-RÍ-a» = it would be. Sin tilde, seria = serious.", "With the accent mark, three syllables: «se-REE-a» = it would be. Without it, seria = serious."))]),
+        wordRange("fuertes", L("a, e, o: siempre separadas", "a, e, o: always apart"), L("dos vocales fuertes (a, e, o) nunca se juntan: cada una es su propia sílaba", "two strong vowels (a, e, o) never join: each one is its own syllable"),
+          [W("l[ee]r", "le·ER", L("Dos sílabas: «le-ER». Las dos e se dicen.", "Two syllables: «le-ER». Both e's are said.")),
+           W("p[oe]ta", "po·E·ta", L("Tres sílabas: «po-E-ta», no «PUE-ta».", "Three syllables: «po-EH-ta», not «PWEH-ta».")),
+           W("t[ea]tro", "te·A·tro", L("Tres sílabas: «te-A-tro».", "Three syllables: «te-AH-tro».")),
+           W("c[ae]r", "ca·ER", L("«ca-ER»: caer = to fall.", "«ka-ER»: caer = to fall.")),
+           W("mus[eo]", "mu·SE·o", L("Tres sílabas: «mu-SE-o».", "Three syllables: «moo-SEH-o».")),
+           W("id[ea]", "i·DE·a", L("Tres sílabas: «i-DE-a», nada de «ai-DI-a».", "Three syllables: «ee-DEH-a», not «eye-DEE-a».")),
+           W("pel[ea]", "pe·LE·a", L("«pe-LE-a»: pelea = fight.", "«pe-LEH-a»: pelea = fight.")),
+           W("[oe]ste", "o·ES·te", L("Tres sílabas: «o-ES-te» = west.", "Three syllables: «o-ES-te» = west.")),
+           W("[ae]rop[ue]rto", "a·e·ro·PUER·to", L("a y e separadas, ue junta: «a-e-ro-PUER-to».", "a and e apart, ue together: «a-e-ro-PWER-to»."))]),
+        wordRange("verbos", L("en los verbos: e → ie, o → ue", "in verbs: e → ie, o → ue"), L("con la fuerza en la raíz, e → ie y o → ue; con vos la fuerza va al final y no cambia", "with the stress on the stem, e → ie and o → ue; with vos the stress is at the end, so it doesn't change"),
+          [W("qu[ie]ro", "QUIE·ro", L("querer → quiero: «KIE-ro». Con vos, querés: la fuerza va al final y no hay ie.", "querer → quiero: «KYE-ro». With vos, querés: the stress is at the end, so no ie.")),
+           W("p[ie]nso", "PIEN·so", L("pensar → pienso. Con vos, pensás.", "pensar → pienso. With vos, pensás.")),
+           W("emp[ie]za", "em·PIE·za", L("empezar → empieza: «em-PIE-sa». Con vos, empezás.", "empezar → empieza: «em-PYE-sa». With vos, empezás.")),
+           W("pref[ie]ro", "pre·FIE·ro", L("preferir → prefiero. Con vos, preferís.", "preferir → prefiero. With vos, preferís.")),
+           W("p[ue]do", "PUE·do", L("poder → puedo: «PUE-do». Con vos, podés.", "poder → puedo: «PWEH-do». With vos, podés.")),
+           W("v[ue]lve", "VUEL·ve", L("volver → vuelve: «BUEL-be». Con vos, volvés.", "volver → vuelve: «BWEL-be». With vos, volvés.")),
+           W("d[ue]rmo", "DUER·mo", L("dormir → duermo. Con vos, dormís.", "dormir → duermo. With vos, dormís.")),
+           W("j[ue]go", "JUE·go", L("jugar → juego: «HUE-go», el único u → ue. Con vos, jugás.", "jugar → juego: «HWEH-go», the only u → ue. With vos, jugás.")),
+           W("c[ue]sta", "CUES·ta", L("costar → cuesta: «¿Cuánto cuesta?»", "costar → cuesta: «¿Cuánto cuesta?» = how much is it?"))]),
+        wordRange("tres", L("tres juntas", "three together"), L("una vocal fuerte entre dos débiles: las tres en una sola sílaba", "a strong vowel between two weak ones: all three in one syllable"),
+          [W("Urug[uay]", "u·ru·GUAY", L("La última sílaba es una: «u-ru-GUAI».", "The last syllable is one: «oo-roo-GWHY».")),
+           W("Parag[uay]", "pa·ra·GUAY", L("«pa-ra-GUAI»: uay, una sílaba.", "«pa-ra-GWHY»: uay is one syllable.")),
+           W("b[uey]", "BUEY", L("Una sílaba: «BUEI». Buey = ox.", "One syllable: «bway». Buey = ox.")),
+           W("g[uau]", "GUAU", L("Una sílaba: «GUAU». ¡Guau! = wow (y el ladrido del perro).", "One syllable: «gwow». ¡Guau! = wow (and a dog's bark).")),
+           W("m[iau]", "MIAU", L("Una sílaba: «MIAU», el gato.", "One syllable: «myow», what a cat says."))])
+      ],
+      defaults: ["ai", "au", "ia", "ua", "iu"],
+      lesson: [
+        { f: "vocales fuertes: a, e, o · débiles: i, u", ex: "una débil + otra vocal → una sola sílaba (diptongo)" },
+        { f: "a, e, o + i, u: termina en una «i» o una «u» corta", ex: "[ai]re · s[ei]s · h[oy] · [au]to · [eu]ro" },
+        { f: "i, u + vocal: la i suena «y», la u suena «w»", ex: "b[ie]n · p[ia]no · b[ue]no · ag[ua]" },
+        { f: "iu · ui: también una sílaba", ex: "c[iu]dad · m[uy] · c[ui]dado" },
+        { f: "tilde en la i o la u → se separan", ex: "[DÍ]·a · pa·[ÍS] · ra·[ÚL]" },
+        { f: "dos fuertes juntas → dos sílabas", ex: "le·[ER] · po·[E]·ta · i·[DE]·a" },
+        { f: "e → ie, o → ue si la fuerza cae en la raíz · con vos, no", ex: "qu[ie]ro / querés · p[ue]do / podés" },
+        { f: "tres juntas: una sílaba", ex: "Urug[uay] · b[uey] · m[iau]" }
+      ],
+      tip: L("Si dos vocales comparten sílaba, decí las dos: rápido, pero sin comerte ninguna.",
+             "When two vowels share a syllable, say both: quickly, but without swallowing either one.")
+    },
     {
       id: "consonantes", type: "gen", name: L("Las consonantes", "The consonants"),
       desc: L("Los sonidos de acá: ll e y como «sh», r y rr, j, h muda…", "The local sounds: ll and y as “sh,” r and rr, j, silent h…"),
@@ -12547,7 +12657,7 @@
   // Gramática de uso for B1); mason, 2026-10-09: no headings. The level
   // only feeds the Nivel chips.
   var TOPIC_ORDER = [
-    ["abecedario", "A1"], ["vocales", "A1"], ["consonantes", "A1"], ["c-g", "A1"],
+    ["abecedario", "A1"], ["vocales", "A1"], ["diptongos", "A1"], ["consonantes", "A1"], ["c-g", "A1"],
     ["numeros", "A1"], ["precios", "A1"], ["hora", "A1"], ["fechas", "A1"],
     ["presentarse", "A1"], ["pronombres", "A1"], ["articulos", "A1"], ["verbos", "A1"], ["irregulares", "A1"], ["presente", "A1"], ["hay-estar", "A1"],
     ["preguntas", "A1"], ["demostrativos", "A1"], ["gustar", "A1"], ["cuantos", "A1"], ["hay-que", "A1"],
@@ -12566,7 +12676,7 @@
   // more than one. The new Temas carry their own (fam in temas.js).
   var TOPIC_FAMILIES = ["sonidos", "numeros", "pronombres", "articulos", "ser-estar", "presente", "pasado", "futuro", "subjuntivo", "conectores"];
   var TOPIC_FAM_OF = {
-    abecedario: ["sonidos"], vocales: ["sonidos"], consonantes: ["sonidos"], "c-g": ["sonidos"],
+    abecedario: ["sonidos"], vocales: ["sonidos"], diptongos: ["sonidos"], consonantes: ["sonidos"], "c-g": ["sonidos"],
     numeros: ["numeros"], precios: ["numeros"], hora: ["numeros"], fechas: ["numeros"],
     pronombres: ["pronombres"], "objeto-directo": ["pronombres"], "objeto-indirecto": ["pronombres"], dobles: ["pronombres"],
     "hay-que": ["presente"], comparativos: ["articulos"], "ya-todavia": ["pasado"], irregulares: ["presente"]
@@ -12580,6 +12690,8 @@
       "The alphabet has 27 letters: the English ones plus ñ. Letter names are how you spell your name, an email, or an address over the phone. Some have two names: b is “be” or “be larga,” and v is “ve” or “ve corta.”"),
     "vocales": L("El español tiene cinco vocales y cada una suena siempre igual, en cualquier palabra. Son cortas y limpias: no se alargan ni se deslizan como en inglés. La sílaba fuerte también importa: la tilde te dice dónde va cuando no sigue la regla.",
       "Spanish has five vowels, and each one always sounds the same, in any word. They're short and clean: they don't stretch or glide the way English vowels do. Stress matters too: the accent mark tells you where it goes when a word breaks the rule."),
+    "diptongos": L("Un diptongo son dos vocales en una sola sílaba: bien, aire, ciudad. Pasa cuando una vocal débil (i, u) se junta con otra: la i suena como una «y» rápida y la u como una «w». Si la tilde cae en la i o la u, se separan (día, país), y dos vocales fuertes (a, e, o) nunca se juntan (le·er).",
+      "A diphthong is two vowels in one syllable: bien, aire, ciudad. It happens when a weak vowel (i, u) meets another vowel: the i sounds like a quick “y” and the u like a “w.” If the accent mark falls on the i or u, they split (día, país), and two strong vowels (a, e, o) never join (le·er)."),
     "consonantes": L("Casi todas las consonantes suenan como en inglés, pero algunas cambian, y Buenos Aires tiene sonidos propios. La ll y la y antes de vocal suenan «sh», la h no suena nunca y la r entre vocales es un toque rápido de la lengua. Escuchá y repetí: el oído se acostumbra rápido.",
       "Most consonants sound the way they do in English, but a few change, and Buenos Aires has sounds of its own. Ll and y before a vowel sound like “sh,” h is always silent, and an r between vowels is one quick tap of the tongue. Listen and repeat: your ear adjusts fast."),
     "c-g": L("La c y la g cambian de sonido según la vocal que sigue. Antes de a, o, u son duras (casa, gato); antes de e, i, la c suena «s» y la g suena como la j (cena, gente). Por eso existen qu y gu: para mantener el sonido duro antes de e, i (queso, guitarra).",
@@ -12818,7 +12930,7 @@
   // Tema is open; only scenes have a gate (their own phrases).
   var CAMINO = [
     { lvl: "A1", title: L("Para arrancar", "Getting started"), groups: [
-      { name: L("Sonidos y números", "Sounds and numbers"), temas: ["abecedario", "vocales", "consonantes", "c-g", "numeros", "precios", "hora", "fechas"] },
+      { name: L("Sonidos y números", "Sounds and numbers"), temas: ["abecedario", "vocales", "diptongos", "consonantes", "c-g", "numeros", "precios", "hora", "fechas"] },
       { name: L("Quién sos", "Who you are"), temas: ["presentarse", "pronombres", "articulos", "verbos", "irregulares", "presente"] },
       { name: L("Qué hay y qué te gusta", "What there is and what you like"), temas: ["hay-estar", "preguntas", "demostrativos", "gustar", "cuantos"] },
       { name: L("Tu día y tu barrio", "Your day and your neighborhood"), temas: ["hay-que", "ir-a", "dia-a-dia", "comparativos", "se-impersonal", "ciudad"] }
