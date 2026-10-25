@@ -3101,3 +3101,41 @@ button.sterm-lab { cursor: pointer; text-decoration: underline; text-underline-o
 .flash-filt b { color: var(--teal); font-weight: 600; }
 #flashcards-panel .flash-source-toggle .switch-row:has(input:not(:checked)) > span:last-child { opacity: .55; }
 .flash-start-row .topic-limit .lang-option:disabled { opacity: .35; cursor: default; }
+
+/* ---------- Header on phones (2026-10-26, review item 8) ----------
+   The wordmark stays; the subtitle goes (it stays on the sign-in screen),
+   and the header's rule merges into the tab row's, so the tabs sit right
+   under voseá. */
+@media (max-width: 640px) {
+  body { padding-top: 10px; }
+  header.masthead { border-bottom: 0; padding-bottom: 0; margin-bottom: 2px; align-items: center; }
+  header.masthead .tag { display: none; }
+  .main-tabs { margin-bottom: 16px; }
+}
+
+/* ---------- Configuración in groups (2026-10-26, review item 4) ---------- */
+.settings-card .set-group { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 14px; }
+.settings-card h3 + .set-group { border-top: 0; padding-top: 0; margin-top: 4px; }
+.settings-card .set-group-h { margin: 0 0 10px; font: italic 600 16px "Fraunces", Georgia, serif; color: var(--ink); }
+.settings-card .set-adv > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
+.settings-card .set-adv > summary::-webkit-details-marker { display: none; }
+.settings-card .set-adv > summary::after { content: "\203A"; display: inline-block; transition: transform .15s; color: var(--ink-soft); font-style: normal; }
+.settings-card .set-adv[open] > summary::after { transform: rotate(90deg); }
+.settings-card .set-adv[open] > summary { margin-bottom: 10px; }
+.settings-card .set-adv:not([open]) > summary { margin-bottom: 0; }
+.settings-card .field { margin-bottom: 4px; }
+.settings-card .set-note, .settings-card .set-more { margin: 4px 0 12px; font-size: 12.5px; }
+.settings-card .set-more { font-style: normal; background: var(--paper-sunken); border-radius: 8px; padding: 8px 10px; }
+.set-label-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+#settings-overlay .set-label-row label { margin-bottom: 0; }
+.set-info { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft);
+  font: italic 700 11px "Fraunces", Georgia, serif; line-height: 1; padding: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.set-info.on { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff; }
+.settings-card .backup-field .set-more { margin-top: 0; }
+@keyframes set-flash { 0%, 60% { background: color-mix(in srgb, var(--teal) 18%, transparent); } 100% { background: transparent; } }
+.set-flash { animation: set-flash 1.6s ease-out; border-radius: 8px; }
+/* Hoy's racha: "hoy: 3 de 20 tarjetas" opens Configuración at Meta diaria */
+button.play-racha-goal { background: none; border: 0; padding: 2px 0; font: inherit; font-size: 12.5px; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.settings-card .field { margin-bottom: 14px; }
+.settings-card .set-note, .settings-card .set-more { margin: -8px 0 14px; }
+.settings-card .backup-field .set-more { margin: 0 0 10px; }

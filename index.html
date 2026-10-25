@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="163">
+<meta name="vosea-build" content="164">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1290,84 +1290,111 @@
 </div>
 
 <div class="modal-overlay" id="settings-overlay" hidden>
-  <div class="modal-card">
+  <!-- Configuración in groups (2026-10-26, review item 4): La app, Práctica,
+       Tus datos, and Avanzado (closed). Each explanation is one line; the
+       longer one is behind the "i". The daily goal moved here from Hoy's
+       racha card (tapping "hoy: N de 20" there opens it). -->
+  <div class="modal-card settings-card">
     <h3 data-i18n="settings_title">Configuración</h3>
-    <div class="field">
-      <label data-i18n="settings_lang_label">Idioma de la app</label>
-      <div class="lang-toggle">
-        <button type="button" class="lang-option" id="lang-es" data-lang="es">Castellano</button>
-        <button type="button" class="lang-option" id="lang-en" data-lang="en">English</button>
+    <section class="set-group">
+      <h4 class="set-group-h" data-i18n="set_g_app">La app</h4>
+      <div class="field">
+        <label data-i18n="settings_lang_label">Idioma de la app</label>
+        <div class="lang-toggle">
+          <button type="button" class="lang-option" id="lang-es" data-lang="es">Castellano</button>
+          <button type="button" class="lang-option" id="lang-en" data-lang="en">English</button>
+        </div>
       </div>
-    </div>
-    <p class="flash-setup-note" data-i18n="settings_lang_note">Esto solo cambia el texto de la app — tus verbos y vocabulario siempre quedan en español.</p>
-    <div class="field">
-      <label data-i18n="settings_voice_label">Voz de pronunciación</label>
-      <div class="lang-toggle">
-        <button type="button" class="lang-option" id="settings-voice-elena" data-i18n-aria-label="tts_voice_elena_aria" aria-label="Voz: Elena">Elena</button>
-        <button type="button" class="lang-option" id="settings-voice-tomas" data-i18n-aria-label="tts_voice_tomas_aria" aria-label="Voz: Tomás">Tomás</button>
+      <p class="flash-setup-note set-note" data-i18n="set_lang_short">Solo el texto de la app: tu contenido queda en español.</p>
+      <div class="field">
+        <label data-i18n="settings_voice_label">Voz de pronunciación</label>
+        <div class="lang-toggle">
+          <button type="button" class="lang-option" id="settings-voice-elena" data-i18n-aria-label="tts_voice_elena_aria" aria-label="Voz: Elena">Elena</button>
+          <button type="button" class="lang-option" id="settings-voice-tomas" data-i18n-aria-label="tts_voice_tomas_aria" aria-label="Voz: Tomás">Tomás</button>
+        </div>
       </div>
-    </div>
-    <p class="flash-setup-note" data-i18n="settings_voice_note">La voz que escuchás al tocar el parlante en las flashcards.</p>
-    <div class="field">
-      <label data-i18n="settings_quiet_label">Modo silencio</label>
-      <div class="lang-toggle">
-        <button type="button" class="lang-option" id="settings-quiet-off" data-i18n="settings_quiet_off">Apagado</button>
-        <button type="button" class="lang-option" id="settings-quiet-on" data-i18n="settings_quiet_on">Activado</button>
+      <div class="field">
+        <div class="set-label-row"><label data-i18n="settings_quiet_label">Modo silencio</label><button type="button" class="set-info" aria-expanded="false" aria-controls="set-more-quiet" data-i18n-aria-label="set_info_aria" aria-label="Más información">i</button></div>
+        <div class="lang-toggle">
+          <button type="button" class="lang-option" id="settings-quiet-off" data-i18n="settings_quiet_off">Apagado</button>
+          <button type="button" class="lang-option" id="settings-quiet-on" data-i18n="settings_quiet_on">Activado</button>
+        </div>
       </div>
-    </div>
-    <p class="flash-setup-note" data-i18n="settings_quiet_note">Silencia toda la pronunciación de la app (por ejemplo, en un avión). Solo en este dispositivo.</p>
-    <div class="field push-field" id="push-field">
-      <label data-i18n="settings_push_label">Notificaciones</label>
-      <div class="lang-toggle">
-        <button type="button" class="lang-option" id="settings-push-off" data-i18n="settings_push_off">Apagadas</button>
-        <button type="button" class="lang-option" id="settings-push-on" data-i18n="settings_push_on">Activadas</button>
-      </div>
+      <p class="flash-setup-note set-more" id="set-more-quiet" hidden data-i18n="settings_quiet_note">Silencia toda la pronunciación de la app (por ejemplo, en un avión). Solo en este dispositivo.</p>
+      <div class="field push-field" id="push-field">
+        <div class="set-label-row"><label data-i18n="settings_push_label">Notificaciones</label><button type="button" class="set-info" aria-expanded="false" aria-controls="set-more-push" data-i18n-aria-label="set_info_aria" aria-label="Más información">i</button></div>
+        <div class="lang-toggle">
+          <button type="button" class="lang-option" id="settings-push-off" data-i18n="settings_push_off">Apagadas</button>
+          <button type="button" class="lang-option" id="settings-push-on" data-i18n="settings_push_on">Activadas</button>
+        </div>
       <div class="push-groups" id="push-groups" hidden>
         <label class="backup-choice-opt"><input type="checkbox" id="push-g-friends" /> <span><strong data-i18n="push_g_friends">Amigos</strong> <span class="backup-choice-sub" data-i18n="push_g_friends_sub">solicitudes y amistades nuevas</span></span></label>
         <label class="backup-choice-opt"><input type="checkbox" id="push-g-lists" /> <span><strong data-i18n="push_g_lists">Listas</strong> <span class="backup-choice-sub" data-i18n="push_g_lists_sub">cuando te agregan, cambia tu rol o te pasan una lista</span></span></label>
         <label class="backup-choice-opt"><input type="checkbox" id="push-g-retos" /> <span><strong data-i18n="push_g_retos">Te reto</strong> <span class="backup-choice-sub" data-i18n="push_g_retos_sub">retos nuevos y resultados</span></span></label>
       </div>
-      <p class="diag-msg push-msg" id="push-msg" role="status" aria-live="polite"></p>
-    </div>
-    <p class="flash-setup-note" data-i18n="settings_push_note">Solo en este dispositivo. Te avisa cuando alguien te manda una solicitud de amistad, te agrega a una lista o te reta. Nunca por algo que hiciste vos.</p>
-    <div class="field diag-field">
-      <label data-i18n="settings_diag_label">Ayudar a mejorar el reconocimiento de voz</label>
-      <div class="lang-toggle">
-        <button type="button" class="lang-option" id="settings-diag-off" data-i18n="settings_diag_off">No</button>
-        <button type="button" class="lang-option" id="settings-diag-on" data-i18n="settings_diag_on">Sí</button>
+        <p class="diag-msg push-msg" id="push-msg" role="status" aria-live="polite"></p>
       </div>
-    </div>
-    <p class="flash-setup-note" data-i18n="settings_diag_note">Si lo activás, cada vez que hablás en Hablar o en Escenas se guarda un registro del intento: qué se esperaba, qué se entendió, los puntajes, el resultado y datos técnicos del micrófono y del navegador. Nunca el audio. Solo lo ve quien administra voseá, y se borra solo a los 90 días.</p>
-    <div class="diag-actions">
-      <button type="button" class="btn-secondary" id="settings-diag-clear" data-i18n="settings_diag_clear">Borrar lo que compartí</button>
-      <p class="diag-msg" id="settings-diag-msg" role="status" aria-live="polite"></p>
-    </div>
-    <div class="field backup-field">
-      <label data-i18n="settings_backup_label">Respaldo</label>
-      <p class="backup-status" id="backup-status"></p>
-      <div class="backup-actions">
-        <button type="button" class="btn-secondary" id="backup-create" data-i18n="backup_create">Crear respaldo</button>
-        <button type="button" class="btn-secondary" id="backup-restore" data-i18n="backup_restore">Restaurar…</button>
-        <button type="button" class="btn-secondary backup-danger" id="backup-delete" data-i18n="backup_delete">Borrar mi contenido…</button>
-      </div>
-      <div class="backup-panel" id="backup-panel" hidden>
-        <p class="backup-panel-text" id="backup-panel-text"></p>
-        <div class="backup-choice" id="backup-choice" role="radiogroup" hidden>
-          <label class="backup-choice-opt"><input type="radio" name="backup-prefer" value="backup" /> <span><strong data-i18n="backup_prefer_backup">Usar el respaldo</strong> <span class="backup-choice-sub" data-i18n="backup_prefer_backup_sub">reemplaza lo que tenés en la app (incluido lo marcado como sabido)</span></span></label>
-          <label class="backup-choice-opt"><input type="radio" name="backup-prefer" value="active" /> <span><strong data-i18n="backup_prefer_active">Conservar lo de la app</strong> <span class="backup-choice-sub" data-i18n="backup_prefer_active_sub">solo agrega lo que falta</span></span></label>
-        </div>
-        <div class="backup-typed" id="backup-typed" hidden>
-          <label for="backup-typed-input" id="backup-typed-label"></label>
-          <input type="text" id="backup-typed-input" autocomplete="off" autocapitalize="characters" spellcheck="false" />
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn-primary" id="backup-confirm"></button>
-          <button type="button" class="btn-secondary" id="backup-cancel" data-i18n="backup_cancel">Cancelar</button>
+      <p class="flash-setup-note set-more" id="set-more-push" hidden data-i18n="settings_push_note">Solo en este dispositivo. Te avisa cuando alguien te manda una solicitud de amistad, te agrega a una lista o te reta. Nunca por algo que hiciste vos.</p>
+    </section>
+    <section class="set-group">
+      <h4 class="set-group-h" data-i18n="set_g_practice">Práctica</h4>
+      <div class="field" id="settings-goal-field">
+        <div class="set-label-row"><label data-i18n="play_goal_label">Meta diaria</label><button type="button" class="set-info" aria-expanded="false" aria-controls="set-more-goal" data-i18n-aria-label="set_info_aria" aria-label="Más información">i</button></div>
+        <div class="lang-toggle" id="settings-goal" role="group">
+          <button type="button" class="lang-option" data-goal="10">10</button>
+          <button type="button" class="lang-option" data-goal="20">20</button>
+          <button type="button" class="lang-option" data-goal="30">30</button>
+          <button type="button" class="lang-option" data-goal="50">50</button>
         </div>
       </div>
-      <p class="backup-msg" id="backup-msg" role="status" aria-live="polite"></p>
-    </div>
-    <p class="flash-setup-note" data-i18n="settings_backup_note">Guarda en el servidor una copia de tus verbos, palabras, frases y listas, incluido lo marcado como sabido. Hay un solo respaldo: uno nuevo reemplaza al anterior.</p>
+      <p class="flash-setup-note set-note" data-i18n="set_goal_short">Tarjetas por día para sumar a tu racha.</p>
+      <p class="flash-setup-note set-more" id="set-more-goal" hidden data-i18n="play_racha_rule">Cuenta cada tarjeta que diste vuelta o calificaste, en cualquier modo. Tenés un día libre por semana.</p>
+    </section>
+    <section class="set-group">
+      <h4 class="set-group-h" data-i18n="set_g_data">Tus datos</h4>
+      <div class="field backup-field">
+        <div class="set-label-row"><label data-i18n="settings_backup_label">Respaldo</label><button type="button" class="set-info" aria-expanded="false" aria-controls="set-more-backup" data-i18n-aria-label="set_info_aria" aria-label="Más información">i</button></div>
+        <p class="flash-setup-note set-more" id="set-more-backup" hidden data-i18n="settings_backup_note">Guarda en el servidor una copia de tus verbos, palabras, frases y listas, incluido lo marcado como sabido. Hay un solo respaldo: uno nuevo reemplaza al anterior.</p>
+        <p class="backup-status" id="backup-status"></p>
+        <div class="backup-actions">
+          <button type="button" class="btn-secondary" id="backup-create" data-i18n="backup_create">Crear respaldo</button>
+          <button type="button" class="btn-secondary" id="backup-restore" data-i18n="backup_restore">Restaurar…</button>
+          <button type="button" class="btn-secondary backup-danger" id="backup-delete" data-i18n="backup_delete">Borrar mi contenido…</button>
+        </div>
+        <div class="backup-panel" id="backup-panel" hidden>
+          <p class="backup-panel-text" id="backup-panel-text"></p>
+          <div class="backup-choice" id="backup-choice" role="radiogroup" hidden>
+            <label class="backup-choice-opt"><input type="radio" name="backup-prefer" value="backup" /> <span><strong data-i18n="backup_prefer_backup">Usar el respaldo</strong> <span class="backup-choice-sub" data-i18n="backup_prefer_backup_sub">reemplaza lo que tenés en la app (incluido lo marcado como sabido)</span></span></label>
+            <label class="backup-choice-opt"><input type="radio" name="backup-prefer" value="active" /> <span><strong data-i18n="backup_prefer_active">Conservar lo de la app</strong> <span class="backup-choice-sub" data-i18n="backup_prefer_active_sub">solo agrega lo que falta</span></span></label>
+          </div>
+          <div class="backup-typed" id="backup-typed" hidden>
+            <label for="backup-typed-input" id="backup-typed-label"></label>
+            <input type="text" id="backup-typed-input" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-primary" id="backup-confirm"></button>
+            <button type="button" class="btn-secondary" id="backup-cancel" data-i18n="backup_cancel">Cancelar</button>
+          </div>
+        </div>
+        <p class="backup-msg" id="backup-msg" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+    <details class="set-group set-adv" id="settings-adv">
+      <summary class="set-group-h" data-i18n="set_g_adv">Avanzado</summary>
+      <div class="field diag-field">
+        <div class="set-label-row"><label data-i18n="settings_diag_label">Ayudar a mejorar el reconocimiento de voz</label><button type="button" class="set-info" aria-expanded="false" aria-controls="set-more-diag" data-i18n-aria-label="set_info_aria" aria-label="Más información">i</button></div>
+        <div class="lang-toggle">
+          <button type="button" class="lang-option" id="settings-diag-off" data-i18n="settings_diag_off">No</button>
+          <button type="button" class="lang-option" id="settings-diag-on" data-i18n="settings_diag_on">Sí</button>
+        </div>
+      </div>
+      <p class="flash-setup-note set-note" data-i18n="set_diag_short">Guarda tus intentos de Hablar (nunca el audio) para mejorar el reconocimiento.</p>
+      <p class="flash-setup-note set-more" id="set-more-diag" hidden data-i18n="settings_diag_note">Si lo activás, cada vez que hablás en Hablar o en Escenas se guarda un registro del intento: qué se esperaba, qué se entendió, los puntajes, el resultado y datos técnicos del micrófono y del navegador. Nunca el audio. Solo lo ve quien administra voseá, y se borra solo a los 90 días.</p>
+      <div class="diag-actions">
+        <button type="button" class="btn-secondary" id="settings-diag-clear" data-i18n="settings_diag_clear">Borrar lo que compartí</button>
+        <p class="diag-msg" id="settings-diag-msg" role="status" aria-live="polite"></p>
+      </div>
+    </details>
     <p class="form-msg" id="settings-msg"></p>
     <div class="form-actions">
       <button type="button" class="btn-secondary" id="settings-close" data-i18n="close">Cerrar</button>

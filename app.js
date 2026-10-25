@@ -1234,6 +1234,15 @@
       share_login_note: "Iniciá sesión o creá una cuenta para importar esta lista a tu colección.",
       btn_import: "Importar a mi colección",
       settings_title: "Configuración",
+      set_g_app: "La app",
+      set_g_practice: "Práctica",
+      set_g_data: "Tus datos",
+      set_g_adv: "Avanzado",
+      set_lang_short: "Solo el texto de la app: tu contenido queda en español.",
+      set_goal_short: "Tarjetas por día para sumar a tu racha.",
+      set_diag_short: "Guarda tus intentos de Hablar (nunca el audio) para mejorar el reconocimiento.",
+      set_info_aria: "Más información",
+      play_goal_change_aria: "Cambiar la meta diaria",
       settings_lang_label: "Idioma de la app",
       settings_lang_note: "Esto solo cambia el texto de la app — tus verbos y vocabulario siempre quedan en español.",
       settings_voice_label: "Voz de pronunciación",
@@ -2557,6 +2566,15 @@
       share_login_note: "Log in or create an account to import this list into your collection.",
       btn_import: "Import to my collection",
       settings_title: "Settings",
+      set_g_app: "The app",
+      set_g_practice: "Practice",
+      set_g_data: "Your data",
+      set_g_adv: "Advanced",
+      set_lang_short: "Only the app's text: your content stays in Spanish.",
+      set_goal_short: "Cards a day to keep your streak going.",
+      set_diag_short: "Saves your Hablar attempts (never the audio) to improve recognition.",
+      set_info_aria: "More information",
+      play_goal_change_aria: "Change the daily goal",
       settings_lang_label: "App language",
       settings_lang_note: "This only changes the app's own text — your verbs and vocabulary always stay in Spanish.",
       settings_voice_label: "Pronunciation voice",
@@ -3174,8 +3192,13 @@
     if (el.quietToast) el.quietToast.hidden = true;
   }
 
-  function openSettings() {
+  function openSettings(focus) {
     el.settingsMsg.textContent = "";
+    renderSettingsGoal();
+    // the longer explanations start closed, and so does Avanzado
+    Array.prototype.forEach.call(el.settingsOverlay.querySelectorAll(".set-info"), function (b) { setInfoOpen(b, false); });
+    var adv = document.getElementById("settings-adv");
+    if (adv) adv.open = false;
     renderLangButtons();
     renderVoiceButtons();
     applyQuietMode();
@@ -3188,6 +3211,31 @@
     refreshBackupStatus();
     refreshPushSettings();
     el.settingsOverlay.hidden = false;
+    var card = el.settingsOverlay.querySelector(".modal-card");
+    if (card) card.scrollTop = 0;
+    if (focus === "goal") {
+      var gf = document.getElementById("settings-goal-field");
+      if (gf) {
+        try { gf.scrollIntoView({ block: "center" }); } catch (e) {}
+        gf.classList.remove("set-flash"); void gf.offsetWidth; gf.classList.add("set-flash");
+      }
+    }
+  }
+  // the "i" next to a setting: its longer explanation, open or closed
+  function setInfoOpen(b, open) {
+    var more = document.getElementById(b.getAttribute("aria-controls"));
+    if (more) more.hidden = !open;
+    b.setAttribute("aria-expanded", open ? "true" : "false");
+    b.classList.toggle("on", !!open);
+  }
+  function renderSettingsGoal() {
+    var box = document.getElementById("settings-goal");
+    if (!box || typeof playGoal === "undefined") return;
+    Array.prototype.forEach.call(box.querySelectorAll("button[data-goal]"), function (b) {
+      var on = Number(b.getAttribute("data-goal")) === playGoal;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
   }
 
   function closeSettings() {
@@ -5716,7 +5764,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "163";
+  var VOSEA_BUILD = "164";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -13358,6 +13406,7 @@
     try { localStorage.setItem(PLAY_GOAL_KEY, String(n)); } catch (e) {}
     renderPlay();
     renderHoy();
+    renderSettingsGoal();
     if (currentUser) {
       supabaseClient.from("user_settings")
         .upsert({ user_id: currentUser.id, daily_goal: n, updated_at: new Date().toISOString() }, { onConflict: "user_id" })
@@ -13376,6 +13425,7 @@
       playGoal = n;
       try { localStorage.setItem(PLAY_GOAL_KEY, String(n)); } catch (e) {}
       renderPlay();
+      renderSettingsGoal();
     });
   }
 
@@ -13771,7 +13821,13 @@
     var n = progEl("div", "play-racha-n", String(m.cur));
     n.appendChild(progEl("span", null, t(m.cur === 1 ? "play_days_one" : "play_days")));
     top.appendChild(n);
-    top.appendChild(progEl("div", "play-racha-goal" + (m.todayMet ? " is-met" : ""), t(m.todayMet ? "play_today_met" : "play_today", { n: m.today, goal: playGoal })));
+    // (2026-10-26, review item 4) the goal is changed in Configuración; this
+    // line opens it there
+    var goalBtn = progEl("button", "play-racha-goal" + (m.todayMet ? " is-met" : ""), t(m.todayMet ? "play_today_met" : "play_today", { n: m.today, goal: playGoal }));
+    goalBtn.type = "button";
+    goalBtn.setAttribute("aria-label", goalBtn.textContent + " · " + t("play_goal_change_aria"));
+    goalBtn.addEventListener("click", function () { openSettings("goal"); });
+    top.appendChild(goalBtn);
     box.appendChild(top);
 
     var week = progEl("div", "play-week");
@@ -13810,19 +13866,7 @@
     msg.split(/\*\*/).forEach(function (p, i) { next.appendChild(i % 2 ? progEl("b", null, p) : document.createTextNode(p)); });
     box.appendChild(next);
 
-    var goalRow = progEl("div", "play-goal-row");
-    goalRow.appendChild(progEl("span", "play-goal-label", t("play_goal_label")));
-    var tog = progEl("div", "lang-toggle play-goal-toggle");
-    PLAY_GOALS.forEach(function (g) {
-      var b = progEl("button", "lang-option" + (g === playGoal ? " active" : ""), String(g));
-      b.type = "button";
-      b.setAttribute("aria-pressed", g === playGoal ? "true" : "false");
-      b.addEventListener("click", function () { setPlayGoal(g); });
-      tog.appendChild(b);
-    });
-    goalRow.appendChild(tog);
-    box.appendChild(goalRow);
-    box.appendChild(progEl("p", "play-fine", t("play_racha_rule")));
+    // (the 10 · 20 · 30 · 50 row and the rule moved to Configuración → Práctica)
   }
 
   function drawPlayToday(m) {
@@ -21727,6 +21771,12 @@
     }
   });
   el.settingsClose.addEventListener("click", closeSettings);
+  Array.prototype.forEach.call(el.settingsOverlay.querySelectorAll(".set-info"), function (b) {
+    b.addEventListener("click", function () { setInfoOpen(b, b.getAttribute("aria-expanded") !== "true"); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#settings-goal button[data-goal]"), function (b) {
+    b.addEventListener("click", function () { setPlayGoal(Number(b.getAttribute("data-goal"))); renderSettingsGoal(); });
+  });
   el.langEs.addEventListener("click", function () { setLang("es"); });
   el.langEn.addEventListener("click", function () { setLang("en"); });
   el.settingsVoiceElena.addEventListener("click", function () { setTtsVoice("elena"); });
