@@ -3082,3 +3082,14 @@ button.sterm-lab { cursor: pointer; text-decoration: underline; text-underline-o
   #lists-panel.is-item > .flash-setup-note, #lists-panel.is-item #lists-list, #lists-panel.is-item > .toolbar-row, #lists-panel.is-item #lists-empty-msg, #lists-panel.is-item #list-form { display: none !important; }
   .ld-back { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--accent); font: 600 15px "Public Sans", sans-serif; padding: 2px 0 8px; cursor: pointer; }
 }
+
+/* Filtros: "Limpiar filtros" in the header, next to × (2026-10-26) */
+.fsheet-head .chip-clear { margin: 0 0 0 auto; flex-basis: auto; padding: 6px 8px; font-size: 13px; }
+.fsheet-head .chip-clear[hidden] { display: none; }
+.fsheet-add:disabled { opacity: .45; cursor: default; }
+/* Filtros: a chip keeps its width when you turn it on, so the row never
+   re-wraps and the sheet doesn't jump (2026-10-26). Off chips have room for
+   the ✓ / ✕ (19 + 19 = 26 + 12), and the text stays the same weight; the
+   green / red is what says it's on. */
+.fsheet .chip { padding-left: 19px; padding-right: 19px; }
+.fsheet .chip.active, .fsheet .chip.exclude { padding-left: 26px; padding-right: 12px; font-weight: inherit; }

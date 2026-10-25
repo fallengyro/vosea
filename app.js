@@ -5704,7 +5704,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "161";
+  var VOSEA_BUILD = "162";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21940,7 +21940,7 @@
     ui.sub.textContent = t("fbar_n_of", { n: shown, total: total, what: noun });
     ui.done.textContent = t("fsheet_done", { what: colPartLine(shown, c.one, c.many) });
     ui.add.textContent = t("fsheet_add", { n: shown });
-    ui.add.hidden = !shown;
+    ui.add.disabled = !shown; // greyed out, not hidden: the sheet keeps its size
     // the item screen's ‹ › and "4 de 34"
     fsheetDetailNav(tab);
     fsheetVerRefresh(tab);
@@ -21950,9 +21950,17 @@
     fsheetRefresh(tab);
     ui.overlay.hidden = false;
     document.body.classList.add("fsheet-open");
+    // mason: the sheet moved up and down while he turned filters on and off.
+    // It sits on the bottom edge (centered on desktop), so any change in its
+    // height moved its top. Its height is set once when it opens; inside, it
+    // scrolls if it ever needs to.
+    var sheet = ui.overlay.querySelector(".fsheet");
+    if (sheet) { sheet.style.height = ""; sheet.style.height = Math.ceil(sheet.getBoundingClientRect().height) + "px"; }
   }
   function closeFsheet(tab) {
     var ui = fsheetUi[tab]; if (!ui) return;
+    var sheet = ui.overlay.querySelector(".fsheet");
+    if (sheet) sheet.style.height = "";
     ui.overlay.hidden = true;
     document.body.classList.remove("fsheet-open");
   }
@@ -22151,6 +22159,10 @@
       c.filtersEl.querySelectorAll(".chip-group").forEach(function (gr) {
         if (gr !== g && !gr.querySelector(".chip, .lists-trigger")) gr.hidden = true;
       });
+      // "Limpiar filtros" lives in the header, next to ×, so turning the first
+      // filter on doesn't add a row and move the sheet (2026-10-26)
+      var clr = c.filtersEl.querySelector(".chip-clear");
+      if (clr) head.insertBefore(clr, x);
       refreshChipVisuals(c.filtersEl, c.active);
       var acts = mk("div", "fsheet-actions");
       ui.done = mk("button", "btn-primary fsheet-done"); ui.done.type = "button";
