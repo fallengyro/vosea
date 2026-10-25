@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="160">
+<meta name="vosea-build" content="161">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1049,15 +1049,32 @@
     </form>
 
     <section class="detail" id="list-detail" hidden>
-      <div class="detail-head">
-        <div>
+      <!-- 2026-10-25 (commit 143), mason picked mockup A: on a phone the list
+           is its own screen (‹ Listas); one status line; Practicar and the
+           "en tu colección" switch first; the items; Personas at the end;
+           everything else in the ⋯ menu. The share link is gone: Personas
+           (live, together) and Publicar (a copy) are the two ways to share. -->
+      <button type="button" class="ld-back" id="ld-back"><span aria-hidden="true">&lsaquo; </span><span data-i18n="nav_lists">Listas</span></button>
+      <div class="detail-head ld-head">
+        <div class="ld-head-text">
           <h2 id="ld-name"></h2>
-          <p class="definition" id="ld-meta"></p>
-          <p class="ld-role" id="ld-role"></p>
-          <p class="ld-published" id="ld-published" hidden></p>
+          <p class="ld-metaline"><span id="ld-meta"></span><span class="ld-role" id="ld-role"></span><span class="ld-published" id="ld-published" hidden></span></p>
+        </div>
+        <div class="ld-more-wrap">
+          <button type="button" class="ld-more" id="ld-more" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="ld_more_aria" aria-label="Más opciones">&#8943;</button>
+          <div class="ld-menu" id="ld-menu" role="menu" hidden>
+            <button class="ld-menu-item" id="ld-publish" type="button" hidden data-i18n="btn_publish">Publicar…</button>
+            <button class="ld-menu-item" id="ld-select-btn" type="button" data-i18n="btn_list_select">Elegir</button>
+            <button class="ld-menu-item" id="ld-rename" type="button" data-i18n="btn_list_rename">Renombrar</button>
+            <button class="ld-menu-item danger" id="ld-leave" type="button" hidden data-i18n="btn_list_leave">Salir de la lista</button>
+            <button class="ld-menu-item danger" id="ld-delete" type="button" data-i18n="btn_delete_list">Eliminar lista</button>
+          </div>
         </div>
       </div>
-      <div class="ld-onoff" id="ld-onoff" hidden></div>
+      <div class="ld-actrow">
+        <button class="btn-primary ld-practice" id="ld-practice" type="button" data-i18n="btn_list_practice">Practicar</button>
+        <div class="ld-onoff" id="ld-onoff" hidden></div>
+      </div>
       <!-- Compartir: the link, and (commit 128) its on/off switch and a new
            link, kept together with the link itself. -->
       <div class="ld-share-box" id="ld-share-row" hidden>
@@ -1094,6 +1111,7 @@
       <div class="list-detail-group ld-people-group" id="ld-people-group" hidden>
         <h4 data-i18n="ld_people">Personas</h4>
         <ul class="ld-people" id="ld-people"></ul>
+        <p class="ld-people-note" id="ld-people-note" data-i18n="ld_people_note">Las personas que agregás ven la lista al día; los Editores también la cambian.</p>
         <div class="ld-invite" id="ld-invite" hidden>
           <p class="ld-invite-label" data-i18n="ld_invite_label">Agregar a un amigo</p>
           <div class="ld-invite-row" id="ld-invite-row">
@@ -1109,15 +1127,9 @@
         </div>
         <p class="form-msg" id="ld-people-msg"></p>
       </div>
-      <div class="detail-actions-footer">
-        <button class="btn-primary ld-practice" id="ld-practice" type="button" data-i18n="btn_list_practice">Practicar</button>
-        <button class="icon-btn" id="ld-select-btn" type="button" data-i18n="btn_list_select">Elegir</button>
-        <button class="icon-btn" id="ld-publish" type="button" hidden data-i18n="btn_publish">Publicar…</button>
-        <button class="icon-btn" id="ld-share-btn" type="button" data-i18n="btn_share">Compartir</button>
-        <button class="icon-btn" id="ld-rename" type="button" data-i18n="btn_list_rename">Renombrar</button>
-        <button class="icon-btn danger" id="ld-leave" type="button" hidden data-i18n="btn_list_leave">Salir de la lista</button>
-        <button class="icon-btn danger" id="ld-delete" type="button" data-i18n="btn_delete_list">Eliminar lista</button>
-      </div>
+      <!-- the old share link (kept hidden: ?share= links people already have
+           still open the list's preview) -->
+      <button class="icon-btn" id="ld-share-btn" type="button" hidden data-i18n="btn_share">Compartir</button>
     </section>
   </section>
 

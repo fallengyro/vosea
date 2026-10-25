@@ -1080,11 +1080,15 @@
       list_role_editor: "Editor",
       list_role_reader: "Lector",
       list_role_line_owner: "Tu lista",
+      ld_onoff_on: "en tu colección",
+      ld_onoff_off: "apagada: no está en tu colección",
+      ld_more_aria: "Más opciones",
+      ld_people_note: "Las personas que agregás ven la lista al día; los Editores también la cambian.",
       list_role_line: "{role} · lista de {owner}",
       list_onoff_aria: "Usar esta lista en tu colección",
       list_onoff_hint_on: "Activa: sus ítems están en tu colección.",
       list_onoff_hint_off: "Apagada: sus ítems no están en tu colección.",
-      btn_list_select: "Elegir",
+      btn_list_select: "Elegir ítems",
       btn_list_select_cancel: "Cancelar",
       ld_select_count: "{n} elegidos",
       ld_select_count_1: "1 elegido",
@@ -1163,7 +1167,7 @@
       am_toast_accepted: "{name} aceptó: ya son amigos.",
       am_toast_see: "Ver",
       acct_menu_amigos: "Amigos",
-      btn_invite_someone: "Invitar a alguien",
+      btn_invite_someone: "Invitar a alguien a voseá",
       btn_invite_new: "Invitar a alguien nuevo",
       am_link_copied_list: "Enlace copiado: cuando lo abra y toque Agregar, ya va a estar en esta lista de amigos para sumarlo.",
       ld_invite_none: "Todavía no tenés amigos en voseá. Invitá a alguien con tu enlace y después agregalo acá.",
@@ -2395,11 +2399,15 @@
       list_role_editor: "Editor",
       list_role_reader: "Reader",
       list_role_line_owner: "Your list",
+      ld_onoff_on: "in your collection",
+      ld_onoff_off: "off: not in your collection",
+      ld_more_aria: "More options",
+      ld_people_note: "People you add see the list as it changes; Editors can change it too.",
       list_role_line: "{role} · {owner}'s list",
       list_onoff_aria: "Use this list in your collection",
       list_onoff_hint_on: "On: its items are in your collection.",
       list_onoff_hint_off: "Off: its items aren't in your collection.",
-      btn_list_select: "Choose",
+      btn_list_select: "Choose items",
       btn_list_select_cancel: "Cancel",
       ld_select_count: "{n} chosen",
       ld_select_count_1: "1 chosen",
@@ -2478,7 +2486,7 @@
       am_toast_accepted: "{name} accepted: you're friends now.",
       am_toast_see: "See",
       acct_menu_amigos: "Friends",
-      btn_invite_someone: "Invite someone",
+      btn_invite_someone: "Invite someone to voseá",
       btn_invite_new: "Invite someone new",
       am_link_copied_list: "Link copied: once they open it and tap Add, they'll be in your friends to add here.",
       ld_invite_none: "You don't have friends on voseá yet. Invite someone with your link, then add them here.",
@@ -5696,7 +5704,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "160";
+  var VOSEA_BUILD = "161";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -20090,7 +20098,7 @@
     el.ldOnoffWrap.innerHTML = "";
     if (liveListsOk) {
       el.ldOnoffWrap.appendChild(onoffButton(l, "list-onoff"));
-      el.ldOnoffWrap.appendChild(progEl("span", "ld-onoff-text", t(l.data.enabled ? "list_onoff_hint_on" : "list_onoff_hint_off")));
+      el.ldOnoffWrap.appendChild(progEl("span", "ld-onoff-text", t(l.data.enabled ? "ld_onoff_on" : "ld_onoff_off")));
     }
     el.ldShareBtn.hidden = !owner;
     el.ldPublish.hidden = !owner || !liveListsOk;
@@ -20102,6 +20110,54 @@
     el.ldRename.hidden = !owner;
     el.ldLeave.hidden = owner || !liveListsOk;
   }
+
+  // ---- the list page, simpler (2026-10-25, commit 143) ----
+  // ⋯ holds Publicar / Elegir ítems / Renombrar / Salir / Eliminar; on a
+  // phone the list opens as its own screen with ‹ Listas.
+  function ldMenuClose() {
+    var m = document.getElementById("ld-menu"), b = document.getElementById("ld-more");
+    if (m) m.hidden = true;
+    if (b) b.setAttribute("aria-expanded", "false");
+  }
+  function ldMenuRefresh() {
+    var m = document.getElementById("ld-menu"), b = document.getElementById("ld-more");
+    if (!m || !b) return;
+    var any = Array.prototype.some.call(m.children, function (x) { return !x.hidden; });
+    b.hidden = !any;
+  }
+  function ldIsPhone() { try { return window.matchMedia("(max-width: 640px)").matches; } catch (e) { return false; } }
+  var ldLastOpen = null;
+  (function wireListPage() {
+    var b = document.getElementById("ld-more"), m = document.getElementById("ld-menu"), back = document.getElementById("ld-back");
+    if (b && m) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        ldMenuRefresh();
+        if (m.hidden) { m.hidden = false; b.setAttribute("aria-expanded", "true"); } else ldMenuClose();
+      });
+      m.addEventListener("click", function () { setTimeout(ldMenuClose, 0); });
+      document.addEventListener("click", function (e) { if (!m.hidden && !m.contains(e.target) && e.target !== b) ldMenuClose(); });
+    }
+    if (back) back.addEventListener("click", function () { selectedListId = null; el.listDetail.hidden = true; });
+    var panel = document.getElementById("lists-panel");
+    if (panel && el.listDetail) {
+      new MutationObserver(function () {
+        var open = !el.listDetail.hidden, was = panel.classList.contains("is-item");
+        panel.classList.toggle("is-item", open);
+        ldMenuClose();
+        if (open) { ldLastOpen = selectedListId; ldMenuRefresh(); }
+        if (!ldIsPhone()) return;
+        if (open && !was) setTimeout(function () { window.scrollTo({ top: 0, behavior: "instant" }); }, 30);
+        else if (!open && was) {
+          var id = ldLastOpen;
+          setTimeout(function () {
+            var row = id && el.listsList.querySelector('.list-row[data-list-id="' + id + '"]');
+            if (row && row.scrollIntoView) row.scrollIntoView({ block: "center", behavior: "instant" });
+          }, 30);
+        }
+      }).observe(el.listDetail, { attributes: true, attributeFilter: ["hidden"] });
+    }
+  })();
 
   function selectListRow(id) {
     if (selectedListId !== id) { listSelectMode = false; listSelected = {}; }
