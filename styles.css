@@ -2997,25 +2997,37 @@
 .fsheet-actions button { width: 100%; }
 .fsheet-actions [hidden] { display: none; }
 body.fsheet-open { overflow: hidden; }
-/* the list is the page, and an open item is its own screen — at every
-   width since 2026-10-26 (mason: on desktop the list was a small box under
-   the sticky row, with the floating + Palabra far below it) */
-.dback { display: none; }
-/* the list is the page */
+/* The list is the page at every width (2026-10-26). An open item is a card
+   over the list (2026-10-26, mason: "the way 'practice' looks when
+   launched"): a sheet from the bottom on a phone, a centered card on
+   desktop, over a dimmed list that stays where it was. */
 #card-list, #word-list, #phrase-list { height: auto !important; max-height: none !important; overflow: visible !important; }
 #card-list::after, #word-list::after, #phrase-list::after { display: none !important; }
-/* an open item is its own screen */
-#verbs-panel.is-item > .search-card, #verbs-panel.is-item > .col-sum, #verbs-panel.is-item #card-list, #verbs-panel.is-item > .toolbar-row,
-#words-panel.is-item > .search-card, #words-panel.is-item > .col-sum, #words-panel.is-item #word-list, #words-panel.is-item > .toolbar-row,
-#phrases-panel.is-item > .search-card, #phrases-panel.is-item > .col-sum, #phrases-panel.is-item #phrase-list, #phrases-panel.is-item > .toolbar-row { display: none !important; }
-.is-item .detail { margin-top: 6px; }
-.dback { display: flex; align-items: center; justify-content: space-between; margin: -6px -4px 8px; }
-.dback-btn { border: 0; background: none; color: var(--accent); font: 600 15px "Public Sans", sans-serif; padding: 6px 4px; cursor: pointer; }
+.item-sheet-bg { position: fixed; inset: 0; z-index: 90; background: rgba(28, 35, 51, .45); }
+.item-sheet-bg[hidden] { display: none; }
+body.item-sheet-open { overflow: hidden; }
+#detail, #word-detail, #phrase-detail { position: fixed; z-index: 91; margin: 0 !important; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--paper); border: 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .25); box-sizing: border-box; transition: transform .18s ease-out; }
+@media (max-width: 640px) {
+  #detail, #word-detail, #phrase-detail { left: 0; right: 0; bottom: 0; max-height: 92vh; border-radius: 20px 20px 0 0; padding: 0 16px calc(22px + env(safe-area-inset-bottom)); }
+  #detail:not([hidden]), #word-detail:not([hidden]), #phrase-detail:not([hidden]) { animation: item-sheet-up .2s ease-out; }
+}
+@media (min-width: 641px) {
+  #detail, #word-detail, #phrase-detail { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); max-height: 84vh; border-radius: 14px; padding: 0 22px 22px; box-shadow: 0 10px 30px rgba(28, 35, 51, .3); transition: none; }
+}
+@keyframes item-sheet-up { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
+/* the card's top row: ‹ N de M › and Cerrar, staying put when it scrolls */
+.dback { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--paper); margin: 0 -16px 6px; padding: 14px 16px 8px; }
+@media (min-width: 641px) { .dback { margin: 0 -22px 6px; padding: 14px 22px 8px; } }
+.dback .dback-btn { display: none; }
+.dback-grab { display: none; }
+@media (max-width: 640px) { .dback-grab { display: block; position: absolute; left: 50%; top: 5px; transform: translateX(-50%); width: 44px; height: 5px; border-radius: 3px; background: var(--line); } }
+.dback-close { border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-soft); border-radius: 8px; padding: 6px 12px; font: 600 14px "Public Sans", sans-serif; cursor: pointer; }
 .dback-nav { display: inline-flex; align-items: center; gap: 4px; font: 12.5px "JetBrains Mono", monospace; color: var(--ink-soft); }
 .dback-step { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 8px; width: 32px; height: 30px; font-size: 18px; line-height: 1; cursor: pointer; }
 .dback-step:disabled { opacity: .35; }
-/* the detail's own × is the back button's job on a phone */
-.is-item .detail .detail-close-btn { display: none; }
+/* Cerrar does the × job */
+#detail .detail-close-btn, #word-detail .detail-close-btn, #phrase-detail .detail-close-btn { display: none; }
 
 /* Ver: your collection or one list (2026-10-25, commit 140) */
 .ver-row { position: relative; display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font: 14px "Public Sans", sans-serif; }

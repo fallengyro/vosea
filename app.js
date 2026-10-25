@@ -1238,6 +1238,7 @@
       settings_title: "Configuración",
       set_g_app: "La app",
       fab_verb: "Verbo",
+      item_close: "Cerrar",
       col_top: "Arriba",
       col_top_aria: "Volver arriba",
       fab_word: "Palabra",
@@ -2580,6 +2581,7 @@
       settings_title: "Settings",
       set_g_app: "The app",
       fab_verb: "Verb",
+      item_close: "Close",
       col_top: "Top",
       col_top_aria: "Back to the top",
       fab_word: "Word",
@@ -5784,7 +5786,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "170";
+  var VOSEA_BUILD = "171";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6507,7 +6509,7 @@
     paintVerbFormMarks(data); // per-form Sabido checks (tiles carry data-form-key in index.html)
 
     el.detail.hidden = false;
-    el.detail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    // (2026-10-26: the item is a card over the list; nothing to scroll to)
     syncConjRowHeights();
     // A second pass a couple frames later catches anything that settles
     // just after this first synchronous one — a font swap finishing, or
@@ -7638,7 +7640,7 @@
     el.wdTtsMsg.textContent = "";
 
     el.wordDetail.hidden = false;
-    el.wordDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    // (2026-10-26: the item is a card over the list; nothing to scroll to)
     renderItemHistory("word");
     paintBorrowedDetail("word");
   }
@@ -7948,7 +7950,7 @@
     el.pdTtsMsg.textContent = "";
 
     el.phraseDetail.hidden = false;
-    el.phraseDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    // (2026-10-26: the item is a card over the list; nothing to scroll to)
     renderItemHistory("phrase");
     paintBorrowedDetail("phrase");
   }
@@ -22433,7 +22435,61 @@
     var c = fsheetConf(tab), items = c.items(), id = c.sel();
     var i = items.findIndex(function (x) { return x.id === id; });
     var nx = items[i + d];
-    if (nx) { c.select(nx.id); fsheetUi[tab].lastId = nx.id; fsheetDetailNav(tab); window.scrollTo(0, 0); }
+    if (nx) { c.select(nx.id); fsheetUi[tab].lastId = nx.id; fsheetDetailNav(tab); c.detail.scrollTop = 0; }
+  }
+  // ---- an item as a card over the list (2026-10-26) ----
+  // On a phone it slides up from the bottom (like Armar el mazo), on desktop
+  // it's a centered card. Cerrar, a tap on the dimmed list, Escape or a
+  // swipe down closes it. While the form is open (Editar) the card steps
+  // aside and comes back after.
+  var itemSheetBg = document.createElement("div");
+  itemSheetBg.className = "item-sheet-bg"; itemSheetBg.hidden = true;
+  document.body.appendChild(itemSheetBg);
+  function itemSheetOpenTab() {
+    var found = null;
+    ["verbs", "words", "phrases"].forEach(function (tab) {
+      var c = fsheetConf(tab), panel = document.getElementById(c.panel);
+      if (!found && panel && !panel.hidden && !c.detail.hidden && !panel.classList.contains("is-form") && currentTab === "col" && !el.appScreen.hidden) found = tab;
+    });
+    return found;
+  }
+  function itemSheetUpdate() {
+    var tab = itemSheetOpenTab();
+    if (itemSheetBg.hidden !== !tab) itemSheetBg.hidden = !tab;
+    if (document.body.classList.contains("item-sheet-open") !== !!tab) document.body.classList.toggle("item-sheet-open", !!tab);
+  }
+  function itemSheetClose() {
+    var tab = itemSheetOpenTab();
+    if (tab) fsheetConf(tab).deselect();
+  }
+  itemSheetBg.addEventListener("click", itemSheetClose);
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" || !itemSheetOpenTab()) return;
+    // a menu or dialog on top of the card closes first
+    if (document.querySelector(".modal-overlay:not([hidden]):not(.deck-overlay)")) return;
+    itemSheetClose();
+  });
+  // swipe down on the card's top row (or anywhere, when it's scrolled to the
+  // top) to close it — phones only
+  function itemSheetSwipe(c, handle) {
+    var y0 = null, dy = 0, fromTop = false;
+    c.detail.addEventListener("touchstart", function (e) {
+      if (!fsheetIsPhone() || e.touches.length !== 1) return;
+      fromTop = handle.contains(e.target) || c.detail.scrollTop <= 0;
+      if (!fromTop) return;
+      y0 = e.touches[0].clientY; dy = 0;
+    }, { passive: true });
+    c.detail.addEventListener("touchmove", function (e) {
+      if (y0 === null) return;
+      dy = e.touches[0].clientY - y0;
+      if (dy > 0 && (handle.contains(e.target) || c.detail.scrollTop <= 0)) { c.detail.style.transform = "translateY(" + dy + "px)"; c.detail.style.transition = "none"; }
+    }, { passive: true });
+    c.detail.addEventListener("touchend", function () {
+      if (y0 === null) return;
+      c.detail.style.transition = ""; c.detail.style.transform = "";
+      if (dy > 90) c.deselect();
+      y0 = null; dy = 0;
+    });
   }
   function fsheetDetailChanged(tab) {
     var c = fsheetConf(tab), panel = document.getElementById(c.panel);
@@ -22442,16 +22498,11 @@
     var was = panel.classList.contains("is-item");
     panel.classList.toggle("is-item", open);
     if (open) fsheetUi[tab].lastId = c.sel();
-    if (open && !was) { // (every width since 2026-10-26)
-      setTimeout(function () { window.scrollTo({ top: 0, behavior: "instant" }); }, 30);
-    } else if (!open && was) {
-      // back on the list, at the item you were last looking at
-      var id = fsheetUi[tab].lastId;
-      setTimeout(function () {
-        var row = id && c.list.querySelector('.card-row[data-item-id="' + id + '"]');
-        if (row && row.scrollIntoView) row.scrollIntoView({ block: "center", behavior: "instant" });
-      }, 30);
-    }
+    // (2026-10-26) mason: "instead of opening to a new card … it overlays
+    // the list in a standalone card the way that 'practice' looks". The list
+    // stays where it was behind the card, so nothing scrolls here.
+    if (open) c.detail.scrollTop = 0;
+    itemSheetUpdate();
     fsheetDetailNav(tab);
   }
 
@@ -22549,6 +22600,12 @@
       ui.backNext.addEventListener("click", function () { fsheetStep(tab, 1); });
       nav.appendChild(ui.backPrev); nav.appendChild(ui.backPos); nav.appendChild(ui.backNext);
       ui.back.appendChild(nav);
+      // (2026-10-26) the item is a card over the list: ‹ N de M › and Cerrar
+      var cl = mk("button", "dback-close", t("item_close")); cl.type = "button"; cl.setAttribute("data-i18n", "item_close");
+      cl.addEventListener("click", function () { c.deselect(); });
+      ui.back.appendChild(cl);
+      ui.back.appendChild(mk("span", "dback-grab"));
+      itemSheetSwipe(c, ui.back);
       c.detail.insertBefore(ui.back, c.detail.firstChild);
       new MutationObserver(function () { fsheetDetailChanged(tab); }).observe(c.detail, { attributes: true, attributeFilter: ["hidden"] });
       fsheetSetVer(tab);
@@ -22808,12 +22865,15 @@
       var open = !c.form.hidden, was = panel.classList.contains("is-form");
       if (open === was) return;
       panel.classList.toggle("is-form", open);
+      itemSheetUpdate();
       if (open) {
         c.y = colLastY; // where the list was (the last scroll event, before anything moved it)
         var editing = !c.detail.hidden && c.name();
         c.backLabel.textContent = editing ? c.name() : t(c.back);
         window.scrollTo({ top: 0, behavior: "instant" });
-      } else if (c.detail.hidden) {
+      } else {
+        // back to the list (or to the item's card, over the list): the list
+        // goes back where it was
         var y = c.y || 0;
         setTimeout(function () { window.scrollTo({ top: y, behavior: "instant" }); }, 0);
       }
@@ -22831,10 +22891,19 @@
     colMo.observe(el.appScreen, { attributes: true, attributeFilter: ["hidden"] });
     if (el.colPanel) colMo.observe(el.colPanel, { attributes: true, attributeFilter: ["hidden"] });
   }
+  // (2026-10-26) an item is a card over the list now: going to another part
+  // or tab closes it
+  function itemSheetCloseHidden() {
+    ["verbs", "words", "phrases"].forEach(function (tab) {
+      var c = fsheetConf(tab), panel = document.getElementById(c.panel);
+      if (panel && !c.detail.hidden && (panel.hidden || currentTab !== "col")) c.deselect();
+    });
+    itemSheetUpdate();
+  }
   var colSetMainTab = setMainTab;
-  setMainTab = function () { var r = colSetMainTab.apply(this, arguments); colFabUpdate(); return r; };
+  setMainTab = function () { var r = colSetMainTab.apply(this, arguments); itemSheetCloseHidden(); colFabUpdate(); return r; };
   var colRenderSeg = renderColSeg;
-  renderColSeg = function () { var r = colRenderSeg.apply(this, arguments); colFabUpdate(); return r; };
+  renderColSeg = function () { var r = colRenderSeg.apply(this, arguments); itemSheetCloseHidden(); colFabUpdate(); return r; };
   // the count + Practicar row: a shadow once it's stuck to the top
   var colLastY = window.scrollY;
   window.addEventListener("scroll", function () {
