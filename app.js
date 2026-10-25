@@ -378,6 +378,10 @@
       flash_custom_persons: "Personas (en los tiempos elegidos)",
       flash_deck_count: "{n} tarjetas",
       flash_deck_count_1: "1 tarjeta",
+      flash_deck_count_of: "{n} de {total} tarjetas",
+      deck_filt: "filtrado: ",
+      deck_filt_none: "todo",
+      deck_filt_not: "sin {what}",
       flash_matrix_hint: "Tocá una celda para esa combinación, o un encabezado para toda la fila o columna.",
       flash_group_direction: "Dirección de la tarjeta",
       flash_dir_def2word: "Definición → palabra",
@@ -1697,6 +1701,10 @@
       flash_custom_persons: "Persons (in the chosen tenses)",
       flash_deck_count: "{n} cards",
       flash_deck_count_1: "1 card",
+      flash_deck_count_of: "{n} of {total} cards",
+      deck_filt: "filtered: ",
+      deck_filt_none: "everything",
+      deck_filt_not: "not {what}",
       flash_matrix_hint: "Tap a cell for that combination, or a header for the whole row or column.",
       flash_group_direction: "Card direction",
       flash_dir_def2word: "Definition → word",
@@ -5368,6 +5376,10 @@
     flashPickAll: document.getElementById("flash-pick-all"),
     flashPickNone: document.getElementById("flash-pick-none"),
     flashDeckCount: document.getElementById("flash-deck-count"),
+    flashLimit: document.getElementById("flash-limit"),
+    flashVerbFilt: document.getElementById("flash-verb-filt"),
+    flashWordFilt: document.getElementById("flash-word-filt"),
+    flashPhraseFilt: document.getElementById("flash-phrase-filt"),
     flashDirDef: document.getElementById("flash-dir-def"),
     flashDirWord: document.getElementById("flash-dir-word"),
     flashSetupMsg: document.getElementById("flash-setup-msg"),
@@ -5704,7 +5716,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "162";
+  var VOSEA_BUILD = "163";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6955,7 +6967,15 @@
   try { var savedSeg = localStorage.getItem(COL_SEG_KEY); if (COL_SEGS.indexOf(savedSeg) !== -1) colSeg = savedSeg; } catch (e) {}
   var currentTab = "hoy";
 
-  function openDeckBuilder() {
+  // (2026-10-26) mason: Practicar on a part opens this with only that part
+  // switched on (the others one tap away); from Hoy, Jugar or anywhere else,
+  // all three are on. The switches aren't remembered between openings.
+  function openDeckBuilder(only) {
+    var one = typeof only === "string" && ["verbs", "words", "phrases"].indexOf(only) !== -1 ? only : null;
+    el.flashSrcVerbs.checked = !one || one === "verbs";
+    el.flashSrcWords.checked = !one || one === "words";
+    el.flashSrcPhrases.checked = !one || one === "phrases";
+    if (currentUser) loadPracticeHistory(false).then(function () { if (!el.deckOverlay.hidden) updateFlashDeckCount(); });
     el.deckOverlay.hidden = false;
     el.flashcardsPanel.hidden = false;
     renderFlashSetup();
@@ -8242,7 +8262,133 @@
   function updateFlashDeckCount() {
     if (!el.flashDeckCount) return;
     var n = buildFlashDeck().length;
-    el.flashDeckCount.textContent = t(n === 1 ? "flash_deck_count_1" : "flash_deck_count", { n: n });
+    var lim = deckSizeN();
+    el.flashDeckCount.textContent = n > lim ? t("flash_deck_count_of", { n: lim, total: n }) : t(n === 1 ? "flash_deck_count_1" : "flash_deck_count", { n: n });
+    renderDeckSize(n);
+    renderDeckFilterLines();
+  }
+
+  // ---- Armar el mazo: how many, and what each part's filters are (2026-10-26) ----
+  // mason picked the mockup: 10 · 20 · Todas next to Empezar, like Temas
+  // (20 to start, remembered). When the pool is smaller, it's all of it:
+  // Todas lights up and the sizes it can't fill are greyed out. Under each
+  // part, a line says what its filters are ("filtrado: cocina · sustantivo")
+  // instead of the paragraph that used to explain it.
+  var DECK_SIZE_KEY = "vosea-deck-size";
+  var DECK_SIZES = ["10", "20", "all"];
+  var deckSize = "20";
+  try { var savedDeckSize = localStorage.getItem(DECK_SIZE_KEY); if (DECK_SIZES.indexOf(savedDeckSize) !== -1) deckSize = savedDeckSize; } catch (e) {}
+  function deckSizeN() { return deckSize === "all" ? Infinity : Number(deckSize || 20); }
+  function setDeckSize(v) {
+    deckSize = DECK_SIZES.indexOf(v) !== -1 ? v : "20";
+    try { localStorage.setItem(DECK_SIZE_KEY, deckSize); } catch (e) {}
+    updateFlashDeckCount();
+  }
+  function renderDeckSize(pool) {
+    if (!el.flashLimit) return;
+    var eff = pool <= deckSizeN() ? "all" : deckSize;
+    Array.prototype.forEach.call(el.flashLimit.querySelectorAll("button"), function (b) {
+      var v = b.getAttribute("data-limit");
+      var on = v === eff;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.disabled = v !== "all" && pool <= Number(v);
+    });
+  }
+  function deckFilterBits(tab) {
+    var c = fsheetConf(tab), bits = [];
+    var ls = sharedListFilter.list;
+    if (ls.include.size || ls.exclude.size) bits.push(verLabel());
+    Object.keys(c.active).forEach(function (facet) {
+      if (facet === "list" || !c.active[facet] || !c.active[facet].include) return;
+      c.active[facet].include.forEach(function (v) { bits.push(fsheetChipLabel(c, facet, v)); });
+      c.active[facet].exclude.forEach(function (v) { bits.push(t("deck_filt_not", { what: fsheetChipLabel(c, facet, v) })); });
+    });
+    var live = { verbs: el.search, words: el.wordSearch, phrases: el.phraseSearch }[tab];
+    var shown = searchTermShow || {};
+    var words = (searchTerms || []).map(function (x) { return shown[x] || x; });
+    if (live && live.value.trim()) words.push(live.value.trim());
+    if (words.length) bits.push("«" + words.join(", ") + "»");
+    return bits;
+  }
+  function renderDeckFilterLines() {
+    [["verbs", el.flashVerbFilt], ["words", el.flashWordFilt], ["phrases", el.flashPhraseFilt]].forEach(function (x) {
+      var box = x[1];
+      if (!box) return;
+      var bits = deckFilterBits(x[0]);
+      box.textContent = "";
+      if (!bits.length) { box.textContent = t("deck_filt_none"); return; }
+      box.appendChild(document.createTextNode(t("deck_filt")));
+      var b = document.createElement("b");
+      b.textContent = bits.join(" · ");
+      box.appendChild(b);
+    });
+  }
+
+  // ---- which cards, when the pool is bigger than the deck (2026-10-26) ----
+  // mason: "build it ... including the smart order". From the practice log
+  // (the same model as Progreso and Hoy):
+  //   1. due for review (missed last time first, then the most overdue);
+  //   2. missed in the last two weeks and not learned yet;
+  //   3. new: never practiced, at most half the deck while there's other
+  //      material. Words and phrases mixed in with verbs; for verbs, the
+  //      person + tense you've been missing on other verbs first, then the
+  //      everyday tenses (presente, pretérito, imperativo…) before the rest;
+  //   4. still being learned (not due yet): the shakiest first;
+  //   5. the rest (learned, or marked Sabido): the longest unseen first;
+  //   then any new ones left over.
+  // The deck is then shuffled as always (openFlashDeck).
+  var DECK_TENSE_RANK = { presente: 0, preterito: 1, imperativo: 2, imperfecto: 3, futuro: 4, gerundio: 5, participio: 5, condicional: 6 };
+  function deckCardKnown(c) {
+    var d = c.data || {};
+    if (d.known) return true;
+    return c.kind === "verb" && !!c.formKey && !!((d.known_forms || {})[c.formKey]);
+  }
+  function deckSmartPick(cards, n) {
+    if (!(cards.length > n)) return cards;
+    var P = computeProgress(practiceAllRows());
+    var today = P.today, since = today - PROG_STRUGGLE_DAYS + 1;
+    var formMiss = {};
+    Object.keys(P.units).forEach(function (k) {
+      var u = P.units[k];
+      if (u.kind !== "verb" || !u.formKey) return;
+      u.events.forEach(function (e) { if (e.grade === "otra" && e.day >= today - 30) formMiss[u.formKey] = (formMiss[u.formKey] || 0) + 1; });
+    });
+    function tenseRank(fk) { var r = DECK_TENSE_RANK[String(fk || "").split("|")[0]]; return r === undefined ? 7 : r; }
+    var due = [], missed = [], fresh = { verb: [], word: [], phrase: [] }, learning = [], rest = [];
+    shuffleArray(cards.slice()).forEach(function (c) {
+      var u = P.units[practiceCardKey(c)];
+      var known = deckCardKnown(c);
+      if (!u) { if (known) rest.push({ c: c, u: null }); else (fresh[c.kind] || fresh.word).push(c); return; }
+      var missedLately = !u.learned && u.events.some(function (e) { return e.day >= since && e.grade === "otra"; });
+      if (u.due && !known) due.push({ c: c, u: u });
+      else if (missedLately && !known) missed.push({ c: c, u: u });
+      else if (!u.learned && !known) learning.push({ c: c, u: u });
+      else rest.push({ c: c, u: u });
+    });
+    due.sort(function (a, b) {
+      var am = a.u.last && a.u.last.grade === "otra" ? 0 : 1, bm = b.u.last && b.u.last.grade === "otra" ? 0 : 1;
+      return am - bm || a.u.dueDay - b.u.dueDay;
+    });
+    missed.sort(function (a, b) { return b.u.last.at - a.u.last.at; });
+    fresh.verb.sort(function (a, b) { return (formMiss[b.formKey] || 0) - (formMiss[a.formKey] || 0) || tenseRank(a.formKey) - tenseRank(b.formKey); });
+    learning.sort(function (a, b) {
+      return a.u.box - b.u.box || (formMiss[b.c.formKey] || 0) - (formMiss[a.c.formKey] || 0) || a.u.last.at - b.u.last.at;
+    });
+    rest.sort(function (a, b) { return (a.u ? a.u.last.at : 0) - (b.u ? b.u.last.at : 0); });
+    // new ones, taking turns between verbs, words and phrases
+    var newOnes = [], lists = [fresh.verb, fresh.word, fresh.phrase].filter(function (l) { return l.length; });
+    for (var i = 0; lists.some(function (l) { return i < l.length; }); i++) lists.forEach(function (l) { if (i < l.length) newOnes.push(l[i]); });
+    var cap = Math.ceil(n / 2);
+    var out = [];
+    function take(arr) { for (var j = 0; j < arr.length && out.length < n; j++) out.push(arr[j]); }
+    take(due.map(function (x) { return x.c; }));
+    take(missed.map(function (x) { return x.c; }));
+    take(newOnes.slice(0, cap));
+    take(learning.map(function (x) { return x.c; }));
+    take(rest.map(function (x) { return x.c; }));
+    take(newOnes.slice(cap));
+    return out;
   }
 
   // A tense column counts as "in play" for an impersonal verb (llover,
@@ -9971,7 +10117,7 @@
       return;
     }
     el.flashSetupMsg.textContent = "";
-    openFlashDeck(cards, "setup");
+    openFlashDeck(deckSmartPick(cards, deckSizeN()), "setup");
   }
 
   // "setup": the deck built from the Tarjetas setup (passes follow the tabs'
@@ -21731,7 +21877,7 @@
   el.tabHoy.addEventListener("click", function () { setMainTab("hoy"); });
   el.tabCol.addEventListener("click", function () { setMainTab("col"); });
   COL_SEGS.forEach(function (k) { el["colSeg_" + k].addEventListener("click", function () { setMainTab(k); try { window.scrollTo({ top: 0 }); } catch (e) {} }); });
-  el.colBarBtn.addEventListener("click", openDeckBuilder);
+  el.colBarBtn.addEventListener("click", function () { openDeckBuilder(); });
   el.deckClose.addEventListener("click", closeDeckBuilder);
   el.deckOverlay.addEventListener("click", function (e) { if (e.target === el.deckOverlay) closeDeckBuilder(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !el.deckOverlay.hidden) closeDeckBuilder(); });
@@ -21743,6 +21889,8 @@
   // for the test suites (and the console): go to a tab, or open the deck
   window.voseaGoTab = setMainTab;
   window.voseaOpenDeckBuilder = openDeckBuilder;
+  window.voseaDeckPick = function (cards, n) { return deckSmartPick(cards, n); }; // tests
+  window.voseaBuildFlashDeck = function () { return buildFlashDeck(); }; // tests
 
   el.wordSearch.addEventListener("input", function () { renderWordList(); });
   loadFilters(filtersStorageKey("words"), activeWordFilters);
@@ -22129,7 +22277,7 @@
       ui.sumText = mk("span", "col-sum-text");
       ui.sumBtn = mk("button", "col-sum-btn"); ui.sumBtn.type = "button";
       var pl = mk("span", null, t("col_sum_practice")); pl.setAttribute("data-i18n", "col_sum_practice"); ui.sumBtn.appendChild(pl);
-      ui.sumBtn.addEventListener("click", openDeckBuilder);
+      ui.sumBtn.addEventListener("click", function () { openDeckBuilder(tab); });
       ui.sum.appendChild(ui.sumText); ui.sum.appendChild(ui.sumBtn);
       card.parentNode.insertBefore(ui.sum, card.nextSibling);
       // the sheet
@@ -22405,6 +22553,9 @@
   el.flashDirDef.addEventListener("change", function () { if (el.flashDirDef.checked) flashDirection = "def2word"; });
   el.flashDirWord.addEventListener("change", function () { if (el.flashDirWord.checked) flashDirection = "word2def"; });
   el.flashStartBtn.addEventListener("click", startFlashcards);
+  if (el.flashLimit) Array.prototype.forEach.call(el.flashLimit.querySelectorAll("button"), function (b) {
+    b.addEventListener("click", function () { if (!b.disabled) setDeckSize(b.getAttribute("data-limit")); });
+  });
   window.addEventListener("pageshow", function () { if (!el.flashcardsPanel.hidden) renderFlashSetup(); });
   // In a Partida, × is "Terminar": the summary first (closing is from there).
   el.flashCloseBtn.addEventListener("click", function () { if (ptActive() && !partida.paused) ptShowSummary(); else closeFlashcards(); });

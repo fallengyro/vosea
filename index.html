@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="162">
+<meta name="vosea-build" content="163">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -829,7 +829,6 @@
       <!-- Última sesión (2026-10-03): how the last deck went, with a button to
            drill just the cards marked Otra vez. See renderLastSession(). -->
       <div class="last-session" id="last-session" hidden></div>
-      <p class="flash-setup-note" data-i18n="flash_setup_note">Las tarjetas salen de lo que tenés filtrado en Colección: Verbos, Vocabulario y Frases, cada parte con sus filtros. Apagá una para sacarla del mazo.</p>
 
       <div class="flash-source-toggle">
         <label class="switch-row">
@@ -837,21 +836,21 @@
             <input type="checkbox" id="flash-src-verbs" checked autocomplete="off" />
             <span class="switch-track"><span class="switch-thumb"></span></span>
           </span>
-          <span><span data-i18n="nav_verbs">Verbos</span> <span class="flash-count" id="flash-verb-count"></span></span>
+          <span><span data-i18n="nav_verbs">Verbos</span> <span class="flash-count" id="flash-verb-count"></span><span class="flash-filt" id="flash-verb-filt"></span></span>
         </label>
         <label class="switch-row">
           <span class="switch">
             <input type="checkbox" id="flash-src-words" checked autocomplete="off" />
             <span class="switch-track"><span class="switch-thumb"></span></span>
           </span>
-          <span><span data-i18n="nav_words">Vocabulario</span> <span class="flash-count" id="flash-word-count"></span></span>
+          <span><span data-i18n="nav_words">Vocabulario</span> <span class="flash-count" id="flash-word-count"></span><span class="flash-filt" id="flash-word-filt"></span></span>
         </label>
         <label class="switch-row">
           <span class="switch">
             <input type="checkbox" id="flash-src-phrases" checked autocomplete="off" />
             <span class="switch-track"><span class="switch-thumb"></span></span>
           </span>
-          <span><span data-i18n="nav_phrases">Frases</span> <span class="flash-count" id="flash-phrase-count"></span></span>
+          <span><span data-i18n="nav_phrases">Frases</span> <span class="flash-count" id="flash-phrase-count"></span><span class="flash-filt" id="flash-phrase-filt"></span></span>
         </label>
       </div>
 
@@ -905,6 +904,13 @@
       <p class="form-msg" id="flash-setup-msg"></p>
       <div class="flash-start-row">
         <button type="button" class="btn-primary" id="flash-start-btn" data-i18n="flash_start_btn">Empezar</button>
+        <!-- how many cards (2026-10-26): 10 · 20 · all, like Temas; the
+             first ones in the smart order (see deckSmartPick in app.js) -->
+        <div class="lang-toggle topic-limit" id="flash-limit" role="group" data-i18n-aria-label="topic_limit_aria" aria-label="Cuántas tarjetas">
+          <button type="button" class="lang-option" data-limit="10">10</button>
+          <button type="button" class="lang-option" data-limit="20">20</button>
+          <button type="button" class="lang-option" data-limit="all" data-i18n="topic_limit_all">Todas</button>
+        </div>
         <span class="flash-deck-count" id="flash-deck-count" aria-live="polite"></span>
       </div>
     </div>
