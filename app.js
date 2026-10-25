@@ -244,6 +244,8 @@
       ver_lab: "Ver:",
       ver_all: "Toda tu colección",
       ver_custom: "Varias listas",
+      ver_n_lists: "{n} listas",
+      ver_done: "Listo",
       ver_off: "apagada",
       ver_turn_on: "Encender",
       list_in_col: "en tu colección",
@@ -1588,6 +1590,8 @@
       ver_lab: "Show:",
       ver_all: "Your whole collection",
       ver_custom: "Several lists",
+      ver_n_lists: "{n} lists",
+      ver_done: "Done",
       ver_off: "off",
       ver_turn_on: "Turn on",
       list_in_col: "in your collection",
@@ -5776,7 +5780,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "165";
+  var VOSEA_BUILD = "166";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -22179,15 +22183,30 @@
   // collection, or one list. Lists you've turned off are marked "apagada",
   // with Encender. The filter chips narrow within what you're seeing.
   // (Same sharedListFilter underneath: a list = include just that one.)
+  // (2026-10-26) mason: "it's reasonable for someone to want more than one
+  // list checked on". The lists are now check boxes: tick as many as you
+  // like and Colección shows what's in any of them. "Toda tu colección"
+  // clears them. Two lists read "Cocina + Verdulería", more "3 listas".
   function verLabel() {
     var st = sharedListFilter.list;
     if (!st.include.size && !st.exclude.size) return t("ver_all");
-    if (st.include.size === 1 && !st.exclude.size) {
-      var id = Array.from(st.include)[0];
+    if (st.exclude.size) return t("ver_custom");
+    var names = Array.from(st.include).map(function (id) {
       var l = allLists.find(function (x) { return x.id === id; });
-      return l ? l.data.name : t("ver_all");
-    }
-    return t("ver_custom");
+      return l ? l.data.name : null;
+    }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b); });
+    if (!names.length) return t("ver_all");
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return names[0] + " + " + names[1];
+    return t("ver_n_lists", { n: names.length });
+  }
+  function verToggle(id) {
+    var st = sharedListFilter.list;
+    st.exclude.clear();
+    if (st.include.has(id)) st.include.delete(id); else st.include.add(id);
+    saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
+    renderList(); renderWordList(); renderPhraseList();
+    FSHEET_TABS.forEach(updateListsTrigger);
   }
   function verSet(id) {
     var st = sharedListFilter.list;
@@ -22230,7 +22249,7 @@
       return a.data.name.localeCompare(b.data.name);
     });
     lists.forEach(function (l) {
-      var on = st.include.size === 1 && !st.exclude.size && st.include.has(l.id);
+      var on = !st.exclude.size && st.include.has(l.id);
       var off = liveListsOk && !l.data.enabled;
       var extra = null;
       if (off) {
@@ -22241,8 +22260,16 @@
         extra.addEventListener("click", function (e) { e.stopPropagation(); setListEnabled(l, true); });
       }
       row(l.data.name, listMetaText(l.data.itemCount || 0) + (off ? " · " + t("ver_off") : ""), on, off,
-        function () { fsheetVerClose(tab); verSet(l.id); }, extra);
+        // a check box: the menu stays open so you can tick several
+        function (e) { e.stopPropagation(); verToggle(l.id); }, extra);
+      m.lastChild.classList.add("is-list");
+      m.lastChild.querySelector(".ver-pick").setAttribute("role", "menuitemcheckbox");
+      m.lastChild.querySelector(".ver-pick").setAttribute("aria-checked", on ? "true" : "false");
     });
+    var foot = document.createElement("div"); foot.className = "ver-foot";
+    var done = document.createElement("button"); done.type = "button"; done.className = "ver-done"; done.textContent = t("ver_done");
+    done.addEventListener("click", function (e) { e.stopPropagation(); fsheetVerClose(tab); });
+    foot.appendChild(done); m.appendChild(foot);
   }
   function fsheetVerClose(tab) {
     var ui = fsheetUi[tab]; if (!ui || !ui.verMenu) return;

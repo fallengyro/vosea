@@ -3161,3 +3161,11 @@ body.has-col-fab #verbs-panel, body.has-col-fab #words-panel, body.has-col-fab #
 #phrases-panel.is-form > :not(.fback):not(#phrase-form):not(.fsheet-overlay) { display: none !important; }
 .is-form > form { margin-top: 0; }
 .fback-btn { border: 0; background: none; color: var(--accent); font: 600 15px "Public Sans", sans-serif; padding: 6px 4px; cursor: pointer; }
+
+/* Ver: several lists at once (2026-10-26) — the lists are check boxes */
+.ver-opt.is-list .ver-opt-name { display: inline-flex; align-items: center; gap: 8px; }
+.ver-opt.is-list .ver-opt-name::before, .ver-opt.is-list.on .ver-opt-name::before { content: ""; flex: none; width: 16px; height: 16px; box-sizing: border-box; border: 1.5px solid var(--line); border-radius: 4px; background: var(--paper); color: #fff; font-size: 11px; line-height: 13px; text-align: center; }
+.ver-opt.is-list.on .ver-opt-name::before { content: "\2713"; background: var(--teal); border-color: var(--teal); }
+.ver-opt.is-list .ver-opt-sub { padding-left: 24px; }
+.ver-foot { display: flex; justify-content: flex-end; border-top: 1px solid var(--line); margin-top: 4px; padding: 6px 4px 2px; }
+.ver-done { border: 0; background: var(--accent-deep); color: var(--accent-ink, #fff); border-radius: 999px; padding: 7px 16px; font: 700 13.5px "Public Sans", sans-serif; cursor: pointer; }
