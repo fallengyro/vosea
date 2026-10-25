@@ -2997,25 +2997,25 @@
 .fsheet-actions button { width: 100%; }
 .fsheet-actions [hidden] { display: none; }
 body.fsheet-open { overflow: hidden; }
-/* the item screen's top bar: phones only */
+/* the list is the page, and an open item is its own screen — at every
+   width since 2026-10-26 (mason: on desktop the list was a small box under
+   the sticky row, with the floating + Palabra far below it) */
 .dback { display: none; }
-@media (max-width: 640px) {
-  /* the list is the page */
-  #card-list, #word-list, #phrase-list { height: auto !important; max-height: none !important; overflow: visible !important; }
-  #card-list::after, #word-list::after, #phrase-list::after { display: none !important; }
-  /* an open item is its own screen */
-  #verbs-panel.is-item > .search-card, #verbs-panel.is-item > .col-sum, #verbs-panel.is-item #card-list, #verbs-panel.is-item > .toolbar-row,
-  #words-panel.is-item > .search-card, #words-panel.is-item > .col-sum, #words-panel.is-item #word-list, #words-panel.is-item > .toolbar-row,
-  #phrases-panel.is-item > .search-card, #phrases-panel.is-item > .col-sum, #phrases-panel.is-item #phrase-list, #phrases-panel.is-item > .toolbar-row { display: none !important; }
-  .is-item .detail { margin-top: 6px; }
-  .dback { display: flex; align-items: center; justify-content: space-between; margin: -6px -4px 8px; }
-  .dback-btn { border: 0; background: none; color: var(--accent); font: 600 15px "Public Sans", sans-serif; padding: 6px 4px; cursor: pointer; }
-  .dback-nav { display: inline-flex; align-items: center; gap: 4px; font: 12.5px "JetBrains Mono", monospace; color: var(--ink-soft); }
-  .dback-step { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 8px; width: 32px; height: 30px; font-size: 18px; line-height: 1; cursor: pointer; }
-  .dback-step:disabled { opacity: .35; }
-  /* the detail's own × is the back button's job on a phone */
-  .is-item .detail .detail-close-btn { display: none; }
-}
+/* the list is the page */
+#card-list, #word-list, #phrase-list { height: auto !important; max-height: none !important; overflow: visible !important; }
+#card-list::after, #word-list::after, #phrase-list::after { display: none !important; }
+/* an open item is its own screen */
+#verbs-panel.is-item > .search-card, #verbs-panel.is-item > .col-sum, #verbs-panel.is-item #card-list, #verbs-panel.is-item > .toolbar-row,
+#words-panel.is-item > .search-card, #words-panel.is-item > .col-sum, #words-panel.is-item #word-list, #words-panel.is-item > .toolbar-row,
+#phrases-panel.is-item > .search-card, #phrases-panel.is-item > .col-sum, #phrases-panel.is-item #phrase-list, #phrases-panel.is-item > .toolbar-row { display: none !important; }
+.is-item .detail { margin-top: 6px; }
+.dback { display: flex; align-items: center; justify-content: space-between; margin: -6px -4px 8px; }
+.dback-btn { border: 0; background: none; color: var(--accent); font: 600 15px "Public Sans", sans-serif; padding: 6px 4px; cursor: pointer; }
+.dback-nav { display: inline-flex; align-items: center; gap: 4px; font: 12.5px "JetBrains Mono", monospace; color: var(--ink-soft); }
+.dback-step { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 8px; width: 32px; height: 30px; font-size: 18px; line-height: 1; cursor: pointer; }
+.dback-step:disabled { opacity: .35; }
+/* the detail's own × is the back button's job on a phone */
+.is-item .detail .detail-close-btn { display: none; }
 
 /* Ver: your collection or one list (2026-10-25, commit 140) */
 .ver-row { position: relative; display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font: 14px "Public Sans", sans-serif; }

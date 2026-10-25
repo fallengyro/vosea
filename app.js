@@ -5780,7 +5780,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "166";
+  var VOSEA_BUILD = "167";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -22324,9 +22324,9 @@
     var was = panel.classList.contains("is-item");
     panel.classList.toggle("is-item", open);
     if (open) fsheetUi[tab].lastId = c.sel();
-    if (open && !was && fsheetIsPhone()) {
+    if (open && !was) { // (every width since 2026-10-26)
       setTimeout(function () { window.scrollTo({ top: 0, behavior: "instant" }); }, 30);
-    } else if (!open && was && fsheetIsPhone()) {
+    } else if (!open && was) {
       // back on the list, at the item you were last looking at
       var id = fsheetUi[tab].lastId;
       setTimeout(function () {
@@ -22656,7 +22656,7 @@
     var panel = c && document.getElementById(c.panel);
     var phone = fsheetIsPhone();
     var show = !!(c && panel && currentUser && !el.appScreen.hidden && currentTab === "col" && !panel.hidden &&
-      !panel.classList.contains("is-form") && !(phone && panel.classList.contains("is-item")) && !(phone && colTyping));
+      !panel.classList.contains("is-form") && !panel.classList.contains("is-item") && !(phone && colTyping));
     if (show) {
       var txt = t(c.label), lab = colFab.querySelector(".col-fab-t");
       if (lab.textContent !== txt) lab.textContent = txt;
