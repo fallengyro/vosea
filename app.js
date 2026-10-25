@@ -1235,6 +1235,12 @@
       btn_import: "Importar a mi colección",
       settings_title: "Configuración",
       set_g_app: "La app",
+      fab_verb: "Verbo",
+      fab_word: "Palabra",
+      fab_phrase: "Frase",
+      fab_verb_aria: "Agregar un verbo",
+      fab_word_aria: "Agregar una palabra",
+      fab_phrase_aria: "Agregar una frase",
       set_g_practice: "Práctica",
       set_g_data: "Tus datos",
       set_g_adv: "Avanzado",
@@ -2567,6 +2573,12 @@
       btn_import: "Import to my collection",
       settings_title: "Settings",
       set_g_app: "The app",
+      fab_verb: "Verb",
+      fab_word: "Word",
+      fab_phrase: "Phrase",
+      fab_verb_aria: "Add a verb",
+      fab_word_aria: "Add a word",
+      fab_phrase_aria: "Add a phrase",
       set_g_practice: "Practice",
       set_g_data: "Your data",
       set_g_adv: "Advanced",
@@ -5764,7 +5776,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "164";
+  var VOSEA_BUILD = "165";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6704,8 +6716,7 @@
     el.form.hidden = false;
     el.toggleAdd.hidden = true;
     el.seedToolbarBtn.hidden = true;
-    el.fInfinitive.focus();
-    el.form.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    el.fInfinitive.focus({ preventScroll: true }); // the form is its own screen (2026-10-26)
   }
 
   function closeForm() {
@@ -7654,8 +7665,7 @@
     el.wordForm.hidden = false;
     el.toggleAddWord.hidden = true;
     el.seedWordsToolbarBtn.hidden = true;
-    el.wfWord.focus();
-    el.wordForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    el.wfWord.focus({ preventScroll: true });
   }
 
   function closeWordForm() {
@@ -7969,8 +7979,7 @@
     el.phraseForm.hidden = false;
     el.toggleAddPhrase.hidden = true;
     el.seedPhrasesToolbarBtn.hidden = true;
-    el.pfPhrase.focus();
-    el.phraseForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    el.pfPhrase.focus({ preventScroll: true });
   }
 
   function closePhraseForm() {
@@ -22587,6 +22596,113 @@
   })();
   window.voseaSearch = { terms: function () { return searchTerms.slice(); } }; // tests
   window.voseaFilters = { open: openFsheet, close: closeFsheet, status: itemProgressStatus }; // tests
+
+  // ================= Adding in Colección (2026-10-26) =================
+  // mason: with the list as the page, "+ Agregar palabra" at the bottom was
+  // out of reach ("you almost never reach it"). He picked a mix of the two
+  // mockups:
+  //   * the count + Practicar row sticks to the top of the screen as you
+  //     scroll (with a shadow once it's stuck);
+  //   * a floating "+ Palabra" (+ Verbo, + Frase) sits in the bottom corner
+  //     of each part. It hides while an item or the form is open on a phone,
+  //     and while you type (so it doesn't ride up on the keyboard);
+  //   * the form opens as its own screen, with "‹ Vocabulario" (or "‹ the
+  //     item" when editing) to go back, instead of under the whole list.
+  // The old bottom row is hidden: "Agregar filtrados a una lista" is in the
+  // Filtros sheet ("Agregar estas N a una lista").
+  var COL_ADD = {
+    verbs: { panel: "verbs-panel", form: el.form, detail: el.detail, open: function () { openForm("add"); }, cancel: function () { closeForm(); }, label: "fab_verb", aria: "fab_verb_aria", back: "nav_verbs", name: function () { return el.fInfinitive.value.trim(); } },
+    words: { panel: "words-panel", form: el.wordForm, detail: el.wordDetail, open: function () { openWordForm("add"); }, cancel: function () { closeWordForm(); }, label: "fab_word", aria: "fab_word_aria", back: "nav_words", name: function () { return el.wfWord.value.trim(); } },
+    phrases: { panel: "phrases-panel", form: el.phraseForm, detail: el.phraseDetail, open: function () { openPhraseForm("add"); }, cancel: function () { closePhraseForm(); }, label: "fab_phrase", aria: "fab_phrase_aria", back: "nav_phrases", name: function () { return el.pfPhrase.value.trim(); } }
+  };
+  var colFab = document.createElement("button");
+  colFab.type = "button"; colFab.className = "col-fab"; colFab.id = "col-fab"; colFab.hidden = true;
+  colFab.innerHTML = '<span class="col-fab-plus" aria-hidden="true">+</span><span class="col-fab-t"></span>';
+  el.appScreen.appendChild(colFab);
+  colFab.addEventListener("click", function () { var c = COL_ADD[colSeg]; if (c) c.open(); });
+  var colTyping = false;
+  function colIsField(x) { return !!(x && /^(INPUT|TEXTAREA|SELECT)$/.test(x.tagName) && x.type !== "checkbox" && x.type !== "radio" && x.type !== "button"); }
+  document.addEventListener("focusin", function (e) { colTyping = colIsField(e.target); colFabUpdate(); });
+  document.addEventListener("focusout", function () { setTimeout(function () { colTyping = colIsField(document.activeElement); colFabUpdate(); }, 0); });
+  function colFabUpdate() {
+    var c = COL_ADD[colSeg];
+    var panel = c && document.getElementById(c.panel);
+    var phone = fsheetIsPhone();
+    var show = !!(c && panel && currentUser && !el.appScreen.hidden && currentTab === "col" && !panel.hidden &&
+      !panel.classList.contains("is-form") && !(phone && panel.classList.contains("is-item")) && !(phone && colTyping));
+    if (show) {
+      var txt = t(c.label), lab = colFab.querySelector(".col-fab-t");
+      if (lab.textContent !== txt) lab.textContent = txt;
+      if (colFab.getAttribute("aria-label") !== t(c.aria)) colFab.setAttribute("aria-label", t(c.aria));
+    }
+    if (colFab.hidden !== !show) colFab.hidden = !show;
+    if (document.body.classList.contains("has-col-fab") !== show) document.body.classList.toggle("has-col-fab", show);
+  }
+  // the form as its own screen
+  Object.keys(COL_ADD).forEach(function (tab) {
+    var c = COL_ADD[tab], panel = document.getElementById(c.panel);
+    if (!panel || !c.form) return;
+    var back = document.createElement("div"); back.className = "fback";
+    var bb = document.createElement("button"); bb.type = "button"; bb.className = "dback-btn fback-btn";
+    bb.appendChild(document.createTextNode("‹ ")); c.backLabel = document.createElement("span"); bb.appendChild(c.backLabel);
+    bb.addEventListener("click", function () { c.cancel(); });
+    back.appendChild(bb);
+    c.form.parentNode.insertBefore(back, c.form);
+  });
+  function colFormChanged() {
+    Object.keys(COL_ADD).forEach(function (tab) {
+      var c = COL_ADD[tab], panel = document.getElementById(c.panel);
+      if (!panel || !c.form) return;
+      var open = !c.form.hidden, was = panel.classList.contains("is-form");
+      if (open === was) return;
+      panel.classList.toggle("is-form", open);
+      if (open) {
+        c.y = colLastY; // where the list was (the last scroll event, before anything moved it)
+        var editing = !c.detail.hidden && c.name();
+        c.backLabel.textContent = editing ? c.name() : t(c.back);
+        window.scrollTo({ top: 0, behavior: "instant" });
+      } else if (c.detail.hidden) {
+        var y = c.y || 0;
+        setTimeout(function () { window.scrollTo({ top: y, behavior: "instant" }); }, 0);
+      }
+    });
+    colFabUpdate();
+  }
+  if (window.MutationObserver) {
+    var colMo = new MutationObserver(function () { colFormChanged(); });
+    Object.keys(COL_ADD).forEach(function (tab) {
+      var c = COL_ADD[tab], panel = document.getElementById(c.panel);
+      if (c.form) colMo.observe(c.form, { attributes: true, attributeFilter: ["hidden"] });
+      if (c.detail) colMo.observe(c.detail, { attributes: true, attributeFilter: ["hidden"] });
+      if (panel) colMo.observe(panel, { attributes: true, attributeFilter: ["hidden"] });
+    });
+    colMo.observe(el.appScreen, { attributes: true, attributeFilter: ["hidden"] });
+    if (el.colPanel) colMo.observe(el.colPanel, { attributes: true, attributeFilter: ["hidden"] });
+  }
+  var colSetMainTab = setMainTab;
+  setMainTab = function () { var r = colSetMainTab.apply(this, arguments); colFabUpdate(); return r; };
+  var colRenderSeg = renderColSeg;
+  renderColSeg = function () { var r = colRenderSeg.apply(this, arguments); colFabUpdate(); return r; };
+  // the count + Practicar row: a shadow once it's stuck to the top
+  var colLastY = window.scrollY;
+  window.addEventListener("scroll", function () {
+    var anyForm = Object.keys(COL_ADD).some(function (k) { var pn = document.getElementById(COL_ADD[k].panel); return pn && pn.classList.contains("is-form"); });
+    if (!anyForm) colLastY = window.scrollY;
+  }, { passive: true });
+  var colStuckRaf = 0;
+  function colStuckCheck() {
+    colStuckRaf = 0;
+    ["verbs", "words", "phrases"].forEach(function (tab) {
+      var ui = fsheetUi[tab];
+      if (!ui || !ui.sum || ui.sum.hidden) return;
+      var r = ui.sum.getBoundingClientRect();
+      var stuck = r.height > 0 && r.top <= 0.5 && window.scrollY > 0;
+      if (ui.sum.classList.contains("is-stuck") !== stuck) ui.sum.classList.toggle("is-stuck", stuck);
+    });
+  }
+  window.addEventListener("scroll", function () { if (!colStuckRaf) colStuckRaf = requestAnimationFrame(colStuckCheck); }, { passive: true });
+  window.addEventListener("resize", colFabUpdate);
+  colFabUpdate();
 
   el.flashSrcVerbs.addEventListener("change", function () {
     activeFlashSources.verbs = el.flashSrcVerbs.checked;
