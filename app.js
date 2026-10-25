@@ -5784,7 +5784,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "168";
+  var VOSEA_BUILD = "169";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21774,6 +21774,8 @@
   el.escVoiceOverlay.addEventListener("click", function (e) { if (e.target === el.escVoiceOverlay) closeEscVoicePicker(); });
   el.usageRefresh.addEventListener("click", function () { refreshUsage(); refreshR2(); if (!(elState.run && elState.run.running)) refreshEleven(); });
   el.usageClose.addEventListener("click", closeUsage);
+  var usageX = document.getElementById("usage-x");
+  if (usageX) usageX.addEventListener("click", closeUsage);
   el.acctMenuLogout.addEventListener("click", function () {
     closeAcctMenu();
     pushBeforeSignOut().then(function () { supabaseClient.auth.signOut(); });

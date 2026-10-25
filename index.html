@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="168">
+<meta name="vosea-build" content="169">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1404,7 +1404,12 @@
 
 <div class="modal-overlay" id="usage-overlay" hidden>
   <div class="modal-card modal-card-wide usage-card">
-    <h3 data-i18n="usage_title">Uso del mes</h3>
+    <!-- × in the corner (2026-10-26, mason: the window is long and Cerrar is
+         at the bottom). The header row stays at the top while you scroll. -->
+    <div class="modal-head">
+      <h3 data-i18n="usage_title">Uso del mes</h3>
+      <button type="button" class="modal-x" id="usage-x" data-i18n-aria-label="close" aria-label="Cerrar">×</button>
+    </div>
     <p class="usage-updated" id="usage-updated" role="status" aria-live="polite"></p>
     <div class="usage-body" id="usage-body"></div>
     <div class="usage-diag" id="usage-diag"></div>

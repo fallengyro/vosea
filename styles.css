@@ -3174,3 +3174,11 @@ body.has-col-fab #verbs-panel, body.has-col-fab #words-panel, body.has-col-fab #
 .col-sum-top { display: none; margin-left: auto; align-items: center; gap: 4px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 7px 12px; font: 600 13px "Public Sans", sans-serif; cursor: pointer; }
 .col-sum-top-ico { font-size: 14px; line-height: 1; }
 .col-sum.is-stuck .col-sum-top { display: inline-flex; }
+
+/* A modal's header row with × in the corner, kept at the top while the card
+   scrolls (the Uso window, 2026-10-26) */
+.modal-head { position: sticky; top: -22px; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: -22px -22px 12px; padding: 16px 14px 10px 22px; background: var(--paper); border-radius: 12px 12px 0 0; }
+.modal-head h3 { margin: 0; }
+.modal-x { flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; background: none; color: var(--ink-soft); font-size: 26px; line-height: 1; cursor: pointer; }
+.modal-x:hover { background: var(--paper-sunken); color: var(--ink); }
