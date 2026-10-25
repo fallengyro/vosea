@@ -238,6 +238,13 @@
       chip_group_transitivity: "Transitividad",
       chip_group_flags: "Marcas",
       fbar_btn: "Filtros",
+      ver_lab: "Ver:",
+      ver_all: "Toda tu colección",
+      ver_custom: "Varias listas",
+      ver_off: "apagada",
+      ver_turn_on: "Encender",
+      list_in_col: "en tu colección",
+      list_out_col: "apagada",
       fbar_remove: "Sacar {what}",
       fbar_n_of: "{n} de {total} {what}",
       fbar_pos: "{i} de {n}",
@@ -1549,6 +1556,13 @@
       chip_group_transitivity: "Transitivity",
       chip_group_flags: "Flags",
       fbar_btn: "Filters",
+      ver_lab: "Show:",
+      ver_all: "Your whole collection",
+      ver_custom: "Several lists",
+      ver_off: "off",
+      ver_turn_on: "Turn on",
+      list_in_col: "in your collection",
+      list_out_col: "off",
       fbar_remove: "Remove {what}",
       fbar_n_of: "{n} of {total} {what}",
       fbar_pos: "{i} of {n}",
@@ -5676,7 +5690,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "157";
+  var VOSEA_BUILD = "158";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6004,14 +6018,7 @@
       if (!chip || !containerEl.contains(chip)) return;
       var facet = chip.getAttribute("data-facet");
       var value = chip.getAttribute("data-value");
-      // In the Filtros sheet (commit 139) a tap shows or hides, by the
-      // sheet's Mostrar solo / Ocultar switch; elsewhere it still cycles.
-      var mode = containerEl.__chipMode, st = activeFilters[facet];
-      if (mode && st) {
-        var side = mode === "hide" ? "exclude" : "include", other = mode === "hide" ? "include" : "exclude";
-        if (st[side].has(value)) st[side].delete(value);
-        else { st[other].delete(value); st[side].add(value); }
-      } else cycleFacetValue(activeFilters, facet, value);
+      cycleFacetValue(activeFilters, facet, value);
       refreshChipVisuals(containerEl, activeFilters);
       clearBtnEl.hidden = !anyFilterActive(activeFilters);
       saveFilters(storageKey, activeFilters);
@@ -19938,7 +19945,7 @@
     var count = document.createElement("span");
     count.className = "def";
     count.textContent = (l.data.role !== "owner" ? t("list_role_line", { role: listRoleLabel(l.data.role), owner: l.data.ownerLabel || "?" }) + " · " : "") +
-      listMetaText(l.data.itemCount || 0);
+      listMetaText(l.data.itemCount || 0) + (liveListsOk ? " · " + t(l.data.enabled ? "list_in_col" : "list_out_col") : "");
     btn.appendChild(count);
     btn.addEventListener("click", function () {
       if (selectedListId === l.id) { selectedListId = null; el.listDetail.hidden = true; }
@@ -19948,23 +19955,6 @@
 
     if (liveListsOk) wrap.appendChild(onoffButton(l, "list-onoff"));
 
-    // The same tri-state control as the Listas picker modal's rows
-    // (renderListFilterRows above): neutral -> include -> exclude ->
-    // neutral. It updates the filter in place and leaves you on Listas.
-    var toggleBtn = document.createElement("button");
-    toggleBtn.type = "button";
-    toggleBtn.className = "list-row-filter-toggle state-" + chipVisualState(sharedListFilter, "list", l.id);
-    toggleBtn.setAttribute("aria-label", t("btn_filter_to_list") + " — " + l.data.name);
-    var glyph = document.createElement("span");
-    glyph.className = "state-glyph";
-    toggleBtn.appendChild(glyph);
-    toggleBtn.addEventListener("click", function () {
-      cycleFacetValue(sharedListFilter, "list", l.id);
-      saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
-      toggleBtn.className = "list-row-filter-toggle state-" + chipVisualState(sharedListFilter, "list", l.id);
-      ["verbs", "words", "phrases"].forEach(function (tab) { updateListsTrigger(tab); rerenderTab(tab); });
-    });
-    wrap.appendChild(toggleBtn);
     li.appendChild(wrap);
     return li;
   }
@@ -21780,8 +21770,9 @@
   //   * the filter chips live in a sheet behind one "Filtros" button (with
   //     the number of filters on); what you picked shows under the search as
   //     chips you take off with ×;
-  //   * in the sheet, "Mostrar solo" / "Ocultar" instead of tapping a chip
-  //     twice to exclude it;
+  //   * (commit 140: mason kept tap / tap twice to include / exclude, with
+  //     include in green; the Mostrar solo / Ocultar switch was dropped, and
+  //     lists moved to the "Ver" choice above the search)
   //   * "Agregar estas N a una lista" moves into the sheet;
   //   * a Progreso group: sabido, me cuestan (missed in the last 14 days and
   //     not learned yet), nuevas (never practiced);
@@ -21837,7 +21828,7 @@
   function fsheetCount(tab) {
     var c = fsheetConf(tab), n = 0;
     Object.keys(c.active).forEach(function (f) { n += c.active[f].include.size + c.active[f].exclude.size; });
-    return n + sharedListFilter.list.include.size + sharedListFilter.list.exclude.size;
+    return n;
   }
   function fsheetChipLabel(c, facet, value) {
     var chip = c.filtersEl.querySelector('.chip[data-facet="' + facet + '"][data-value="' + (window.CSS && CSS.escape ? CSS.escape(value) : value) + '"]');
@@ -21876,34 +21867,7 @@
         });
       });
     });
-    ["include", "exclude"].forEach(function (side) {
-      sharedListFilter.list[side].forEach(function (id) {
-        var l = allLists.find(function (x) { return x.id === id; });
-        pill(l ? l.data.name : "?", side === "exclude", function () {
-          sharedListFilter.list[side].delete(id);
-          saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
-          renderList(); renderWordList(); renderPhraseList();
-          FSHEET_TABS.forEach(updateListsTrigger);
-        });
-      });
-    });
     ui.pills.hidden = !ui.pills.children.length;
-    // the Listas group: one chip per list, same Mostrar solo / Ocultar
-    // as the rest (the old picker asked for a double tap)
-    if (ui.listChips) {
-      ui.listChips.innerHTML = "";
-      allLists.slice().sort(function (a, b) { return a.data.name.localeCompare(b.data.name); }).forEach(function (l) {
-        var b = document.createElement("button");
-        b.type = "button";
-        b.className = "chip";
-        b.setAttribute("data-list-id", l.id);
-        b.textContent = l.data.name;
-        b.classList.toggle("active", sharedListFilter.list.include.has(l.id));
-        b.classList.toggle("exclude", sharedListFilter.list.exclude.has(l.id));
-        ui.listChips.appendChild(b);
-      });
-      ui.listChips.parentNode.hidden = !allLists.length;
-    }
     // the count + Practicar row, and the sheet's buttons
     var shown = c.items().length, total = c.all().length;
     var noun = colPartLine(total, c.one, c.many).replace(/^\S+\s/, "");
@@ -21915,21 +21879,10 @@
     ui.add.hidden = !shown;
     // the item screen's ‹ › and "4 de 34"
     fsheetDetailNav(tab);
-  }
-  function fsheetSetMode(tab, mode) {
-    var ui = fsheetUi[tab], c = fsheetConf(tab);
-    c.filtersEl.__chipMode = mode;
-    ui.mode.querySelectorAll("button").forEach(function (b) {
-      var on = b.getAttribute("data-mode") === mode;
-      b.classList.toggle("on", on);
-      b.setAttribute("aria-pressed", on ? "true" : "false");
-    });
-    ui.note.textContent = t(mode === "hide" ? "fsheet_note_hide" : "fsheet_note_show");
-    c.filtersEl.classList.toggle("is-hide-mode", mode === "hide");
+    fsheetVerRefresh(tab);
   }
   function openFsheet(tab) {
     var ui = fsheetUi[tab]; if (!ui) return;
-    fsheetSetMode(tab, "show");
     fsheetRefresh(tab);
     ui.overlay.hidden = false;
     document.body.classList.add("fsheet-open");
@@ -21938,6 +21891,108 @@
     var ui = fsheetUi[tab]; if (!ui) return;
     ui.overlay.hidden = true;
     document.body.classList.remove("fsheet-open");
+  }
+
+  // ---- "Ver": which list you're looking at (2026-10-25, commit 140) ----
+  // mason: the lists at the bottom of the filters felt like "a pile" and it
+  // was unclear how they related to the Listas tab's on/off. Now Colección
+  // has one choice above the search, shared by the three parts: your whole
+  // collection, or one list. Lists you've turned off are marked "apagada",
+  // with Encender. The filter chips narrow within what you're seeing.
+  // (Same sharedListFilter underneath: a list = include just that one.)
+  function verLabel() {
+    var st = sharedListFilter.list;
+    if (!st.include.size && !st.exclude.size) return t("ver_all");
+    if (st.include.size === 1 && !st.exclude.size) {
+      var id = Array.from(st.include)[0];
+      var l = allLists.find(function (x) { return x.id === id; });
+      return l ? l.data.name : t("ver_all");
+    }
+    return t("ver_custom");
+  }
+  function verSet(id) {
+    var st = sharedListFilter.list;
+    st.include.clear(); st.exclude.clear();
+    if (id) st.include.add(id);
+    saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
+    renderList(); renderWordList(); renderPhraseList();
+    FSHEET_TABS.forEach(updateListsTrigger);
+  }
+  function fsheetVerRefresh(tab) {
+    var ui = fsheetUi[tab]; if (!ui || !ui.ver) return;
+    ui.ver.hidden = !allLists.length;
+    var scoped = sharedListFilter.list.include.size + sharedListFilter.list.exclude.size > 0;
+    ui.verName.textContent = verLabel();
+    ui.verBtn.classList.toggle("on", scoped);
+    ui.verClear.hidden = !scoped;
+    if (!ui.verMenu.hidden) fsheetVerMenu(tab);
+  }
+  function fsheetVerMenu(tab) {
+    var ui = fsheetUi[tab], m = ui.verMenu;
+    m.innerHTML = "";
+    var st = sharedListFilter.list;
+    function row(label, sub, on, off, pick, extra) {
+      var r = document.createElement("div");
+      r.className = "ver-opt" + (on ? " on" : "") + (off ? " is-off" : "");
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "ver-pick";
+      var nm = document.createElement("span"); nm.className = "ver-opt-name"; nm.textContent = label; b.appendChild(nm);
+      if (sub) { var sb = document.createElement("span"); sb.className = "ver-opt-sub"; sb.textContent = sub; b.appendChild(sb); }
+      b.addEventListener("click", pick);
+      r.appendChild(b);
+      if (extra) r.appendChild(extra);
+      m.appendChild(r);
+    }
+    var none = !st.include.size && !st.exclude.size;
+    row(t("ver_all"), null, none, false, function () { fsheetVerClose(tab); verSet(null); });
+    var lists = allLists.slice().sort(function (a, b) {
+      if (!!a.data.enabled !== !!b.data.enabled) return a.data.enabled ? -1 : 1;
+      return a.data.name.localeCompare(b.data.name);
+    });
+    lists.forEach(function (l) {
+      var on = st.include.size === 1 && !st.exclude.size && st.include.has(l.id);
+      var off = liveListsOk && !l.data.enabled;
+      var extra = null;
+      if (off) {
+        extra = document.createElement("button");
+        extra.type = "button";
+        extra.className = "ver-turn-on";
+        extra.textContent = t("ver_turn_on");
+        extra.addEventListener("click", function (e) { e.stopPropagation(); setListEnabled(l, true); });
+      }
+      row(l.data.name, listMetaText(l.data.itemCount || 0) + (off ? " · " + t("ver_off") : ""), on, off,
+        function () { fsheetVerClose(tab); verSet(l.id); }, extra);
+    });
+  }
+  function fsheetVerClose(tab) {
+    var ui = fsheetUi[tab]; if (!ui || !ui.verMenu) return;
+    ui.verMenu.hidden = true;
+    ui.verBtn.setAttribute("aria-expanded", "false");
+  }
+  function fsheetSetVer(tab) {
+    var ui = fsheetUi[tab], c = fsheetConf(tab);
+    var panel = document.getElementById(c.panel), card = document.querySelector("#" + c.panel + " > .search-card");
+    if (!panel || !card || ui.ver) return;
+    ui.ver = document.createElement("div"); ui.ver.className = "ver-row"; ui.ver.hidden = true;
+    var lab = document.createElement("span"); lab.className = "ver-lab"; lab.setAttribute("data-i18n", "ver_lab"); lab.textContent = t("ver_lab");
+    ui.verBtn = document.createElement("button"); ui.verBtn.type = "button"; ui.verBtn.className = "ver-btn"; ui.verBtn.id = tab + "-ver-btn";
+    ui.verBtn.setAttribute("aria-haspopup", "true"); ui.verBtn.setAttribute("aria-expanded", "false");
+    ui.verName = document.createElement("span"); ui.verName.className = "ver-name";
+    ui.verBtn.appendChild(ui.verName); ui.verBtn.appendChild(document.createTextNode(" ▾"));
+    ui.verClear = document.createElement("button"); ui.verClear.type = "button"; ui.verClear.className = "ver-clear"; ui.verClear.textContent = "×";
+    ui.verClear.setAttribute("aria-label", t("ver_all"));
+    ui.verClear.addEventListener("click", function () { verSet(null); });
+    ui.verMenu = document.createElement("div"); ui.verMenu.className = "ver-menu"; ui.verMenu.hidden = true; ui.verMenu.setAttribute("role", "menu");
+    ui.verBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (ui.verMenu.hidden) { fsheetVerMenu(tab); ui.verMenu.hidden = false; ui.verBtn.setAttribute("aria-expanded", "true"); }
+      else fsheetVerClose(tab);
+    });
+    ui.ver.appendChild(lab); ui.ver.appendChild(ui.verBtn); ui.ver.appendChild(ui.verClear); ui.ver.appendChild(ui.verMenu);
+    panel.insertBefore(ui.ver, card);
+    document.addEventListener("click", function (e) { if (!ui.verMenu.hidden && !ui.ver.contains(e.target)) fsheetVerClose(tab); });
+    fsheetVerRefresh(tab);
   }
 
   // ---- an item as its own screen (phones) ----
@@ -22016,14 +22071,6 @@
       head.appendChild(x);
       sheet.appendChild(head);
       ui.sub = mk("p", "fsheet-sub"); sheet.appendChild(ui.sub);
-      ui.mode = mk("div", "fsheet-mode");
-      [["show", "fsheet_show"], ["hide", "fsheet_hide"]].forEach(function (m) {
-        var b = mk("button", null, t(m[1])); b.type = "button"; b.setAttribute("data-mode", m[0]); b.setAttribute("data-i18n", m[1]);
-        b.addEventListener("click", function () { fsheetSetMode(tab, m[0]); });
-        ui.mode.appendChild(b);
-      });
-      sheet.appendChild(ui.mode);
-      ui.note = mk("p", "fsheet-note"); sheet.appendChild(ui.note);
       sheet.appendChild(c.filtersEl); // the chips themselves move in here
       // Progreso: sabido (moved from Marcas), me cuestan, nuevas
       var known = c.filtersEl.querySelector('.chip[data-facet="flag"][data-value="known"]');
@@ -22035,20 +22082,6 @@
         g.appendChild(b);
       });
       var listsGroup = c.filtersEl.querySelector('[id$="-lists-group"]');
-      if (listsGroup) {
-        ui.listChips = mk("span", "fsheet-listchips");
-        listsGroup.appendChild(ui.listChips);
-        ui.listChips.addEventListener("click", function (e) {
-          var chip = e.target.closest(".chip[data-list-id]");
-          if (!chip) return;
-          var id = chip.getAttribute("data-list-id"), st = sharedListFilter.list;
-          var side = c.filtersEl.__chipMode === "hide" ? "exclude" : "include", other = side === "include" ? "exclude" : "include";
-          if (st[side].has(id)) st[side].delete(id); else { st[other].delete(id); st[side].add(id); }
-          saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
-          renderList(); renderWordList(); renderPhraseList();
-          FSHEET_TABS.forEach(updateListsTrigger);
-        });
-      }
       c.filtersEl.insertBefore(g, listsGroup || c.filtersEl.querySelector(".chip-clear"));
       // a Marcas group left empty (Vocabulario only had Sabido) goes
       c.filtersEl.querySelectorAll(".chip-group").forEach(function (gr) {
@@ -22083,7 +22116,7 @@
       ui.back.appendChild(nav);
       c.detail.insertBefore(ui.back, c.detail.firstChild);
       new MutationObserver(function () { fsheetDetailChanged(tab); }).observe(c.detail, { attributes: true, attributeFilter: ["hidden"] });
-      fsheetSetMode(tab, "show");
+      fsheetSetVer(tab);
     });
     // keep the bar, the count row and the sheet in step with every render
     var rl = renderList, rw = renderWordList, rp = renderPhraseList;
