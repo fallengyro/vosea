@@ -238,6 +238,9 @@
       chip_group_transitivity: "Transitividad",
       chip_group_flags: "Marcas",
       fbar_btn: "Filtros",
+      sterm_none: "no está",
+      sterm_more: "otra…",
+      sterm_hint: "Separá con coma para buscar varias.",
       ver_lab: "Ver:",
       ver_all: "Toda tu colección",
       ver_custom: "Varias listas",
@@ -1556,6 +1559,9 @@
       chip_group_transitivity: "Transitivity",
       chip_group_flags: "Flags",
       fbar_btn: "Filters",
+      sterm_none: "not here",
+      sterm_more: "another…",
+      sterm_hint: "Separate with commas to search several.",
       ver_lab: "Show:",
       ver_all: "Your whole collection",
       ver_custom: "Several lists",
@@ -5690,7 +5696,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "158";
+  var VOSEA_BUILD = "160";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -5937,17 +5943,19 @@
   // for all of them.
   function clearBtnShouldShow(tab) {
     var search = tab === "verbs" ? el.search : tab === "words" ? el.wordSearch : el.phraseSearch;
-    return anyFilterActive(activeFiltersForTab(tab)) || !!(search && search.value.trim()) ||
+    return anyFilterActive(activeFiltersForTab(tab)) || !!(search && search.value.trim()) || (searchTerms && searchTerms.length > 0) ||
       sharedListFilter.list.include.size + sharedListFilter.list.exclude.size > 0;
   }
   function clearAllFiltersFor(tab) {
     var search = tab === "verbs" ? el.search : tab === "words" ? el.wordSearch : el.phraseSearch;
     if (search) search.value = "";
+    var hadTerms = searchTerms.length > 0;
+    searchTerms = [];
     var hadLists = sharedListFilter.list.include.size + sharedListFilter.list.exclude.size > 0;
     sharedListFilter.list.include.clear();
     sharedListFilter.list.exclude.clear();
     saveFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
-    if (hadLists) { renderList(); renderWordList(); renderPhraseList(); }
+    if (hadLists || hadTerms) { renderList(); renderWordList(); renderPhraseList(); }
     else rerenderTab(tab);
     ["verbs", "words", "phrases"].forEach(updateListsTrigger);
   }
@@ -6125,7 +6133,7 @@
 
   function renderList() {
     var q = norm(el.search.value);
-    var searchOk = function (v) { return !q || norm(v.data.infinitive || v.id).indexOf(q) !== -1; };
+    var searchOk = searchPredicate("verb", el.search.value);
     filtered = allVerbs.filter(function (v) { return searchOk(v) && verbPassesFacets(v, false); });
     var wouldShow = allVerbs.filter(function (v) { return searchOk(v) && verbPassesFacets(v, true); });
     filtered.sort(function (a, b) { return compareText(a.data.infinitive || a.id, b.data.infinitive || b.id); });
@@ -7469,7 +7477,7 @@
 
   function renderWordList() {
     var q = norm(el.wordSearch.value);
-    var searchOk = function (v) { return !q || norm(v.data.word || v.id).indexOf(q) !== -1; };
+    var searchOk = searchPredicate("word", el.wordSearch.value);
     filteredWords = allWords.filter(function (v) { return searchOk(v) && wordPassesFacets(v, false); });
     var wouldShow = allWords.filter(function (v) { return searchOk(v) && wordPassesFacets(v, true); });
     filteredWords.sort(function (a, b) { return compareText(a.data.word || a.id, b.data.word || b.id); });
@@ -7780,7 +7788,7 @@
 
   function renderPhraseList() {
     var q = norm(el.phraseSearch.value);
-    var searchOk = function (v) { return !q || norm(v.data.phrase || v.id).indexOf(q) !== -1; };
+    var searchOk = searchPredicate("phrase", el.phraseSearch.value);
     filteredPhrases = allPhrases.filter(function (v) { return searchOk(v) && phrasePassesFacets(v, false); });
     var wouldShow = allPhrases.filter(function (v) { return searchOk(v) && phrasePassesFacets(v, true); });
     filteredPhrases.sort(function (a, b) { return compareText(a.data.phrase || a.id, b.data.phrase || b.id); });
@@ -21547,7 +21555,7 @@
   migrateLegacyPerTabListFilters();
   loadFilters(SHARED_LIST_STORAGE_KEY, sharedListFilter);
 
-  el.search.addEventListener("input", renderList);
+  el.search.addEventListener("input", function () { renderList(); });
   loadFilters(filtersStorageKey("verbs"), activeVerbFilters);
   refreshChipVisuals(el.verbFilters, activeVerbFilters);
   el.verbFiltersClear.hidden = !anyFilterActive(activeVerbFilters);
@@ -21680,7 +21688,7 @@
   window.voseaGoTab = setMainTab;
   window.voseaOpenDeckBuilder = openDeckBuilder;
 
-  el.wordSearch.addEventListener("input", renderWordList);
+  el.wordSearch.addEventListener("input", function () { renderWordList(); });
   loadFilters(filtersStorageKey("words"), activeWordFilters);
   refreshChipVisuals(el.wordFilters, activeWordFilters);
   el.wordFiltersClear.hidden = !anyFilterActive(activeWordFilters);
@@ -21722,7 +21730,7 @@
     openListPicker("word", filteredWords.map(function (w) { return w.data; }));
   });
 
-  el.phraseSearch.addEventListener("input", renderPhraseList);
+  el.phraseSearch.addEventListener("input", function () { renderPhraseList(); });
   loadFilters(filtersStorageKey("phrases"), activePhraseFilters);
   refreshChipVisuals(el.phraseFilters, activePhraseFilters);
   el.phraseFiltersClear.hidden = !anyFilterActive(activePhraseFilters);
@@ -22129,6 +22137,189 @@
     });
     FSHEET_TABS.forEach(fsheetRefresh);
   })();
+  // ================= Searching several words (2026-10-25, commit 142) =================
+  // mason picked mockup 3B, without the lookup: type a comma (or Enter) and
+  // the word becomes a chip; the list shows anything that matches any chip,
+  // plus whatever is still being typed. A single word works exactly as
+  // before (a live "contains" search). The chips are shared by Verbos,
+  // Vocabulario and Frases, so a pasted mixed list works in each part; a
+  // chip says how it did in the part you're in:
+  //   "olla ✓"                 that exact word is here
+  //   "cuch… · 3"              a start of word, 3 matches here
+  //   "pago → pagar"           (Verbos) a conjugated form of a verb you have
+  //   "pago → pagar · Verbos"  not here, but in another part (tap to go there)
+  //   "mesa · no está"         nowhere in your collection
+  // A chip matches the start of the item or of any of its words (so "a"
+  // alone doesn't match everything), and for verbs any conjugated form.
+  var searchTerms = [];
+  var searchTermShow = {}; // normalized -> as typed (accents kept)
+  var verbFormCache = new WeakMap();
+  function verbFormSet(d) {
+    var set = verbFormCache.get(d);
+    if (set) return set;
+    set = {};
+    (function walk(x) {
+      if (!x) return;
+      if (typeof x === "string") {
+        var n = norm(x); if (!n) return;
+        set[n] = true;
+        n.split(/\s+/).forEach(function (w) { if (w) set[w] = true; }); // "me levanto" → "levanto" too
+        return;
+      }
+      if (typeof x === "object") Object.keys(x).forEach(function (k) { walk(x[k]); });
+    })(d.forms);
+    verbFormCache.set(d, set);
+    return set;
+  }
+  function searchItemText(kind, v) { return kind === "verb" ? (v.data.infinitive || v.id) : kind === "word" ? (v.data.word || v.id) : (v.data.phrase || v.id); }
+  // "", "start" (start of the item or a word in it), "form" (a verb form)
+  function termMatchKind(kind, v, txt, t) {
+    if (txt.indexOf(t) === 0) return "start";
+    var words = txt.split(/[\s¿?¡!.,;:'"«»()\/-]+/);
+    for (var i = 1; i < words.length; i++) if (words[i].indexOf(t) === 0) return "start";
+    if (kind === "verb" && v.data && verbFormSet(v.data)[t]) return "form";
+    return "";
+  }
+  function searchPredicate(kind, live) {
+    var q = norm(live || "");
+    var terms = searchTerms || [];
+    if (!terms.length) return function (v) { return !q || norm(searchItemText(kind, v)).indexOf(q) !== -1; };
+    return function (v) {
+      var txt = norm(searchItemText(kind, v));
+      if (q && txt.indexOf(q) !== -1) return true;
+      for (var i = 0; i < terms.length; i++) if (termMatchKind(kind, v, txt, terms[i])) return true;
+      return false;
+    };
+  }
+  var STERM_PARTS = [
+    { tab: "verbs", kind: "verb", items: function () { return allVerbs; }, label: "nav_verbs" },
+    { tab: "words", kind: "word", items: function () { return allWords; }, label: "nav_words" },
+    { tab: "phrases", kind: "phrase", items: function () { return allPhrases; }, label: "nav_phrases" }];
+  // How a term did in one part: { n, exact, form }
+  function termStats(part, t) {
+    var out = { n: 0, exact: false, form: null };
+    part.items().forEach(function (v) {
+      var txt = norm(searchItemText(part.kind, v));
+      var m = termMatchKind(part.kind, v, txt, t);
+      if (!m) return;
+      out.n++;
+      if (txt === t) out.exact = true;
+      if (m === "form" && !out.form) out.form = searchItemText(part.kind, v);
+    });
+    return out;
+  }
+  function stermInput(tab) { return tab === "verbs" ? el.search : tab === "words" ? el.wordSearch : el.phraseSearch; }
+  function stermRerender() { renderList(); renderWordList(); renderPhraseList(); }
+  function stermAdd(raw) {
+    var added = false;
+    String(raw || "").split(/[,;\n\r\t]+/).forEach(function (p) {
+      var t = norm(p);
+      if (!t || searchTerms.indexOf(t) !== -1) return;
+      searchTerms.push(t); searchTermShow[t] = p.trim().toLowerCase(); added = true;
+    });
+    return added;
+  }
+  function stermRender(tab) {
+    var box = stermInput(tab) && stermInput(tab).closest(".search-box");
+    if (!box) return;
+    var wrap = box.querySelector(".sterms");
+    if (!wrap) { wrap = document.createElement("div"); wrap.className = "sterms"; box.insertBefore(wrap, box.firstChild); }
+    wrap.innerHTML = "";
+    box.classList.toggle("has-terms", searchTerms.length > 0);
+    var inp0 = stermInput(tab);
+    if (inp0.dataset.ph == null) inp0.dataset.ph = inp0.getAttribute("placeholder") || "";
+    inp0.setAttribute("placeholder", searchTerms.length ? t("sterm_more") : (inp0.getAttribute("data-i18n-placeholder") ? t(inp0.getAttribute("data-i18n-placeholder")) : inp0.dataset.ph));
+    var here = STERM_PARTS.filter(function (x) { return x.tab === tab; })[0];
+    searchTerms.forEach(function (term) {
+      var st = termStats(here, term);
+      var shown = searchTermShow[term] || term;
+      var chip = document.createElement("span");
+      var label, cls, goTo = null;
+      if (st.n) {
+        cls = "ok";
+        label = st.exact ? shown + " ✓" : st.form && st.n === 1 ? shown + " → " + st.form : shown + "… · " + st.n;
+      } else {
+        var elsewhere = null;
+        STERM_PARTS.forEach(function (o) {
+          if (elsewhere || o.tab === tab) return;
+          var os = termStats(o, term);
+          if (os.n) elsewhere = { part: o, name: os.exact ? term : os.form || null, n: os.n };
+        });
+        if (elsewhere) {
+          cls = "away";
+          label = shown + (elsewhere.name && elsewhere.name !== term ? " → " + elsewhere.name : "") + " · " + t(elsewhere.part.label);
+          goTo = elsewhere.part.tab;
+        } else {
+          cls = "none";
+          label = shown + " · " + t("sterm_none");
+        }
+      }
+      chip.className = "sterm " + cls;
+      var lb = document.createElement(goTo ? "button" : "span");
+      if (goTo) { lb.type = "button"; lb.addEventListener("click", function () { setMainTab(goTo); }); }
+      lb.className = "sterm-lab";
+      lb.textContent = label;
+      chip.appendChild(lb);
+      var x = document.createElement("button");
+      x.type = "button";
+      x.className = "sterm-x";
+      x.textContent = "×";
+      x.setAttribute("aria-label", t("fbar_remove", { what: shown }));
+      x.addEventListener("click", function () {
+        searchTerms = searchTerms.filter(function (y) { return y !== term; });
+        stermRerender();
+        stermInput(tab).focus();
+      });
+      chip.appendChild(x);
+      wrap.appendChild(chip);
+    });
+    var hint = box.parentNode.querySelector(".sterm-hint");
+    if (!hint) { hint = document.createElement("p"); hint.className = "sterm-hint"; box.parentNode.insertBefore(hint, box.nextSibling); }
+    hint.textContent = t("sterm_hint");
+    hint.hidden = !(stermInput(tab).value.trim() && !searchTerms.length);
+  }
+  (function wireSearchTerms() {
+    STERM_PARTS.forEach(function (part) {
+      var inp = stermInput(part.tab);
+      if (!inp) return;
+      inp.setAttribute("enterkeyhint", "search");
+      function commitFrom(value, keepLast) {
+        var parts = String(value).split(/[,;\n\r\t]+/);
+        var rest = keepLast ? parts.pop() : "";
+        if (stermAdd(parts.join(","))) { inp.value = rest; stermRerender(); return true; }
+        if (keepLast) { inp.value = rest; }
+        return false;
+      }
+      inp.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === ",") {
+          if (!inp.value.trim()) { if (e.key === "Enter") e.preventDefault(); return; }
+          e.preventDefault();
+          if (stermAdd(inp.value)) { inp.value = ""; stermRerender(); }
+          else { inp.value = ""; stermRerender(); }
+        } else if (e.key === "Backspace" && !inp.value && searchTerms.length) {
+          searchTerms.pop();
+          stermRerender();
+        }
+      });
+      // phones (no "," key event) and pasted lists
+      inp.addEventListener("input", function () {
+        if (/[,;\n\r\t]/.test(inp.value)) commitFrom(inp.value, true) || stermRerender();
+      });
+      inp.addEventListener("paste", function (e) {
+        var txt = (e.clipboardData || window.clipboardData) && (e.clipboardData || window.clipboardData).getData("text");
+        if (!txt || !/[,;\n\r\t]/.test(txt)) return;
+        e.preventDefault();
+        stermAdd((inp.value ? inp.value + "," : "") + txt);
+        inp.value = "";
+        stermRerender();
+      });
+    });
+    var rl = renderList, rw = renderWordList, rp = renderPhraseList;
+    renderList = function () { var r = rl.apply(this, arguments); stermRender("verbs"); return r; };
+    renderWordList = function () { var r = rw.apply(this, arguments); stermRender("words"); return r; };
+    renderPhraseList = function () { var r = rp.apply(this, arguments); stermRender("phrases"); return r; };
+  })();
+  window.voseaSearch = { terms: function () { return searchTerms.slice(); } }; // tests
   window.voseaFilters = { open: openFsheet, close: closeFsheet, status: itemProgressStatus }; // tests
 
   el.flashSrcVerbs.addEventListener("change", function () {

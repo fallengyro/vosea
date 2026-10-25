@@ -3036,3 +3036,18 @@ body.fsheet-open { overflow: hidden; }
 .ver-opt-sub { font-size: 12px; color: var(--ink-soft); }
 .ver-opt.is-off .ver-opt-name { color: var(--ink-soft); }
 .ver-turn-on { flex: 0 0 auto; border: 1px solid var(--line); background: var(--paper); color: var(--accent); border-radius: 999px; padding: 5px 10px; font: 600 12.5px "Public Sans", sans-serif; margin-right: 6px; cursor: pointer; }
+
+/* Searching several words: chips in the search box (2026-10-25, commit 142) */
+.search-box.has-terms { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border-bottom: 2px solid var(--ink); padding: 4px 64px 6px 0; }
+.search-box.has-terms input { flex: 1 1 90px; width: auto; min-width: 80px; border-bottom: 0; padding: 4px 2px; }
+.search-box.has-terms .count { bottom: 12px; }
+.sterms { display: contents; }
+.sterm { display: inline-flex; align-items: center; gap: 2px; border-radius: 999px; padding: 3px 4px 3px 10px; font: 600 13px "Public Sans", sans-serif; border: 1px solid var(--line); background: var(--paper); color: var(--ink); max-width: 100%; }
+.sterm.ok { border-color: var(--teal); color: var(--teal); background: var(--teal-soft); }
+.sterm.away { border-color: var(--teal); color: var(--teal); background: var(--paper); }
+.sterm.none { border-style: dashed; color: var(--ink-soft); }
+.sterm-lab { border: 0; background: none; color: inherit; font: inherit; padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+button.sterm-lab { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.sterm-x { border: 0; background: none; color: inherit; opacity: .75; font-size: 15px; line-height: 1; padding: 0 5px; cursor: pointer; }
+.sterm-hint { margin: 2px 2px 4px; font-size: 12px; color: var(--ink-soft); }
+.sterm-hint[hidden] { display: none; }
