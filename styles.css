@@ -25,6 +25,8 @@
     --teal-soft: #FCEBB4;
     --danger: #B23A3A;
     --flag: #74ACDF;
+    --sun: #F6B40E;
+    --sun-edge: #D99A00;
     --shadow: rgba(19, 37, 58, 0.14);
   }
   @media (prefers-color-scheme: dark) {
@@ -46,6 +48,8 @@
       --teal-soft: #3A2F12;
       --danger: #E88A84;
       --flag: #74ACDF;
+      --sun: #F2C14E;
+      --sun-edge: #F2C14E;
       --shadow: rgba(0, 0, 0, 0.45);
     }
   }
@@ -67,6 +71,8 @@
     --teal-soft: #3A2F12;
     --danger: #E88A84;
     --flag: #74ACDF;
+    --sun: #F2C14E;
+    --sun-edge: #F2C14E;
     --shadow: rgba(0, 0, 0, 0.45);
   }
 
@@ -2142,9 +2148,12 @@
   .play-racha-goal.is-met { color: var(--accent-deep); font-weight: 600; }
   .play-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 12px 0 10px; text-align: center; font-size: 11px; color: var(--ink-soft); }
   .play-day i { display: block; height: 26px; border-radius: 8px; margin-bottom: 3px; background: var(--paper-sunken); }
-  .play-day i.on { background: var(--accent); }
+  /* (2026-10-26, mason: "make your successful review days filled gold … just
+     enough so that it's clear that it is flag colors") a day you met the
+     goal is the Sol de Mayo; today keeps its celeste outline */
+  .play-day i.on { background: var(--sun); box-shadow: inset 0 0 0 1px var(--sun-edge); }
   .play-day i.today { background: color-mix(in srgb, var(--accent) 22%, var(--paper-sunken)); outline: 2px solid var(--accent); outline-offset: -2px; }
-  .play-day i.on.today { background: var(--accent); }
+  .play-day i.on.today { background: var(--sun); box-shadow: none; }
   .play-day i.free { background: repeating-linear-gradient(45deg, var(--paper-sunken) 0 4px, color-mix(in srgb, var(--accent) 30%, var(--paper-sunken)) 4px 8px); }
   .play-track { height: 6px; margin: 2px 0 9px; }
   .play-next { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 12px; line-height: 1.4; }
