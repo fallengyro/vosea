@@ -975,7 +975,14 @@
       usage_failed: "No se pudo leer: {what}",
       usage_source_vosea: "Azure no publica este número para este recurso: es lo que contó voseá.",
       warm_title: "Audio por adelantado",
-      warm_intro: "Para cuando conectes un recurso de Speech pago (S0) por un rato, como el 10 de octubre: genera ahora el audio que la app va a pedir igual, y queda guardado para siempre. Los pasos están en la guía del proyecto. Hoy la app usa el recurso gratis (F0): si lo corrés así, se para solo en el primer audio nuevo.",
+      warm_intro: "Genera ahora el audio que la app va a pedir igual, y queda guardado para siempre. Con el recurso gratis (F0) usa solo la parte del mes gratis que elijas, y nunca pasa la línea de reserva. Con un S0 conectado por un rato (la guía del proyecto), no toca el mes gratis.",
+      warm_slice_label: "Del mes gratis, usar hasta",
+      warm_free_room: "Este mes van {used} de {free} caracteres; la reserva empieza en {line}. Esta vez, hasta {budget}.",
+      warm_free_full: "Este mes ya se llegó a la línea de reserva ({line} de {free}): no queda lugar para generar con el gratis hasta que se renueve.",
+      warm_free_wait: "Esperá a que cargue el uso del mes (arriba) para saber cuánto queda.",
+      warm_budget_progress: "Del mes gratis: {used} de {budget} caracteres",
+      warm_budget_hit: "Llegó a lo que elegiste ({used} de {budget} caracteres). Lo que falta se puede hacer otro día: lo hecho no se repite.",
+      warm_paid_progress: "Con el S0: {used} caracteres, que no tocan el mes gratis",
       warm_calc: "Ver qué se puede generar",
       warm_set_coleccion: "Tu colección (verbos, palabras, frases)",
       warm_set_album: "Álbum",
@@ -992,7 +999,7 @@
       warm_total: "Total: {n} clips · {chars} caracteres · ~{mb} MB",
       warm_storage_ok: "Archivos: {now} MB ahora → ~{after} MB después (de {free} MB gratis).",
       warm_storage_over: "Eso dejaría los archivos en ~{after} MB, demasiado cerca de los {free} MB gratis. Sacá algún grupo.",
-      warm_paid_note: "Lo que ya está guardado no se vuelve a generar. Usalo solo mientras la función tts usa el recurso S0: si hace un clip nuevo con el gratis (F0), se para sola.",
+      warm_paid_note: "Lo que ya está guardado no se vuelve a generar ni se cuenta.",
       warm_start: "Generar",
       warm_stop: "Parar",
       warm_progress: "Generando: {done} de {total} · {miss} nuevos · {hit} ya estaban · {err} errores",
@@ -2320,7 +2327,14 @@
       usage_failed: "Couldn't read: {what}",
       usage_source_vosea: "Azure doesn't publish this number for this resource: it's what voseá counted.",
       warm_title: "Make audio ahead of time",
-      warm_intro: "For when you connect a paid (S0) Speech resource for a while, as on October 10: it makes the audio the app will ask for anyway, now, and keeps it for good. The steps are in the project guide. Right now the app uses the free (F0) resource: if you run it like this, it stops at the first new clip.",
+      warm_intro: "Makes the audio the app will ask for anyway, now, and keeps it for good. On the free (F0) resource it uses only the part of the free month you choose, and never goes past the reserve line. With an S0 connected for a while (see the project guide), it doesn't touch the free month.",
+      warm_slice_label: "From the free month, use up to",
+      warm_free_room: "This month: {used} of {free} characters; the reserve starts at {line}. This time, up to {budget}.",
+      warm_free_full: "This month has reached the reserve line ({line} of {free}): there's no room left to generate on the free resource until it resets.",
+      warm_free_wait: "Wait for this month's usage (above) to load, to know how much is left.",
+      warm_budget_progress: "From the free month: {used} of {budget} characters",
+      warm_budget_hit: "Reached what you chose ({used} of {budget} characters). The rest can be done another day: nothing is made twice.",
+      warm_paid_progress: "On the S0: {used} characters, outside the free month",
       warm_calc: "See what can be made",
       warm_set_coleccion: "Your collection (verbs, words, phrases)",
       warm_set_album: "Album",
@@ -2337,7 +2351,7 @@
       warm_total: "Total: {n} clips · {chars} characters · ~{mb} MB",
       warm_storage_ok: "Files: {now} MB now → ~{after} MB after (of {free} MB free).",
       warm_storage_over: "That would put files at ~{after} MB, too close to the {free} MB free. Leave out a group.",
-      warm_paid_note: "Clips that are already saved aren't made again. Only use this while the tts function runs on the S0 resource: if it makes a new clip on the free one (F0), it stops by itself.",
+      warm_paid_note: "Clips that are already saved aren't made again and don't count.",
       warm_start: "Start",
       warm_stop: "Stop",
       warm_progress: "Working: {done} of {total} · {miss} new · {hit} already saved · {err} errors",
@@ -3640,6 +3654,23 @@
   var warmPicked = { escenas: true, oraciones: true, sonidos: true, numeros: true, precios: true, hora: true, fechas: true, album: true, coleccion: true, miles: false };
   var WARM_BYTES_PER_CHAR = 560; // 64 kbit/s mp3 ≈ 8 KB a second; Spanish TTS ≈ 14 characters a second
   var WARM_CONCURRENCY = 4;
+  // On the free (F0) resource, a slice of the free month at a time
+  // (2026-10-26, mason: "i still want to be able to warm up, i just need to
+  // be a little more careful about usage"). A run never goes past the
+  // reserve line (75%), so normal use always keeps the last part.
+  var WARM_SLICES = [25000, 50000, 100000];
+  var WARM_SLICE_KEY = "vosea-warm-slice";
+  var warmSlice = 50000;
+  try { var savedSlice = Number(localStorage.getItem(WARM_SLICE_KEY)); if (WARM_SLICES.indexOf(savedSlice) !== -1) warmSlice = savedSlice; } catch (e) {}
+  // this month's free text-to-speech: used, free, the reserve line, room left
+  function warmFreeRoom() {
+    var ts = usageData && usageData.azure && usageData.azure.speech && usageData.azure.speech.tts_chars;
+    if (!ts || !(ts.free > 0)) return null;
+    var pct = (usageData.limits && usageData.limits.reserve_pct) || 75;
+    var line = Math.floor(ts.free * pct / 100), used = Math.max(0, Number(ts.used) || 0);
+    var room = Math.max(0, line - used);
+    return { used: used, free: ts.free, line: line, room: room, budget: Math.min(warmSlice, room) };
+  }
 
   function warmCardTexts(c, out) {
     if (!c) return;
@@ -3952,10 +3983,27 @@
       sec.appendChild(uNode("p", tooBig ? "usage-problem" : "usage-note", t(tooBig ? "warm_storage_over" : "warm_storage_ok", { now: usageMb(st.used), after: usageMb(after), free: progNum(st.free / 1048576) })));
     }
     sec.appendChild(uNode("p", "usage-note", t("warm_paid_note")));
+    // how much of the free month this run may use
+    var sl = uNode("div", "warm-slice");
+    sl.appendChild(uNode("span", "warm-slice-label", t("warm_slice_label")));
+    var stg = uNode("div", "lang-toggle warm-slices");
+    WARM_SLICES.forEach(function (n) {
+      var b = uNode("button", "lang-option" + (warmSlice === n ? " active" : ""), progNum(n));
+      b.type = "button"; b.disabled = running;
+      b.setAttribute("aria-pressed", warmSlice === n ? "true" : "false");
+      b.addEventListener("click", function () { warmSlice = n; try { localStorage.setItem(WARM_SLICE_KEY, String(n)); } catch (e) {} renderWarm(); });
+      stg.appendChild(b);
+    });
+    sl.appendChild(stg);
+    sec.appendChild(sl);
+    var fr = warmFreeRoom();
+    if (!fr) sec.appendChild(uNode("p", "usage-note", t("warm_free_wait")));
+    else if (!fr.room) sec.appendChild(uNode("p", "usage-problem", t("warm_free_full", { line: progNum(fr.line), free: progNum(fr.free) })));
+    else sec.appendChild(uNode("p", "usage-note warm-room", t("warm_free_room", { used: progNum(fr.used), free: progNum(fr.free), line: progNum(fr.line), budget: progNum(fr.budget) })));
     var actions = uNode("div", "form-actions");
     var go = uNode("button", "btn-primary", running ? t("warm_stop") : t("warm_start"));
     go.type = "button";
-    go.disabled = !running && (!tot.clips || tooBig);
+    go.disabled = !running && (!tot.clips || tooBig || !fr || !fr.budget);
     go.addEventListener("click", function () { if (running) { warmRun.stop = true; go.disabled = true; } else startWarm(); });
     actions.appendChild(go);
     sec.appendChild(actions);
@@ -3963,6 +4011,9 @@
       var r = warmRun;
       sec.appendChild(uNode("p", "warm-progress", t(r.running ? "warm_progress" : (r.stopped ? "warm_stopped" : "warm_done"), {
         done: progNum(r.done), total: progNum(r.total), miss: progNum(r.miss), hit: progNum(r.hit), err: progNum(r.error) })));
+      if (r.paid) sec.appendChild(uNode("p", "warm-progress", t("warm_paid_progress", { used: progNum(r.paidChars) })));
+      else sec.appendChild(uNode("p", "warm-progress warm-budget", t("warm_budget_progress", { used: progNum(r.freeChars), budget: progNum(r.budget) })));
+      if (r.budgetHit && !r.running) sec.appendChild(uNode("p", "usage-note", t("warm_budget_hit", { used: progNum(r.freeChars), budget: progNum(r.budget) })));
       if (r.lastError) sec.appendChild(uNode("p", "usage-problem", r.lastError));
     }
     sec.appendChild(cbox);
@@ -4365,14 +4416,28 @@
       voices.forEach(function (voice) { s.texts.forEach(function (text) { jobs.push({ text: text, voice: voice }); }); });
     });
     if (!jobs.length) return;
-    var run = warmRun = { total: jobs.length, done: 0, hit: 0, miss: 0, error: 0, fails: 0, stop: false, running: true, stopped: false, lastError: "" };
+    var fr = warmFreeRoom();
+    if (!fr || !fr.budget) return;
+    var run = warmRun = { total: jobs.length, done: 0, hit: 0, miss: 0, error: 0, fails: 0, stop: false, running: true, stopped: false, lastError: "",
+      budget: fr.budget, freeChars: 0, pending: 0, paid: false, paidChars: 0, budgetHit: false };
     warmTtsCacheRunning = true;
     var next = 0, paint = 0;
     function repaint(force) { var now = Date.now(); if (force || now - paint > 400) { paint = now; renderWarm(); } }
     function worker() {
       if (run.stop || next >= jobs.length) return Promise.resolve();
-      var job = jobs[next++];
+      var job = jobs[next];
+      // on the free resource: this clip could be new, so it must fit in
+      // what's left of the slice (clips already saved give their share back)
+      var len = job.text.length;
+      if (!run.paid && run.freeChars + run.pending + len > run.budget) {
+        if (run.pending > 0) return new Promise(function (ok) { setTimeout(ok, 150); }).then(worker); // wait for the ones in flight
+        run.stop = true; run.budgetHit = true;
+        return Promise.resolve();
+      }
+      next++;
+      run.pending += len;
       return supabaseClient.functions.invoke("tts", { body: { text: job.text, voice: job.voice } }).then(function (res) {
+        run.pending -= len; len = 0;
         if (res.error || !res.data || !res.data.url) {
           // the function's own answer says what Azure said (status + detail)
           var ctx = res.error && res.error.context, st = ctx && ctx.status;
@@ -4387,13 +4452,18 @@
         }
         // made, but nowhere to put it: more would only be paid for and lost
         if (res.data.stored === false) { run.error++; run.stop = true; run.lastError = t("warm_not_stored", { msg: res.data.store_error || "" }); return; }
-        // a new clip made on the free resource would use up the free month
-        if (!res.data.cached && !res.data.paid) { run.miss++; run.stop = true; run.lastError = t("warm_not_paid"); return; }
+        // a new clip: on the S0 it's outside the free month; on the free
+        // resource it counts toward this run's slice
+        if (!res.data.cached) {
+          if (res.data.paid) { run.paid = true; run.paidChars += job.text.length; }
+          else run.freeChars += job.text.length;
+        }
         if (res.data.cached) run.hit++; else run.miss++;
         run.fails = 0;
         // remembered on this device too, so these play without asking again
         ttsUrlMemo[job.voice + "\u0000" + job.text] = res.data.url;
       }).catch(function (e) {
+        if (len) { run.pending -= len; len = 0; }
         run.error++; run.fails++;
         run.lastError = t("warm_error", { text: job.text, msg: (e && e.message) || "" });
         if (run.fails >= 12) run.stop = true; // something is wrong (key, quota): don't keep hammering
@@ -4411,8 +4481,9 @@
       run.stopped = run.stop && run.done < run.total;
       warmTtsCacheRunning = false;
       saveTtsUrlMemo();
-      console.log("[warm] " + run.done + "/" + run.total + " — " + run.miss + " made, " + run.hit + " already there, " + run.error + " errors");
+      console.log("[warm] " + run.done + "/" + run.total + " — " + run.miss + " made, " + run.hit + " already there, " + run.error + " errors, " + run.freeChars + " free chars");
       repaint(true);
+      if (run.miss) refreshUsage(); // the month's meter, with what was just made
     });
   }
 
@@ -5790,7 +5861,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "174";
+  var VOSEA_BUILD = "175";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
