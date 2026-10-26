@@ -1,71 +1,73 @@
-  /* --accent/--accent-deep moved off blue (was #3B4B9E / #28336E) to a
-     plum/berry hue, chosen after reviewing several directions side by side —
-     the old indigo-blue read as generic "corporate SaaS" (too close to
-     Facebook's brand blue) and, worse, its dark-mode periwinkle counterpart
-     (#8B95E8) looked washed out/muddy against the near-black background.
-     Plum keeps the same warm-cool crossover feel as the rest of the palette
-     (brick/gold warm, teal cool) without colliding with any of them, and
-     the dark-mode value (#D191CE) carries more chroma than the old one so
-     it doesn't go flat next to --paper. Every other token is unchanged. */
+  /* Palette (2026-10-26, mason: "maybe it was a missed opportunity to not
+     use the Argentine colors"): A · Celeste y blanco in light mode, Noche
+     celeste in dark mode (mockups paleta-argentina*.png). Celeste for the
+     buttons and links (a shade deeper than the flag's #74ACDF so white text
+     and small links stay readable: 4.6:1 or more on every panel), the Sol
+     de Mayo gold for picks (--teal: include chips, highlights) and for
+     Sabido (--gold), and the flag's own celeste as --flag, the line under
+     the header. The purple / plum before it is in git history. */
   :root {
     color-scheme: light;
-    --paper: #EDEFF5;
-    --paper-raised: #E1E5F0;
-    --paper-sunken: #D5DAEA;
-    --ink: #1C2333;
-    --ink-soft: #565F7A;
-    --line: #C2C9DE;
-    --accent: #6E3B72;
-    --accent-deep: #4B2350;
-    --accent-ink: #F5F6FC;
+    --paper: #F5F9FD;
+    --paper-raised: #E9F2FB;
+    --paper-sunken: #DAE8F6;
+    --ink: #13253A;
+    --ink-soft: #4D6279;
+    --line: #C3D6EB;
+    --accent: #2269A8;
+    --accent-deep: #1B5A94;
+    --accent-ink: #FFFFFF;
     --brick: #8C4A20;
-    --brick-soft: #F0DCC8;
-    --gold: #6B5316;
-    --gold-soft: #F0E4C0;
-    --teal: #146B63;
-    --teal-soft: #D2EEEA;
-    --danger: #A23A3A;
-    --shadow: rgba(28, 35, 51, 0.14);
+    --brick-soft: #F3DFCB;
+    --gold: #7A5600;
+    --gold-soft: #FCEBB4;
+    --teal: #8F5E00;
+    --teal-soft: #FCEBB4;
+    --danger: #B23A3A;
+    --flag: #74ACDF;
+    --shadow: rgba(19, 37, 58, 0.14);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #12141F;
-      --paper-raised: #171A2C;
-      --paper-sunken: #0D0E18;
-      --ink: #E7E9F5;
-      --ink-soft: #A7ADC9;
-      --line: #2C3049;
-      --accent: #D191CE;
-      --accent-deep: #E6AEE0;
-      --accent-ink: #11132A;
+      --paper: #0E1726;
+      --paper-raised: #14223A;
+      --paper-sunken: #0A111D;
+      --ink: #E8F1FB;
+      --ink-soft: #9FB4CC;
+      --line: #25385A;
+      --accent: #7DB8E8;
+      --accent-deep: #8EC4EE;
+      --accent-ink: #0E1726;
       --brick: #E19A6C;
       --brick-soft: #3A2A1D;
-      --gold: #DDBE72;
-      --gold-soft: #35301C;
-      --teal: #6FE0D0;
-      --teal-soft: #12302C;
-      --danger: #E28881;
-      --shadow: rgba(0, 0, 0, 0.4);
+      --gold: #F2C14E;
+      --gold-soft: #3A2F12;
+      --teal: #F2C14E;
+      --teal-soft: #3A2F12;
+      --danger: #E88A84;
+      --flag: #74ACDF;
+      --shadow: rgba(0, 0, 0, 0.45);
     }
   }
   :root[data-theme="dark"] {
-    --paper: #12141F;
-    --paper-raised: #171A2C;
-    --paper-sunken: #0D0E18;
-    --ink: #E7E9F5;
-    --ink-soft: #A7ADC9;
-    --line: #2C3049;
-    --accent: #D191CE;
-    --accent-deep: #E6AEE0;
-    --accent-ink: #11132A;
+    --paper: #0E1726;
+    --paper-raised: #14223A;
+    --paper-sunken: #0A111D;
+    --ink: #E8F1FB;
+    --ink-soft: #9FB4CC;
+    --line: #25385A;
+    --accent: #7DB8E8;
+    --accent-deep: #8EC4EE;
+    --accent-ink: #0E1726;
     --brick: #E19A6C;
     --brick-soft: #3A2A1D;
-    --gold: #DDBE72;
-    --gold-soft: #35301C;
-    --teal: #6FE0D0;
-    --teal-soft: #12302C;
-    --danger: #E28881;
-    --shadow: rgba(0, 0, 0, 0.4);
+    --gold: #F2C14E;
+    --gold-soft: #3A2F12;
+    --teal: #F2C14E;
+    --teal-soft: #3A2F12;
+    --danger: #E88A84;
+    --flag: #74ACDF;
+    --shadow: rgba(0, 0, 0, 0.45);
   }
 
   * { box-sizing: border-box; }
@@ -107,7 +109,7 @@
   .wrap { max-width: 760px; margin: 0 auto; }
 
   header.masthead {
-    border-bottom: 2px solid var(--ink);
+    border-bottom: 2px solid var(--flag);
     padding-bottom: 16px;
     margin-bottom: 24px;
     display: flex;
@@ -130,10 +132,9 @@
     font-size: clamp(28px, 6vw, 40px);
     margin: 0;
     letter-spacing: -0.01em;
-    /* matches the app icon's wordmark color (#6E3B72 light / #D191CE dark,
-       sampled straight from icons/icon-192.png) rather than inheriting the
-       page's near-black --ink, so the title reads as the same mark as the
-       icon instead of plain heading text. */
+    /* matches the app icon's wordmark color (the celeste --accent; the icon
+       was recolored with the palette, 2026-10-26) rather than the page's
+       --ink, so the title reads as the same mark as the icon. */
     color: var(--accent);
   }
   header.masthead .tag {
@@ -263,7 +264,7 @@
      so it visibly ran longer than the header's line above — this keeps
      the two lines the same length while the tab row itself still scrolls
      edge-to-edge underneath. */
-  .main-tabs { margin-bottom: 22px; border-bottom: 2px solid var(--ink); }
+  .main-tabs { margin-bottom: 22px; border-bottom: 2px solid var(--flag); }
   .main-tabs-scroll {
     display: flex; gap: 4px;
     /* overflow-x: auto on its own makes the browser implicitly treat
@@ -1274,20 +1275,20 @@
      descendant (front/back faces, badges) inherits the inverted palette
      while the page around the card stays in your actual theme. */
   .flash-card[data-theme="dark"] {
-    --paper: #12141F; --paper-raised: #171A2C; --paper-sunken: #0D0E18;
-    --ink: #E7E9F5; --ink-soft: #A7ADC9; --line: #2C3049;
-    --accent: #D191CE; --accent-deep: #E6AEE0; --accent-ink: #11132A;
-    --brick: #E19A6C; --brick-soft: #3A2A1D; --gold: #DDBE72; --gold-soft: #35301C;
-    --teal: #6FE0D0; --teal-soft: #12302C;
-    --danger: #E28881; --shadow: rgba(0, 0, 0, 0.4);
+    --paper: #0F1D2E; --paper-raised: #142842; --paper-sunken: #0A1522;
+    --ink: #EAF3FC; --ink-soft: #A9C1DA; --line: #27425F;
+    --accent: #8EC4EE; --accent-deep: #B6D9F5; --accent-ink: #0F1D2E;
+    --brick: #E19A6C; --brick-soft: #3A2A1D; --gold: #F4C24A; --gold-soft: #3A3014;
+    --teal: #F4C24A; --teal-soft: #3A3014;
+    --danger: #E88A84; --flag: #74ACDF; --shadow: rgba(0, 0, 0, 0.4);
   }
   .flash-card[data-theme="light"] {
-    --paper: #EDEFF5; --paper-raised: #E1E5F0; --paper-sunken: #D5DAEA;
-    --ink: #1C2333; --ink-soft: #565F7A; --line: #C2C9DE;
-    --accent: #6E3B72; --accent-deep: #4B2350; --accent-ink: #F5F6FC;
-    --brick: #8C4A20; --brick-soft: #F0DCC8; --gold: #6B5316; --gold-soft: #F0E4C0;
-    --teal: #146B63; --teal-soft: #D2EEEA;
-    --danger: #A23A3A; --shadow: rgba(28, 35, 51, 0.14);
+    --paper: #F5F9FD; --paper-raised: #E9F2FB; --paper-sunken: #DAE8F6;
+    --ink: #13253A; --ink-soft: #4D6279; --line: #C3D6EB;
+    --accent: #2269A8; --accent-deep: #1B5A94; --accent-ink: #FFFFFF;
+    --brick: #8C4A20; --brick-soft: #F3DFCB; --gold: #7A5600; --gold-soft: #FCEBB4;
+    --teal: #8F5E00; --teal-soft: #FCEBB4;
+    --danger: #B23A3A; --flag: #74ACDF; --shadow: rgba(19, 37, 58, 0.14);
   }
   .flash-card.flipped { transform: rotateY(180deg); }
   /* Used for one frame when jumping to a different card (next/prev), so the
