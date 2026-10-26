@@ -975,7 +975,7 @@
       usage_failed: "No se pudo leer: {what}",
       usage_source_vosea: "Azure no publica este número para este recurso: es lo que contó voseá.",
       warm_title: "Audio por adelantado",
-      warm_intro: "Con el recurso de Speech pago (S0) conectado, esto genera ahora el audio que la app va a pedir igual, y queda guardado para siempre. Dejá esta página abierta mientras corre.",
+      warm_intro: "Para cuando conectes un recurso de Speech pago (S0) por un rato, como el 10 de octubre: genera ahora el audio que la app va a pedir igual, y queda guardado para siempre. Los pasos están en la guía del proyecto. Hoy la app usa el recurso gratis (F0): si lo corrés así, se para solo en el primer audio nuevo.",
       warm_calc: "Ver qué se puede generar",
       warm_set_coleccion: "Tu colección (verbos, palabras, frases)",
       warm_set_album: "Álbum",
@@ -2320,7 +2320,7 @@
       usage_failed: "Couldn't read: {what}",
       usage_source_vosea: "Azure doesn't publish this number for this resource: it's what voseá counted.",
       warm_title: "Make audio ahead of time",
-      warm_intro: "With the paid (S0) Speech resource connected, this makes the audio the app will ask for anyway, now, and keeps it for good. Keep this page open while it runs.",
+      warm_intro: "For when you connect a paid (S0) Speech resource for a while, as on October 10: it makes the audio the app will ask for anyway, now, and keeps it for good. The steps are in the project guide. Right now the app uses the free (F0) resource: if you run it like this, it stops at the first new clip.",
       warm_calc: "See what can be made",
       warm_set_coleccion: "Your collection (verbs, words, phrases)",
       warm_set_album: "Album",
@@ -5790,7 +5790,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "173";
+  var VOSEA_BUILD = "174";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
