@@ -5790,7 +5790,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "172";
+  var VOSEA_BUILD = "173";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -22450,6 +22450,40 @@
     var nx = items[i + d];
     if (nx) { c.select(nx.id); fsheetUi[tab].lastId = nx.id; fsheetDetailNav(tab); c.detail.scrollTop = 0; }
   }
+  // ---- one tap opens a row, on phones too (2026-10-26) ----
+  // mason, on his iPhone: "the first time I select, I have to select twice".
+  // With the list as the page, it's usually still gliding a little after a
+  // flick, and iOS spends the first tap stopping the glide instead of sending
+  // a click. So a short touch that doesn't move is handled here, on touchend:
+  // it opens the row right away (and the browser's own click is cancelled, so
+  // it doesn't open and close). A swipe (moved more than 10 px) still scrolls.
+  function rowTapFast(list) {
+    if (!list) return;
+    var t0 = null;
+    list.addEventListener("touchstart", function (e) {
+      if (e.touches.length !== 1) { t0 = null; return; }
+      var row = e.target.closest && e.target.closest(".card-row");
+      if (!row || !list.contains(row)) { t0 = null; return; }
+      t0 = { row: row, x: e.touches[0].clientX, y: e.touches[0].clientY, at: Date.now(), moved: false };
+    }, { passive: true });
+    list.addEventListener("touchmove", function (e) {
+      if (!t0) return;
+      var dx = e.touches[0].clientX - t0.x, dy = e.touches[0].clientY - t0.y;
+      if (dx * dx + dy * dy > 100) t0.moved = true;
+    }, { passive: true });
+    list.addEventListener("touchcancel", function () { t0 = null; }, { passive: true });
+    list.addEventListener("touchend", function (e) {
+      var t = t0; t0 = null;
+      if (!t || t.moved || Date.now() - t.at > 700) return;
+      var end = e.changedTouches && e.changedTouches[0];
+      var under = end && document.elementFromPoint(end.clientX, end.clientY);
+      if (!under || !t.row.contains(under)) return;
+      e.preventDefault();
+      t.row.click();
+    }, { passive: false });
+  }
+  [el.list, el.wordList, el.phraseList, el.topicList].forEach(rowTapFast);
+
   // ---- an item as a card over the list (2026-10-26) ----
   // On a phone it slides up from the bottom (like Armar el mazo), on desktop
   // it's a centered card. Cerrar, a tap on the dimmed list, Escape or a
