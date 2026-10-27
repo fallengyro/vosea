@@ -137,6 +137,7 @@
       col_n_topics: "{n} temas",
       col_n_topics_one: "1 tema",
       hoy_k_practice: "Practicar",
+      hoy_review_label: "Repasar",
       hoy_k_learn: "Aprender",
       hoy_k_play: "Jugar",
       hoy_due_title: "{n} tarjetas para repasar",
@@ -1495,6 +1496,7 @@
       col_n_topics: "{n} topics",
       col_n_topics_one: "1 topic",
       hoy_k_practice: "Practice",
+      hoy_review_label: "Review",
       hoy_k_learn: "Learn",
       hoy_k_play: "Play",
       hoy_due_title: "{n} cards to review",
@@ -5861,7 +5863,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "183";
+  var VOSEA_BUILD = "184";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7278,9 +7280,29 @@
     var build = function () { openDeckBuilder(); };
     if (due.length) {
       var missed = due.filter(function (u) { return u.last && u.last.grade === "otra"; }).length;
-      box.appendChild(hoyCard({ id: "hoy-practice", kicker: t("hoy_k_practice"), title: t(due.length === 1 ? "hoy_due_title_one" : "hoy_due_title", { n: due.length }),
-        sub: missed ? t("prog_due_missed", { n: missed }) : t("hoy_due_sub"), btn: t("prog_due_btn"), onGo: function () { startPracticeDeck(cardsForUnits(due)); },
-        link: t("hoy_build"), onLink: build }));
+      // (2026-10-27) mason: "it's not intuitive that launching flash cards
+      // from the hoy tab will use the read/listen/speak settings you picked
+      // last time". The modes are the start buttons (mockup C): tap one to
+      // review in it; the one you used last is the filled one.
+      var dueCard = hoyCard({ id: "hoy-practice", kicker: t("hoy_k_practice"), title: t(due.length === 1 ? "hoy_due_title_one" : "hoy_due_title", { n: due.length }),
+        sub: missed ? t("prog_due_missed", { n: missed }) : t("hoy_due_sub"), link: t("hoy_build"), onLink: build });
+      var cur = effectiveFlashMode();
+      var modesRow = progEl("div", "hoy-modes");
+      [["leer", "flash_mode_read"], ["escuchar", "flash_mode_listen"], ["hablar", "flash_mode_speak"]].forEach(function (m) {
+        var mb = progButton(t(m[1]), m[0] === cur, function () {
+          setFlashMode(m[0]);
+          startPracticeDeck(cardsForUnits(due));
+        });
+        mb.classList.add("hoy-mode");
+        mb.setAttribute("data-mode", m[0]);
+        if ((m[0] !== "leer" && quietMode) || (m[0] === "hablar" && !hablarSupported())) mb.disabled = true;
+        modesRow.appendChild(mb);
+      });
+      var dueRow = dueCard.querySelector(".hoy-row");
+      dueCard.insertBefore(progEl("p", "flash-group-label hoy-modes-label", t("hoy_review_label")), dueRow);
+      dueCard.insertBefore(modesRow, dueRow);
+      if (quietMode) dueCard.insertBefore(progEl("p", "flash-mode-note hoy-modes-note", t("flash_mode_note_quiet")), dueRow);
+      box.appendChild(dueCard);
     } else if (nMine && P.events.length) {
       box.appendChild(hoyCard({ id: "hoy-practice", kicker: t("hoy_k_practice"), title: t("hoy_nodue_title"), sub: t("hoy_nodue_sub"), btn: t("hoy_build_btn"), onGo: build }));
     } else if (nMine) {

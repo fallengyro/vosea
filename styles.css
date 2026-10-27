@@ -3,8 +3,9 @@
      celeste in dark mode (mockups paleta-argentina*.png). Celeste for the
      buttons and links (a shade deeper than the flag's #74ACDF so white text
      and small links stay readable: 4.6:1 or more on every panel), the Sol
-     de Mayo gold for picks (--teal: include chips, highlights) and for
-     Sabido (--gold), and the flag's own celeste as --flag, the line under
+     de Mayo gold for Sabido (--gold) and the met days on Hoy (--sun),
+     green for Bien and the include chips (--teal; mason 2026-10-27:
+     "green is an important success cue"), and the flag's own celeste as --flag, the line under
      the header. The purple / plum before it is in git history. */
   :root {
     color-scheme: light;
@@ -21,8 +22,8 @@
     --brick-soft: #F3DFCB;
     --gold: #7A5600;
     --gold-soft: #FCEBB4;
-    --teal: #8F5E00;
-    --teal-soft: #FCEBB4;
+    --teal: #146B63;
+    --teal-soft: #D2EEEA;
     --danger: #B23A3A;
     --flag: #74ACDF;
     --sun: #F9DD8C;   /* the sun on the home-screen icon (icon-180/192) */
@@ -44,8 +45,8 @@
       --brick-soft: #3A2A1D;
       --gold: #F2C14E;
       --gold-soft: #3A2F12;
-      --teal: #F2C14E;
-      --teal-soft: #3A2F12;
+      --teal: #6FE0D0;
+      --teal-soft: #12302C;
       --danger: #E88A84;
       --flag: #74ACDF;
       --sun: #F9DD8C;
@@ -67,8 +68,8 @@
     --brick-soft: #3A2A1D;
     --gold: #F2C14E;
     --gold-soft: #3A2F12;
-    --teal: #F2C14E;
-    --teal-soft: #3A2F12;
+    --teal: #6FE0D0;
+    --teal-soft: #12302C;
     --danger: #E88A84;
     --flag: #74ACDF;
     --sun: #F9DD8C;
@@ -1285,7 +1286,7 @@
     --ink: #EAF3FC; --ink-soft: #A9C1DA; --line: #27425F;
     --accent: #8EC4EE; --accent-deep: #B6D9F5; --accent-ink: #0F1D2E;
     --brick: #E19A6C; --brick-soft: #3A2A1D; --gold: #F4C24A; --gold-soft: #3A3014;
-    --teal: #F4C24A; --teal-soft: #3A3014;
+    --teal: #6FE0D0; --teal-soft: #12302C;
     --danger: #E88A84; --flag: #74ACDF; --shadow: rgba(0, 0, 0, 0.4);
   }
   .flash-card[data-theme="light"] {
@@ -1293,7 +1294,7 @@
     --ink: #13253A; --ink-soft: #4D6279; --line: #C3D6EB;
     --accent: #2269A8; --accent-deep: #1B5A94; --accent-ink: #FFFFFF;
     --brick: #8C4A20; --brick-soft: #F3DFCB; --gold: #7A5600; --gold-soft: #FCEBB4;
-    --teal: #8F5E00; --teal-soft: #FCEBB4;
+    --teal: #146B63; --teal-soft: #D2EEEA;
     --danger: #B23A3A; --flag: #74ACDF; --shadow: rgba(19, 37, 58, 0.14);
   }
   .flash-card.flipped { transform: rotateY(180deg); }
@@ -2633,6 +2634,12 @@
   .hoy-title { font-family: "Fraunces", Georgia, serif; font-size: 20px; font-weight: 600; margin: 4px 0 2px; line-height: 1.2; color: var(--ink); }
   .hoy-sub { font-size: 13.5px; color: var(--ink-soft); margin: 0; line-height: 1.4; }
   .hoy-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+  /* Hoy's review card: the modes are the start buttons (2026-10-27, mockup C) */
+  .hoy-modes-label { margin: 14px 0 6px; }
+  .hoy-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 4px; }
+  .hoy-modes .hoy-mode { width: 100%; min-height: 44px; padding-left: 4px; padding-right: 4px; }
+  .hoy-modes .hoy-mode:disabled { opacity: .4; cursor: default; }
+  .hoy-modes-note { margin: 6px 0 0; }
   .hoy-link { background: none; border: 0; color: var(--accent); font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; padding: 0 2px; min-height: 44px; }
   .hoy-link:hover { color: var(--accent-deep); }
   .hoy-btn { min-height: 44px; }
