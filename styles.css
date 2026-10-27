@@ -25,8 +25,8 @@
     --teal-soft: #FCEBB4;
     --danger: #B23A3A;
     --flag: #74ACDF;
-    --sun: #F6B40E;
-    --sun-edge: #D99A00;
+    --sun: #F9DD8C;   /* the sun on the home-screen icon (icon-180/192) */
+    --sun-edge: #E9C25E;
     --shadow: rgba(19, 37, 58, 0.14);
   }
   @media (prefers-color-scheme: dark) {
@@ -48,8 +48,8 @@
       --teal-soft: #3A2F12;
       --danger: #E88A84;
       --flag: #74ACDF;
-      --sun: #F2C14E;
-      --sun-edge: #F2C14E;
+      --sun: #F9DD8C;
+      --sun-edge: #F9DD8C;
       --shadow: rgba(0, 0, 0, 0.45);
     }
   }
@@ -71,8 +71,8 @@
     --teal-soft: #3A2F12;
     --danger: #E88A84;
     --flag: #74ACDF;
-    --sun: #F2C14E;
-    --sun-edge: #F2C14E;
+    --sun: #F9DD8C;
+    --sun-edge: #F9DD8C;
     --shadow: rgba(0, 0, 0, 0.45);
   }
 
