@@ -4,13 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="177">
+<meta name="vosea-build" content="178">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.ico" sizes="any">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
+<!-- small sizes get their own drawing (the v on a sun); the 192 one is the
+     full icon, so it's labeled with its size and never picked for a tab -->
+<link rel="icon" href="icons/icon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="icons/icon-16.png" type="image/png" sizes="16x16">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 
 <!-- PWA: status bar / theme color, matched to --paper so the OS chrome
