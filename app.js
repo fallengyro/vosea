@@ -5861,7 +5861,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "179";
+  var VOSEA_BUILD = "183";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7132,7 +7132,40 @@
     el.deckOverlay.hidden = true;
     el.flashcardsPanel.hidden = true;
     document.body.classList.remove("deck-open");
+    var dc = el.deckOverlay.querySelector(".deck-card");
+    if (dc) { dc.style.transform = ""; dc.style.transition = ""; }
   }
+  // (2026-10-27) The sheet follows your finger down and closes past 90 px,
+  // like an item's card: from the top row, or anywhere once it's scrolled to
+  // the top. Phones only.
+  (function deckSwipe() {
+    var card = el.deckOverlay && el.deckOverlay.querySelector(".deck-card");
+    if (!card) return;
+    var head = card.querySelector(".deck-head");
+    var y0 = null, dy = 0;
+    function phone() { try { return window.matchMedia("(max-width: 600px)").matches; } catch (e) { return false; } }
+    card.addEventListener("touchstart", function (e) {
+      y0 = null; dy = 0;
+      if (!phone() || e.touches.length !== 1) return;
+      if (!(head && head.contains(e.target)) && card.scrollTop > 0) return;
+      y0 = e.touches[0].clientY;
+    }, { passive: true });
+    card.addEventListener("touchmove", function (e) {
+      if (y0 === null) return;
+      dy = e.touches[0].clientY - y0;
+      if (dy > 0 && ((head && head.contains(e.target)) || card.scrollTop <= 0)) { card.style.transition = "none"; card.style.transform = "translateY(" + dy + "px)"; }
+      else if (dy <= 0) { card.style.transform = ""; }
+    }, { passive: true });
+    function end() {
+      if (y0 === null) return;
+      card.style.transition = ""; card.style.transform = "";
+      var close = dy > 90;
+      y0 = null; dy = 0;
+      if (close) closeDeckBuilder();
+    }
+    card.addEventListener("touchend", end);
+    card.addEventListener("touchcancel", function () { y0 = null; dy = 0; card.style.transition = ""; card.style.transform = ""; });
+  })();
 
   // ---- Colección ----
   function colPartLine(n, one, many) { return t(n === 1 ? one : many, { n: n }); }
@@ -12739,7 +12772,7 @@
     ["presentarse", "A1"], ["pronombres", "A1"], ["articulos", "A1"], ["verbos", "A1"], ["irregulares", "A1"], ["presente", "A1"], ["hay-estar", "A1"],
     ["preguntas", "A1"], ["demostrativos", "A1"], ["gustar", "A1"], ["cuantos", "A1"], ["hay-que", "A1"],
     ["ir-a", "A1"], ["dia-a-dia", "A1"], ["comparativos", "A1"], ["se-impersonal", "A1"], ["ciudad", "A1"],
-    ["saber-poder", "A2"], ["gerundio", "A2"], ["preterito", "A2"], ["ya-todavia", "A2"],
+    ["saber-poder", "A2"], ["gerundio", "A2"], ["preterito", "A2"], ["ya-todavia", "A2"], ["empezar-terminar", "A2"],
     ["objeto-directo", "A2"], ["ser-estar", "A2"],
     ["imperfecto", "A2"], ["historia", "A2"],
     // Objeto indirecto and Me lo · se lo sit next to the imperative, as in
@@ -13013,7 +13046,7 @@
       { name: L("Tu día y tu barrio", "Your day and your neighborhood"), temas: ["hay-que", "ir-a", "dia-a-dia", "comparativos", "se-impersonal", "ciudad"] }
     ] },
     { lvl: "A2", title: L("Moverte solo", "Getting around on your own"), groups: [
-      { name: L("Lo que podés y lo que pasó", "What you can do and what happened"), temas: ["saber-poder", "gerundio", "preterito", "ya-todavia"] },
+      { name: L("Lo que podés y lo que pasó", "What you can do and what happened"), temas: ["saber-poder", "gerundio", "preterito", "ya-todavia", "empezar-terminar"] },
       { name: L("Lo y la · ser y estar", "Lo and la · ser and estar"), temas: ["objeto-directo", "ser-estar"] },
       { name: L("Antes y después", "Then and now"), temas: ["imperfecto", "historia"] },
       { name: L("Pedir: le, se lo, el imperativo", "Asking: le, se lo, the imperative"), temas: ["objeto-indirecto", "dobles", "imperativo"] },

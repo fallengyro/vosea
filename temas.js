@@ -4,6 +4,8 @@
 // 2026-10-17: every Tema brought to 50+ sentences and «Los verbos» added
 // (sources: Claude outputs/temas50/add/*.json, merged by temas50/merge.py;
 // new items take the next free id, so practice history keeps its keys).
+// 2026-10-27: «Empezar, seguir, terminar» added (estar por, empezar a, volver a,
+// dejar de…; source /home/claude/tema-fases/add/empezar-terminar.json).
 window.VOSEA_TEMAS = [
  {
   "id": "presentarse",
@@ -6702,7 +6704,7 @@ window.VOSEA_TEMAS = [
    "en": "What happened and is over: fui, hice, comiste."
   },
   "intro": {
-   "es": "El pretérito cuenta algo que pasó y terminó: ayer, el sábado, en 2019. En Buenos Aires se usa casi siempre donde en España dirían «he comido», también para lo que acaba de pasar: «¿Ya comiste?». Los verbos más comunes son irregulares: fui, hice, tuve, dije.",
+   "es": "El pretérito cuenta algo que pasó y terminó: ayer, el sábado, en 2019. En Buenos Aires se usa casi siempre donde en España dirían «he comido», también para lo que pasó recién: «¿Ya comiste?». Los verbos más comunes son irregulares: fui, hice, tuve, dije.",
    "en": "The preterite tells something that happened and is over: yesterday, on Saturday, in 2019. In Buenos Aires it's used almost everywhere Spain would say “he comido,” even for what just happened: “¿Ya comiste?” The most common verbs are irregular: fui, hice, tuve, dije."
   },
   "tag": {
@@ -6756,7 +6758,7 @@ window.VOSEA_TEMAS = [
     "ex": "Llegamos [hace] dos años. [El sábado] fuimos a la costa."
    },
    {
-    "f": "empezar a · dejar de · volver a · terminar de · ponerse a · acabar de + infinitivo",
+    "f": "empezar a · dejar de · volver a · terminar de · ponerse a + infinitivo · recién + pretérito",
     "ex": "[Empecé a] estudiar en marzo. [Dejé de] fumar."
    }
   ],
@@ -7030,9 +7032,9 @@ window.VOSEA_TEMAS = [
    {
     "id": "pt39",
     "part": "perifrasis",
-    "es": "[Acabo de] llegar.",
+    "es": "[Recién] llegué.",
     "en": "I just got here.",
-    "p": "acabar de + infinitivo = recién"
+    "p": "recién + pretérito"
    },
    {
     "id": "pt40",
@@ -7135,9 +7137,446 @@ window.VOSEA_TEMAS = [
    {
     "id": "pt54",
     "part": "perifrasis",
-    "es": "Mis viejos [acaban de] aterrizar en Ezeiza.",
+    "es": "Mis viejos [recién] aterrizaron en Ezeiza.",
     "en": "My parents just landed at Ezeiza.",
-    "p": "acabar de + infinitivo = recién"
+    "p": "recién + pretérito"
+   }
+  ]
+ },
+ {
+  "id": "empezar-terminar",
+  "name": {
+   "es": "Empezar, seguir, terminar",
+   "en": "Starting, going on, finishing"
+  },
+  "desc": {
+   "es": "Estar por, empezar a, volver a, dejar de: en qué momento de algo estás.",
+   "en": "Estar por, empezar a, volver a, dejar de: where you are in an action."
+  },
+  "intro": {
+   "es": "Estas frases dicen en qué momento de una acción estás: por empezar (estoy por salir, estoy a punto de salir), empezando (empecé a estudiar, me puse a cocinar), siguiendo o repitiendo (sigo trabajando, volví a llamar) o terminando (dejé de fumar, terminé de comer). Casi todas son un verbo conjugado, una preposición y el infinitivo. Y para algo que pasó hace un momento, acá se dice «recién»: recién llegué.",
+   "en": "These phrases say where you are in an action: about to start (estoy por salir, estoy a punto de salir), starting (empecé a estudiar, me puse a cocinar), going on or doing it again (sigo trabajando, volví a llamar), or finishing (dejé de fumar, terminé de comer). Most are a conjugated verb, a preposition, and the infinitive. And for something that happened a moment ago, people here say «recién»: recién llegué."
+  },
+  "tag": {
+   "es": "empezar a · dejar de",
+   "en": "empezar a · dejar de"
+  },
+  "fam": [
+   "presente",
+   "pasado"
+  ],
+  "parts": [
+   {
+    "key": "por-empezar",
+    "label": {
+     "es": "por empezar: estar por, a punto de",
+     "en": "about to: estar por, a punto de"
+    }
+   },
+   {
+    "key": "empezar",
+    "label": {
+     "es": "empezar a, ponerse a, largarse a",
+     "en": "starting: empezar a, ponerse a, largarse a"
+    }
+   },
+   {
+    "key": "seguir-volver",
+    "label": {
+     "es": "seguir y volver a",
+     "en": "going on and again: seguir, volver a"
+    }
+   },
+   {
+    "key": "dejar-terminar",
+    "label": {
+     "es": "dejar de, terminar de, recién",
+     "en": "stopping and just done: dejar de, terminar de, recién"
+    }
+   }
+  ],
+  "lesson": [
+   {
+    "f": "estar por + infinitivo = estar a punto de + infinitivo · está por llover",
+    "ex": "[Estoy por] salir. El partido [está a punto de] empezar."
+   },
+   {
+    "f": "empezar a · ponerse a + infinitivo · largarse a = de golpe (se largó a llover)",
+    "ex": "[Empecé a] estudiar en marzo. [Me puse a] cocinar."
+   },
+   {
+    "f": "volver a + infinitivo = otra vez · seguir + gerundio = todavía · seguir sin + infinitivo = todavía no",
+    "ex": "[Volví a] llamar. [Sigo sin] entender."
+   },
+   {
+    "f": "dejar de · parar de · terminar de + infinitivo · recién + pretérito = hace un momento",
+    "ex": "[Dejé de] fumar. [Recién] llegué."
+   }
+  ],
+  "items": [
+   {
+    "id": "et01",
+    "part": "por-empezar",
+    "es": "[Estoy por] salir, ¿necesitás algo?",
+    "en": "I'm about to head out. Do you need anything?",
+    "p": "estar por · yo"
+   },
+   {
+    "id": "et02",
+    "part": "por-empezar",
+    "es": "Apurate, que el subte [está por] cerrar las puertas.",
+    "en": "Hurry, the subway's about to close its doors.",
+    "p": "estar por · el subte"
+   },
+   {
+    "id": "et03",
+    "part": "por-empezar",
+    "es": "[Está por] llover: llevá paraguas.",
+    "en": "It's about to rain: take an umbrella.",
+    "p": "estar por · llover"
+   },
+   {
+    "id": "et04",
+    "part": "por-empezar",
+    "es": "[Estamos por] comer, ¿te quedás?",
+    "en": "We're about to eat. Are you staying?",
+    "p": "estar por · nosotros"
+   },
+   {
+    "id": "et05",
+    "part": "por-empezar",
+    "es": "El partido [está a punto de] empezar.",
+    "en": "The game is about to start.",
+    "p": "a punto de · el partido"
+   },
+   {
+    "id": "et06",
+    "part": "por-empezar",
+    "es": "[Estaba a punto de] llamarte.",
+    "en": "I was just about to call you.",
+    "p": "a punto de · yo · imperfecto"
+   },
+   {
+    "id": "et07",
+    "part": "por-empezar",
+    "es": "Mi hermana [está por] tener un bebé.",
+    "en": "My sister is about to have a baby.",
+    "p": "estar por · ella"
+   },
+   {
+    "id": "et08",
+    "part": "por-empezar",
+    "es": "¿[Estás por] salir? Te acompaño hasta la esquina.",
+    "en": "Are you about to leave? I'll walk you to the corner.",
+    "p": "estar por · vos"
+   },
+   {
+    "id": "et09",
+    "part": "por-empezar",
+    "es": "El colectivo [estaba por] arrancar y corrí.",
+    "en": "The bus was about to pull away, so I ran.",
+    "p": "estar por · imperfecto"
+   },
+   {
+    "id": "et10",
+    "part": "por-empezar",
+    "es": "[Están a punto de] cerrar la verdulería.",
+    "en": "They're about to close the produce store.",
+    "p": "a punto de · ellos"
+   },
+   {
+    "id": "et11",
+    "part": "por-empezar",
+    "es": "[Estuve a punto de] perder el tren.",
+    "en": "I came close to missing the train.",
+    "p": "a punto de · yo · pretérito"
+   },
+   {
+    "id": "et12",
+    "part": "por-empezar",
+    "es": "Sacá la pava, que el agua [está por] hervir.",
+    "en": "Take the kettle off, the water's about to boil.",
+    "p": "estar por · el agua"
+   },
+   {
+    "id": "et13",
+    "part": "por-empezar",
+    "es": "Los chicos [están por] llegar del colegio.",
+    "en": "The kids are about to get home from school.",
+    "p": "estar por · los chicos"
+   },
+   {
+    "id": "et14",
+    "part": "empezar",
+    "es": "[Empecé a] estudiar castellano el año pasado.",
+    "en": "I started studying Spanish last year.",
+    "p": "empezar a · yo · pretérito"
+   },
+   {
+    "id": "et15",
+    "part": "empezar",
+    "es": "¿Cuándo [empezás a] laburar en el lugar nuevo?",
+    "en": "When do you start working at the new place?",
+    "p": "empezar a · vos"
+   },
+   {
+    "id": "et16",
+    "part": "empezar",
+    "es": "El bebé ya [empezó a] caminar.",
+    "en": "The baby has started walking.",
+    "p": "empezar a · él · pretérito"
+   },
+   {
+    "id": "et17",
+    "part": "empezar",
+    "es": "[Me puse a] cocinar a las ocho.",
+    "en": "I started cooking at eight.",
+    "p": "ponerse a · yo · pretérito"
+   },
+   {
+    "id": "et18",
+    "part": "empezar",
+    "es": "Llegó a casa y [se puso a] mirar una serie.",
+    "en": "She got home and started watching a show.",
+    "p": "ponerse a · ella · pretérito"
+   },
+   {
+    "id": "et19",
+    "part": "empezar",
+    "es": "[Ponete a] estudiar, que el examen es el lunes.",
+    "en": "Get going on your studying, the test is on Monday.",
+    "p": "ponerse a · imperativo vos"
+   },
+   {
+    "id": "et20",
+    "part": "empezar",
+    "es": "Salimos del cine y [se largó a] llover.",
+    "en": "We came out of the movie theater and it started pouring.",
+    "p": "largarse a · llover"
+   },
+   {
+    "id": "et21",
+    "part": "empezar",
+    "es": "Cuando le conté, [se largó a] llorar.",
+    "en": "When I told her, she burst into tears.",
+    "p": "largarse a · ella"
+   },
+   {
+    "id": "et22",
+    "part": "empezar",
+    "es": "[Empezamos a] buscar departamento en Caballito.",
+    "en": "We started looking for an apartment in Caballito.",
+    "p": "empezar a · nosotros · pretérito"
+   },
+   {
+    "id": "et23",
+    "part": "empezar",
+    "es": "Este mes [empiezo a] ir al gimnasio.",
+    "en": "This month I'm starting to go to the gym.",
+    "p": "empezar a · yo"
+   },
+   {
+    "id": "et24",
+    "part": "empezar",
+    "es": "¿Ya [empezaste a] tomar mate?",
+    "en": "Have you started drinking mate yet?",
+    "p": "empezar a · vos · pretérito"
+   },
+   {
+    "id": "et25",
+    "part": "empezar",
+    "es": "Los vecinos [se pusieron a] cantar en el balcón.",
+    "en": "The neighbors started singing on the balcony.",
+    "p": "ponerse a · ellos · pretérito"
+   },
+   {
+    "id": "et26",
+    "part": "empezar",
+    "es": "Ya [empezó a] hacer frío a la noche.",
+    "en": "It's already started getting cold at night.",
+    "p": "empezar a · hacer frío"
+   },
+   {
+    "id": "et27",
+    "part": "seguir-volver",
+    "es": "[Volví a] llamar, pero no atendió nadie.",
+    "en": "I called again, but nobody answered.",
+    "p": "volver a · yo · pretérito"
+   },
+   {
+    "id": "et28",
+    "part": "seguir-volver",
+    "es": "¿Me lo [volvés a] explicar?",
+    "en": "Can you explain it to me again?",
+    "p": "volver a · vos"
+   },
+   {
+    "id": "et29",
+    "part": "seguir-volver",
+    "es": "No [vuelvo a] comprar en ese lugar.",
+    "en": "I'm not buying from that place again.",
+    "p": "volver a · yo"
+   },
+   {
+    "id": "et30",
+    "part": "seguir-volver",
+    "es": "Mañana [volvemos a] probar con el plomero.",
+    "en": "Tomorrow we'll try the plumber again.",
+    "p": "volver a · nosotros"
+   },
+   {
+    "id": "et31",
+    "part": "seguir-volver",
+    "es": "[Volvé a] intentar, vas a ver que sale.",
+    "en": "Try again, you'll see it works out.",
+    "p": "volver a · imperativo vos"
+   },
+   {
+    "id": "et32",
+    "part": "seguir-volver",
+    "es": "Después de diez años, [volvió a] vivir en Rosario.",
+    "en": "After ten years, he moved back to Rosario.",
+    "p": "volver a · él · pretérito"
+   },
+   {
+    "id": "et33",
+    "part": "seguir-volver",
+    "es": "[Sigo sin] entender qué me dijo.",
+    "en": "I still don't understand what he told me.",
+    "p": "seguir sin · yo"
+   },
+   {
+    "id": "et34",
+    "part": "seguir-volver",
+    "es": "El ascensor [sigue sin] andar.",
+    "en": "The elevator still isn't working.",
+    "p": "seguir sin · el ascensor"
+   },
+   {
+    "id": "et35",
+    "part": "seguir-volver",
+    "es": "[Seguís sin] contestarme los mensajes.",
+    "en": "You still haven't answered my messages.",
+    "p": "seguir sin · vos"
+   },
+   {
+    "id": "et36",
+    "part": "seguir-volver",
+    "es": "¿[Seguís] viviendo en Palermo?",
+    "en": "Are you still living in Palermo?",
+    "p": "seguir + gerundio · vos"
+   },
+   {
+    "id": "et37",
+    "part": "seguir-volver",
+    "es": "Ella [sigue] estudiando para el examen.",
+    "en": "She's still studying for the test.",
+    "p": "seguir + gerundio · ella"
+   },
+   {
+    "id": "et38",
+    "part": "seguir-volver",
+    "es": "Mis viejos [siguen] viniendo todos los domingos.",
+    "en": "My parents still come over every Sunday.",
+    "p": "seguir + gerundio · ellos"
+   },
+   {
+    "id": "et39",
+    "part": "seguir-volver",
+    "es": "El nene [siguió] jugando aunque llovía.",
+    "en": "The little boy kept playing even though it was raining.",
+    "p": "seguir + gerundio · pretérito"
+   },
+   {
+    "id": "et40",
+    "part": "dejar-terminar",
+    "es": "[Dejé de] fumar hace dos años.",
+    "en": "I quit smoking two years ago.",
+    "p": "dejar de · yo · pretérito"
+   },
+   {
+    "id": "et41",
+    "part": "dejar-terminar",
+    "es": "[Dejá de] mirar el celular, ¡estamos comiendo!",
+    "en": "Stop looking at your phone, we're eating!",
+    "p": "dejar de · imperativo vos"
+   },
+   {
+    "id": "et42",
+    "part": "dejar-terminar",
+    "es": "¿[Dejaste de] ir a natación?",
+    "en": "Did you stop going to swimming?",
+    "p": "dejar de · vos · pretérito"
+   },
+   {
+    "id": "et43",
+    "part": "dejar-terminar",
+    "es": "Los precios no [dejan de] subir.",
+    "en": "Prices keep going up.",
+    "p": "dejar de · los precios"
+   },
+   {
+    "id": "et44",
+    "part": "dejar-terminar",
+    "es": "El perro del vecino no [para de] ladrar.",
+    "en": "The neighbor's dog won't stop barking.",
+    "p": "parar de · el perro"
+   },
+   {
+    "id": "et45",
+    "part": "dejar-terminar",
+    "es": "No [paró de] llover en todo el fin de semana.",
+    "en": "It didn't stop raining all weekend.",
+    "p": "parar de · pretérito"
+   },
+   {
+    "id": "et46",
+    "part": "dejar-terminar",
+    "es": "¿A qué hora [terminás de] trabajar?",
+    "en": "What time do you finish work?",
+    "p": "terminar de · vos"
+   },
+   {
+    "id": "et47",
+    "part": "dejar-terminar",
+    "es": "Esperá, que [termino de] lavar los platos.",
+    "en": "Hold on, let me finish washing the dishes.",
+    "p": "terminar de · yo"
+   },
+   {
+    "id": "et48",
+    "part": "dejar-terminar",
+    "es": "Todavía no [terminé de] leer el libro.",
+    "en": "I haven't finished reading the book yet.",
+    "p": "terminar de · yo · pretérito"
+   },
+   {
+    "id": "et49",
+    "part": "dejar-terminar",
+    "es": "[Recién] llegué, ¿dónde estás vos?",
+    "en": "I just got here. Where are you?",
+    "p": "recién + pretérito"
+   },
+   {
+    "id": "et50",
+    "part": "dejar-terminar",
+    "es": "[Recién] comimos, no tenemos hambre.",
+    "en": "We just ate, we're not hungry.",
+    "p": "recién + pretérito"
+   },
+   {
+    "id": "et51",
+    "part": "dejar-terminar",
+    "es": "Mi jefa [recién] me mandó un mail.",
+    "en": "My boss just sent me an email.",
+    "p": "recién + pretérito"
+   },
+   {
+    "id": "et52",
+    "part": "dejar-terminar",
+    "es": "[Recién] salió el tren; el próximo pasa en diez minutos.",
+    "en": "The train just left; the next one comes in ten minutes.",
+    "p": "recién + pretérito"
    }
   ]
  },

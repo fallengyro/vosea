@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="179">
+<meta name="vosea-build" content="183">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -824,6 +824,7 @@
        before; it reads the filters you left in Colección. -->
   <div class="modal-overlay deck-overlay" id="deck-overlay" hidden>
   <div class="modal-card deck-card" role="dialog" aria-modal="true" aria-labelledby="deck-title">
+  <span class="deck-grab" aria-hidden="true"></span>
   <div class="deck-head">
     <h2 id="deck-title" data-i18n="deck_title">Armar el mazo</h2>
     <button type="button" class="icon-btn" id="deck-close" data-i18n="close">Cerrar</button>

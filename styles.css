@@ -2663,10 +2663,22 @@
   .deck-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
   .deck-head h2 { font-family: "Fraunces", Georgia, serif; font-style: italic; font-size: 22px; margin: 0; }
   .deck-card .flash-setup { padding: 0; border: 0; background: none; box-shadow: none; margin-bottom: 0; }
+  .deck-grab { display: none; }
   @media (max-width: 600px) {
     .deck-overlay { align-items: flex-end; padding: 0; }
-    .deck-card { max-width: none; border-radius: 20px 20px 0 0; max-height: 92vh; padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); }
+    .deck-card { max-width: none; border-radius: 20px 20px 0 0; max-height: 92vh; max-height: 92dvh; padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); position: relative; transition: transform .18s ease-out; }
+    .deck-grab { display: block; position: absolute; left: 50%; top: 5px; transform: translateX(-50%); width: 44px; height: 5px; border-radius: 3px; background: var(--line); }
   }
+  /* (2026-10-27) mason, on the phone: the Practicar setup "slides opposite
+     normal motion or sometimes not at all … I can't see the page behind it
+     sliding with my finger". Nothing kept the page behind a sheet still
+     (body.deck-open had no rule), so a drag on the sheet scrolled the page
+     instead, and the browser bar folding away moved the sheet the other way.
+     Now the page can't scroll while any window or card is open, and a
+     drag inside one never passes through to the page. */
+  html:has(.modal-overlay:not([hidden])), html:has(body.deck-open), html:has(body.item-sheet-open),
+  body.deck-open { overflow: hidden; }
+  .modal-overlay, .modal-card { overscroll-behavior: contain; }
 
   /* Temas: Lista · Camino, and the scene start's two Temas rows (2026-10-11, stage 2) */
   .topics-view { display: flex; margin: -8px 0 14px; }
@@ -3019,7 +3031,7 @@ body.item-sheet-open { overflow: hidden; }
 #detail, #word-detail, #phrase-detail, #topic-detail { position: fixed; z-index: 91; margin: 0 !important; overflow-y: auto; overscroll-behavior: contain;
   background: var(--paper); border: 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .25); box-sizing: border-box; transition: transform .18s ease-out; }
 @media (max-width: 640px) {
-  #detail, #word-detail, #phrase-detail, #topic-detail { left: 0; right: 0; bottom: 0; max-height: 92vh; border-radius: 20px 20px 0 0; padding: 0 16px calc(22px + env(safe-area-inset-bottom)); }
+  #detail, #word-detail, #phrase-detail, #topic-detail { left: 0; right: 0; bottom: 0; max-height: 92vh; max-height: 92dvh; border-radius: 20px 20px 0 0; padding: 0 16px calc(22px + env(safe-area-inset-bottom)); }
   #detail:not([hidden]), #word-detail:not([hidden]), #phrase-detail:not([hidden]), #topic-detail:not([hidden]) { animation: item-sheet-up .2s ease-out; }
 }
 @media (min-width: 641px) {
