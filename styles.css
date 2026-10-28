@@ -3,9 +3,10 @@
      celeste in dark mode (mockups paleta-argentina*.png). Celeste for the
      buttons and links (a shade deeper than the flag's #74ACDF so white text
      and small links stay readable: 4.6:1 or more on every panel), the Sol
-     de Mayo gold for Sabido (--gold) and the met days on Hoy (--sun),
-     green for Bien and the include chips (--teal; mason 2026-10-27:
-     "green is an important success cue"), and the flag's own celeste as --flag, the line under
+     de Mayo gold for Sabido (--gold), the met days on Hoy (--sun) and
+     whatever you switched on (--pick: include chips, lists in Ver), and
+     green for Bien and other successes (--teal; mason 2026-10-27: "green
+     is an important success cue"), and the flag's own celeste as --flag, the line under
      the header. The purple / plum before it is in git history. */
   :root {
     color-scheme: light;
@@ -28,6 +29,15 @@
     --flag: #74ACDF;
     --sun: #F9DD8C;   /* the sun on the home-screen icon (icon-180/192) */
     --sun-edge: #E9C25E;
+    /* --pick: something you turned ON (an include chip, a list in Ver), in
+       the icon's sun gold (mason 2026-10-27: "the filter chips would look
+       better in the same light gold … when toggled to include. The bien is
+       different because it signals correctness not just that the state is
+       on"). Green (--teal) stays for Bien and other successes. */
+    --pick: #F9DD8C;
+    --pick-edge: #E9C25E;
+    --pick-ink: #13253A;
+    --pick-mark: #7A5600;
     --shadow: rgba(19, 37, 58, 0.14);
   }
   @media (prefers-color-scheme: dark) {
@@ -51,6 +61,10 @@
       --flag: #74ACDF;
       --sun: #F9DD8C;
       --sun-edge: #F9DD8C;
+      --pick: #F9DD8C;
+      --pick-edge: #F9DD8C;
+      --pick-ink: #0E1726;
+      --pick-mark: #F2C14E;
       --shadow: rgba(0, 0, 0, 0.45);
     }
   }
@@ -74,6 +88,10 @@
     --flag: #74ACDF;
     --sun: #F9DD8C;
     --sun-edge: #F9DD8C;
+      --pick: #F9DD8C;
+      --pick-edge: #F9DD8C;
+      --pick-ink: #0E1726;
+      --pick-mark: #F2C14E;
     --shadow: rgba(0, 0, 0, 0.45);
   }
 
@@ -461,7 +479,7 @@
     font-weight: 600;
     color: var(--paper);
   }
-  .chip.active { background: var(--teal); border-color: var(--teal); }
+  .chip.active { background: var(--pick); border-color: var(--pick-edge); color: var(--pick-ink); }
   .chip.exclude { background: var(--danger); border-color: var(--danger); }
   .chip.active::before, .chip.exclude::before {
     position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
@@ -3073,7 +3091,7 @@ body.item-sheet-open { overflow: hidden; }
 .ver-opt.on { background: var(--paper-raised); }
 .ver-pick { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; border: 0; background: none; text-align: left; padding: 9px 10px; cursor: pointer; font-family: "Public Sans", sans-serif; }
 .ver-opt-name { font-weight: 600; font-size: 14.5px; color: var(--ink); }
-.ver-opt.on .ver-opt-name::before { content: "\2713  "; color: var(--teal); }
+.ver-opt.on .ver-opt-name::before { content: "\2713  "; color: var(--pick-mark); }
 .ver-opt-sub { font-size: 12px; color: var(--ink-soft); }
 .ver-opt.is-off .ver-opt-name { color: var(--ink-soft); }
 .ver-turn-on { flex: 0 0 auto; border: 1px solid var(--line); background: var(--paper); color: var(--accent); border-radius: 999px; padding: 5px 10px; font: 600 12.5px "Public Sans", sans-serif; margin-right: 6px; cursor: pointer; }
@@ -3139,7 +3157,7 @@ button.sterm-lab { cursor: pointer; text-decoration: underline; text-underline-o
    a part that's off is greyed; 10 · 20 · Todas next to Empezar */
 #flashcards-panel .flash-source-toggle { flex-direction: column; gap: 10px; }
 .flash-filt { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 400; color: var(--ink-soft); }
-.flash-filt b { color: var(--teal); font-weight: 600; }
+.flash-filt b { color: var(--pick-mark); font-weight: 600; }
 #flashcards-panel .flash-source-toggle .switch-row:has(input:not(:checked)) > span:last-child { opacity: .55; }
 .flash-start-row .topic-limit .lang-option:disabled { opacity: .35; cursor: default; }
 
@@ -3206,7 +3224,7 @@ body.has-col-fab #verbs-panel, body.has-col-fab #words-panel, body.has-col-fab #
 /* Ver: several lists at once (2026-10-26) — the lists are check boxes */
 .ver-opt.is-list .ver-opt-name { display: inline-flex; align-items: center; gap: 8px; }
 .ver-opt.is-list .ver-opt-name::before, .ver-opt.is-list.on .ver-opt-name::before { content: ""; flex: none; width: 16px; height: 16px; box-sizing: border-box; border: 1.5px solid var(--line); border-radius: 4px; background: var(--paper); color: #fff; font-size: 11px; line-height: 13px; text-align: center; }
-.ver-opt.is-list.on .ver-opt-name::before { content: "\2713"; background: var(--teal); border-color: var(--teal); }
+.ver-opt.is-list.on .ver-opt-name::before { content: "\2713"; background: var(--pick); border-color: var(--pick-edge); color: var(--pick-ink); }
 .ver-opt.is-list .ver-opt-sub { padding-left: 24px; }
 .ver-foot { display: flex; justify-content: flex-end; border-top: 1px solid var(--line); margin-top: 4px; padding: 6px 4px 2px; }
 .ver-done { border: 0; background: var(--accent-deep); color: var(--accent-ink, #fff); border-radius: 999px; padding: 7px 16px; font: 700 13.5px "Public Sans", sans-serif; cursor: pointer; }
