@@ -10,6 +10,11 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <title>voseá · prueba Al oído</title>
 <!--
+  Round 2 (2026-10-27, after mason's first log): speed 0.9 / 1.1 (0.8 /
+  1.2 "just sounded fast"), «Pausa suave» for the earbud resume that
+  sometimes didn't come back, only ⏮ ⏭ on the lock screen, and the four
+  English voices to choose from (needs the updated tts function).
+
   voseá — Al oído, step 0 (2026-10-27): a hidden test page, not linked from
   the app. It answers one question before the listening mode is built: on
   mason's iPhone (Chrome = WebKit, and as a home-screen app), does audio keep
@@ -54,19 +59,25 @@
 
   <div class="box">
     <p id="who">Checking…</p>
-    <div class="row"><button class="main" id="prep" type="button">1 · Preparar</button><span id="prep-msg" class="note"></span></div>
+    <div class="row"><button class="main" id="prep" type="button">Preparar</button><span id="prep-msg" class="note"></span></div>
   </div>
 
-  <h2>What to try</h2>
+  <h2>1 · Voces en inglés</h2>
+  <div class="box">
+    <p class="note">The English before and after each line. Each plays the same three lines from the scenes (the first time, each is made once and saved). Pick the one you'd like to hear a thousand times.</p>
+    <div class="row" id="en-voices"></div>
+    <p class="now" id="en-now"></p>
+  </div>
+
+  <h2>2 · What to try (round 2)</h2>
   <div class="box">
     <ol>
       <li>Tap <b>Preparar</b> and wait for “Listo”.</li>
-      <li>Tap <b>A · Reproducir</b>, put your earbuds in, and <b>lock the phone</b>. Listen for about a minute.</li>
-      <li>While it's locked: press the earbud button (pause, play, and double press for next), and try the lock-screen controls.</li>
-      <li>Unlock, change the speed to 0.8× and 1.2× and lock again for a bit.</li>
-      <li>Do the same with <b>B · Reproducir</b>.</li>
-      <li>Tap <b>Copiar el registro</b> and paste it to Claude, with a line on what you heard.</li>
-      <li>If you can: add this page to the home screen (Share → Add to Home Screen), open it from there, and repeat 2–6. It plays tones there, which is fine for this test.</li>
+      <li>Tap <b>A · Reproducir</b> (Pausa suave on), lock the phone, and pause from the earbuds. <b>Wait a full minute</b>, then press play. Does it come back? Try it two or three times, with different waits.</li>
+      <li>While it's locked, look at the lock screen: are there now ⏮ ⏭ buttons instead of ±10 s? Try them, and the earbud double press for next.</li>
+      <li>Turn <b>Pausa suave</b> off, tap A · Reproducir again, and repeat the one-minute pause, for comparison.</li>
+      <li>Try 0.9× and 1.1×.</li>
+      <li>Tap <b>Copiar el registro</b> and paste it to Claude, with which English voice you liked and what the lock screen showed during a pause.</li>
     </ol>
   </div>
 
@@ -74,6 +85,7 @@
   <div class="box">
     <p class="note">Every clip and pause joined into one audio file, so the phone only has to keep one thing playing.</p>
     <div class="row"><button class="main" id="a-play" type="button" disabled>A · Reproducir</button><button id="a-stop" type="button" disabled>Parar</button></div>
+    <label class="row note" style="margin-top:10px"><input type="checkbox" id="soft" checked> Pausa suave: while paused, keep a silent sound going so iOS doesn't put the page to sleep (up to ten minutes).</label>
   </div>
 
   <h2>B · Clip by clip</h2>
@@ -84,7 +96,7 @@
 
   <h2>Speed</h2>
   <div class="box">
-    <div class="row speed" id="speed"><button type="button" data-r="0.8">0.8×</button><button type="button" data-r="1" class="on">1×</button><button type="button" data-r="1.2">1.2×</button></div>
+    <div class="row speed" id="speed"><button type="button" data-r="0.9">0.9×</button><button type="button" data-r="1" class="on">1×</button><button type="button" data-r="1.1">1.1×</button></div>
     <p class="now" id="now"></p>
   </div>
 
@@ -128,6 +140,9 @@
   var chain = [];               // [{ url, label, item }]
   var silence = {};             // seconds → blob url
 
+  // English voices to choose from (tts allows these since 2026-10-27)
+  var EN_VOICES = [["en-US-AvaNeural", "Ava"], ["en-US-EmmaNeural", "Emma"], ["en-US-AndrewNeural", "Andrew"], ["en-US-BrianNeural", "Brian"]];
+  var EN_SAMPLES = ["Half a dozen croissants, please.", "Sorry, we're out. We have other pastries, though.", "Could you take me to the airport?"];
   var sb = null, session = null;
   try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { sb = null; }
   (sb ? sb.auth.getSession() : Promise.resolve({ data: {} })).then(function (r) {
@@ -236,14 +251,14 @@
   audio.addEventListener("error", function () { log(mode + ": ERROR " + (audio.error && audio.error.code)); });
   audio.addEventListener("stalled", function () { log(mode + ": stalled"); });
   audio.addEventListener("timeupdate", function () {
-    if (mode === "A") {
+    if (mode === "A" && !soft) {
       var i = itemAt(audio.currentTime);
       if (i !== lastItem) { lastItem = i; meta(joined.labels[i], "A · " + (i + 1) + " de " + joined.starts.length); log("A: item " + (i + 1) + " «" + joined.labels[i] + "» at " + audio.currentTime.toFixed(1) + " s"); }
     }
-    if (Date.now() - lastBeat > 15000) { lastBeat = Date.now(); log(mode + ": playing, t=" + audio.currentTime.toFixed(1) + " s"); }
+    if (Date.now() - lastBeat > 15000) { lastBeat = Date.now(); log(mode + (soft ? ": soft-paused, page awake (" + Math.round((Date.now() - soft.at) / 1000) + " s)" : ": playing, t=" + audio.currentTime.toFixed(1) + " s")); }
   });
   audio.addEventListener("ended", function () {
-    if (mode === "A") { log("A: ended (whole track)"); return; }
+    if (mode === "A") { if (!soft) log("A: ended (whole track)"); return; }
     if (mode === "B") { chainIdx++; if (chainIdx >= chain.length) { log("B: ended (whole list)"); return; } playChain(); }
   });
   function playChain() {
@@ -254,6 +269,7 @@
     if (p && p.catch) p.catch(function (e) { log("B: play() REFUSED: " + (e && e.name) + " " + (e && e.message)); });
   }
   function start(which) {
+    soft = null; audio.loop = false;
     audio.pause(); mode = which; lastItem = -1;
     if (which === "A") { audio.src = joined.url; applyRate(); var p = audio.play(); if (p && p.catch) p.catch(function (e) { log("A: play() REFUSED: " + e.name); }); }
     else { chainIdx = 0; playChain(); }
@@ -261,6 +277,7 @@
   }
   function skip(dir) {
     log(mode + ": " + (dir > 0 ? "next" : "previous") + " (from the controls)");
+    if (soft) { var st = soft.t, ii = itemAt(st); soft.t = joined.starts[dir > 0 ? Math.min(ii + 1, joined.starts.length - 1) : (st - joined.starts[ii] > 1.5 ? ii : Math.max(0, ii - 1))]; softResume(); return; }
     if (mode === "A") {
       var i = itemAt(audio.currentTime), into = audio.currentTime - joined.starts[i];
       var to = dir > 0 ? Math.min(i + 1, joined.starts.length - 1) : (into > 1.5 ? i : Math.max(0, i - 1));
@@ -275,22 +292,84 @@
       chainIdx = first[target]; playChain();
     }
   }
+  // ---- Pausa suave (round 2): round 1 showed that a pause of ~35 s or
+  // more while locked couldn't be resumed from the earbuds (short ones
+  // could), most likely because iOS puts a page with nothing playing to
+  // sleep. So a pause keeps a silent loop playing and remembers where it
+  // was; play goes back to that spot. After ten minutes it really stops.
+  var soft = null, silentLoop = null, SOFT_MAX = 10 * 60000;
+  function softPause() {
+    if (!silentLoop) silentLoop = wav(silentBuf(1));
+    soft = { t: audio.currentTime, at: Date.now() };
+    log("A: soft pause at " + soft.t.toFixed(1) + " s");
+    audio.loop = true; audio.src = silentLoop; audio.playbackRate = 1;
+    var p = audio.play(); if (p && p.catch) p.catch(function (e) { log("A: silent loop REFUSED: " + e.name); });
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+  }
+  function softResume() {
+    var t = soft.t; soft = null;
+    log("A: soft resume → " + t.toFixed(1) + " s");
+    audio.loop = false; audio.src = joined.url; applyRate();
+    var seek = function () { audio.removeEventListener("loadedmetadata", seek); try { audio.currentTime = t; } catch (e) { log("A: seek failed " + e.name); } };
+    audio.addEventListener("loadedmetadata", seek);
+    var p = audio.play(); if (p && p.catch) p.catch(function (e) { log("A: resume play() REFUSED: " + e.name); });
+  }
+  function doPause() { if (mode === "A" && $("soft").checked && !soft) softPause(); else audio.pause(); }
+  function doPlay() { if (soft) softResume(); else audio.play(); }
+  audio.addEventListener("timeupdate", function () {
+    if (!soft) return;
+    if (Date.now() - soft.at > SOFT_MAX) { log("A: soft pause ran ten minutes → real pause"); audio.pause(); }
+  });
+  audio.addEventListener("play", function () { if (soft && "mediaSession" in navigator) navigator.mediaSession.playbackState = "paused"; });
+
   if ("mediaSession" in navigator) {
+    // only previous / next (round 1: with seekforward / seekbackward set,
+    // iOS showed ±10 s buttons instead of ⏮ ⏭)
     var acts = {
-      play: function () { log("controls: play"); audio.play(); },
-      pause: function () { log("controls: pause"); audio.pause(); },
-      nexttrack: function () { skip(1); },
-      previoustrack: function () { skip(-1); },
-      seekforward: function () { log("controls: seek forward"); skip(1); },
-      seekbackward: function () { log("controls: seek back"); skip(-1); }
+      play: function () { log("controls: play"); doPlay(); },
+      pause: function () { log("controls: pause"); doPause(); },
+      nexttrack: function () { log("controls: next"); skip(1); },
+      previoustrack: function () { log("controls: previous"); skip(-1); }
     };
     Object.keys(acts).forEach(function (k) { try { navigator.mediaSession.setActionHandler(k, acts[k]); } catch (e) { log("mediaSession: no " + k); } });
+    ["seekforward", "seekbackward", "seekto"].forEach(function (k) { try { navigator.mediaSession.setActionHandler(k, null); } catch (e) {} });
     log("mediaSession: available");
   } else log("mediaSession: NOT available");
 
+  // ---- the English voices: three lines each, on their own player
+  var enAudio = new Audio(), enBusy = false;
+  EN_VOICES.forEach(function (v) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = "▶ " + v[1];
+    b.addEventListener("click", function () {
+      if (enBusy) return;
+      if (!session) { $("en-now").textContent = "Sign in to voseá in this browser first."; return; }
+      enBusy = true; audio.pause();
+      log("en: " + v[1] + " (" + v[0] + ")");
+      var i = 0;
+      (function next() {
+        if (i >= EN_SAMPLES.length) { enBusy = false; $("en-now").textContent = v[1] + " ✓"; return; }
+        var text = EN_SAMPLES[i++];
+        $("en-now").textContent = v[1] + ": “" + text + "”";
+        sb.functions.invoke("tts", { body: { text: text, voice: v[0] } }).then(function (res) {
+          if (res.error || !res.data || !res.data.url) throw (res.error || new Error("no url"));
+          log("en: " + v[1] + " «" + text + "» " + (res.data.cached ? "saved" : "made now"));
+          enAudio.src = res.data.url; enAudio.onended = function () { setTimeout(next, 500); };
+          return enAudio.play();
+        }).catch(function (e) {
+          enBusy = false;
+          var m = (e && e.context && e.context.status) ? "HTTP " + e.context.status : (e && e.message) || String(e);
+          $("en-now").innerHTML = '<span class="bad">' + v[1] + ' failed:</span> ' + m + (/400/.test(m) ? " (the updated tts function isn't deployed yet?)" : "");
+          log("en: " + v[1] + " failed: " + m);
+        });
+      })();
+    });
+    $("en-voices").appendChild(b);
+  });
+
+  window.__oidoTest = { play: function () { doPlay(); }, pause: function () { doPause(); }, next: function () { skip(1); }, soft: function () { return soft; } }; // tests
   $("a-play").addEventListener("click", function () { start("A"); });
   $("b-play").addEventListener("click", function () { start("B"); });
-  $("a-stop").addEventListener("click", function () { audio.pause(); });
+  $("a-stop").addEventListener("click", function () { doPause(); });
   $("b-stop").addEventListener("click", function () { audio.pause(); });
   $("speed").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
