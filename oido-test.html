@@ -10,6 +10,10 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <title>voseá · prueba Al oído</title>
 <!--
+  Round 3 (2026-10-27): the standard English voices sounded poor, so section
+  1 now compares Azure's HD voices (Dragon HD) with premium voices, on the
+  same three lines. Needs the updated tts function. The rest is round 2.
+
   Round 2 (2026-10-27, after mason's first log): speed 0.9 / 1.1 (0.8 /
   1.2 "just sounded fast"), «Pausa suave» for the earbud resume that
   sometimes didn't come back, only ⏮ ⏭ on the lock screen, and the four
@@ -64,13 +68,17 @@
 
   <h2>1 · Voces en inglés</h2>
   <div class="box">
-    <p class="note">The English before and after each line. Each plays the same three lines from the scenes (the first time, each is made once and saved). Pick the one you'd like to hear a thousand times.</p>
+    <p class="note">The English before and after each line. Each button plays the same three lines from the scenes (the first time, each is made once and saved, so a second tap is instant). Pick the one you'd like to hear a thousand times.</p>
+    <p class="note"><b>Azure HD</b> (free allowance). Emma2 and Andrew2 are the “conversational” versions.</p>
     <div class="row" id="en-voices"></div>
+    <p class="note" style="margin-top:12px"><b>Premium</b> (uses paid credits, about 100 characters a tap, once). Valeria and Agustín are your Spanish voices reading English; Rachel and Adam are native English.</p>
+    <div class="row" id="en-premium"></div>
     <p class="now" id="en-now"></p>
   </div>
 
-  <h2>2 · What to try (round 2)</h2>
+  <h2>2 · What to try</h2>
   <div class="box">
+    <p class="note"><b>Round 3:</b> only step 1 below is new. Play every voice in section 1 and tell me your favorite and runner-up, and anything that sounds wrong. The lock-screen steps are still open from round 2 if you want to run them.</p>
     <ol>
       <li>Tap <b>Preparar</b> and wait for “Listo”.</li>
       <li>Tap <b>A · Reproducir</b> (Pausa suave on), lock the phone, and pause from the earbuds. <b>Wait a full minute</b>, then press play. Does it come back? Try it two or three times, with different waits.</li>
@@ -141,7 +149,9 @@
   var silence = {};             // seconds → blob url
 
   // English voices to choose from (tts allows these since 2026-10-27)
-  var EN_VOICES = [["en-US-AvaNeural", "Ava"], ["en-US-EmmaNeural", "Emma"], ["en-US-AndrewNeural", "Andrew"], ["en-US-BrianNeural", "Brian"]];
+  var HD = ":DragonHDLatestNeural";
+  var EN_VOICES = [["en-US-Ava" + HD, "Ava HD"], ["en-US-Emma" + HD, "Emma HD"], ["en-US-Andrew" + HD, "Andrew HD"], ["en-US-Brian" + HD, "Brian HD"], ["en-US-Emma2" + HD, "Emma2 HD"], ["en-US-Andrew2" + HD, "Andrew2 HD"]];
+  var EN_PREMIUM = [["eleven:valeria", "Valeria"], ["eleven:agustin", "Agustín"], ["eleven:rachel", "Rachel"], ["eleven:adam", "Adam"]];
   var EN_SAMPLES = ["Half a dozen croissants, please.", "Sorry, we're out. We have other pastries, though.", "Could you take me to the airport?"];
   var sb = null, session = null;
   try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { sb = null; }
@@ -338,7 +348,13 @@
 
   // ---- the English voices: three lines each, on their own player
   var enAudio = new Audio(), enBusy = false;
-  EN_VOICES.forEach(function (v) {
+  function errText(e) {
+    // supabase-js hands back the failed Response in e.context: read its JSON for the reason
+    var ctx = e && e.context;
+    if (ctx && typeof ctx.json === "function") return ctx.json().then(function (j) { return "HTTP " + ctx.status + " " + (j.error || "") + (j.detail ? " · " + String(j.detail).slice(0, 160) : ""); }, function () { return "HTTP " + ctx.status; });
+    return Promise.resolve((e && e.message) || String(e));
+  }
+  function addEnButton(v, premium) {
     var b = document.createElement("button"); b.type = "button"; b.textContent = "▶ " + v[1];
     b.addEventListener("click", function () {
       if (enBusy) return;
@@ -350,21 +366,26 @@
         if (i >= EN_SAMPLES.length) { enBusy = false; $("en-now").textContent = v[1] + " ✓"; return; }
         var text = EN_SAMPLES[i++];
         $("en-now").textContent = v[1] + ": “" + text + "”";
-        sb.functions.invoke("tts", { body: { text: text, voice: v[0] } }).then(function (res) {
+        var body = { text: text, voice: v[0] };
+        if (premium) { body.lang = "en"; body.gen = true; }
+        sb.functions.invoke("tts", { body: body }).then(function (res) {
           if (res.error || !res.data || !res.data.url) throw (res.error || new Error("no url"));
           log("en: " + v[1] + " «" + text + "» " + (res.data.cached ? "saved" : "made now"));
           enAudio.src = res.data.url; enAudio.onended = function () { setTimeout(next, 500); };
           return enAudio.play();
         }).catch(function (e) {
           enBusy = false;
-          var m = (e && e.context && e.context.status) ? "HTTP " + e.context.status : (e && e.message) || String(e);
-          $("en-now").innerHTML = '<span class="bad">' + v[1] + ' failed:</span> ' + m + (/400/.test(m) ? " (the updated tts function isn't deployed yet?)" : "");
-          log("en: " + v[1] + " failed: " + m);
+          errText(e).then(function (m) {
+            $("en-now").innerHTML = '<span class="bad">' + v[1] + ' failed:</span> ' + m.replace(/</g, "&lt;") + (/HTTP 400 unknown_voice/.test(m) ? " (the updated tts function isn't deployed yet?)" : "");
+            log("en: " + v[1] + " failed: " + m);
+          });
         });
       })();
     });
-    $("en-voices").appendChild(b);
-  });
+    $(premium ? "en-premium" : "en-voices").appendChild(b);
+  }
+  EN_VOICES.forEach(function (v) { addEnButton(v, false); });
+  EN_PREMIUM.forEach(function (v) { addEnButton(v, true); });
 
   window.__oidoTest = { play: function () { doPlay(); }, pause: function () { doPause(); }, next: function () { skip(1); }, soft: function () { return soft; } }; // tests
   $("a-play").addEventListener("click", function () { start("A"); });
