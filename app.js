@@ -5863,7 +5863,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "184";
+  var VOSEA_BUILD = "185";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;

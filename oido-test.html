@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Prueba oído">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>voseá · prueba Al oído</title>
+<!--
+  voseá — Al oído, step 0 (2026-10-27): a hidden test page, not linked from
+  the app. It answers one question before the listening mode is built: on
+  mason's iPhone (Chrome = WebKit, and as a home-screen app), does audio keep
+  playing with the screen locked, do the earbud / lock-screen buttons work,
+  and does a speed change hold?
+    A · one joined track (every clip and pause decoded and joined in the
+        browser into one WAV, played by one <audio>)
+    B · clip by clip (one <audio>, the next clip set on "ended")
+  Both use the Media Session API. Every event is logged with the time and
+  whether the page was visible, kept in this browser only
+  (localStorage "vosea-oido-test-log") so it survives a lock, and can be
+  copied. Signed in (same browser as voseá): real clips from the tts
+  function (Elena / Tomás, phrases that are already saved). Not signed in
+  (e.g. as its own home-screen app, which has its own storage): tones.
+  Nothing is written to the account. See claude/vosea-al-oido-plan.md.
+-->
+<style>
+  :root { color-scheme: light dark; --paper: #F5F9FD; --raised: #E9F2FB; --ink: #13253A; --soft: #4D6279; --line: #C3D6EB; --accent: #2269A8; --ok: #146B63; --bad: #B23A3A; }
+  @media (prefers-color-scheme: dark) { :root { --paper: #0E1726; --raised: #14223A; --ink: #E8F1FB; --soft: #9FB4CC; --line: #25385A; --accent: #7DB8E8; --ok: #6FE0D0; --bad: #E88A84; } }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.45 -apple-system, "Public Sans", system-ui, sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: 18px 16px calc(40px + env(safe-area-inset-bottom)); }
+  h1 { font: italic 600 26px Georgia, serif; color: var(--accent); margin: 0 0 4px; }
+  h2 { font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--soft); margin: 22px 0 8px; }
+  p { margin: 0 0 10px; }
+  .note { font-size: 14px; color: var(--soft); }
+  .box { background: var(--raised); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  button { font: 600 16px system-ui, sans-serif; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); min-height: 44px; padding: 0 14px; cursor: pointer; }
+  button.main { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+  button:disabled { opacity: .45; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .speed button.on { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .now { font: italic 600 20px Georgia, serif; min-height: 28px; margin: 6px 0; }
+  ol { padding-left: 20px; margin: 0; } li { margin-bottom: 6px; }
+  pre { white-space: pre-wrap; font: 12px/1.4 ui-monospace, Menlo, monospace; background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 10px; max-height: 340px; overflow: auto; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Prueba: Al oído</h1>
+  <p class="note">A hidden test page for the listening mode. Nothing is saved to your account.</p>
+
+  <div class="box">
+    <p id="who">Checking…</p>
+    <div class="row"><button class="main" id="prep" type="button">1 · Preparar</button><span id="prep-msg" class="note"></span></div>
+  </div>
+
+  <h2>What to try</h2>
+  <div class="box">
+    <ol>
+      <li>Tap <b>Preparar</b> and wait for “Listo”.</li>
+      <li>Tap <b>A · Reproducir</b>, put your earbuds in, and <b>lock the phone</b>. Listen for about a minute.</li>
+      <li>While it's locked: press the earbud button (pause, play, and double press for next), and try the lock-screen controls.</li>
+      <li>Unlock, change the speed to 0.8× and 1.2× and lock again for a bit.</li>
+      <li>Do the same with <b>B · Reproducir</b>.</li>
+      <li>Tap <b>Copiar el registro</b> and paste it to Claude, with a line on what you heard.</li>
+      <li>If you can: add this page to the home screen (Share → Add to Home Screen), open it from there, and repeat 2–6. It plays tones there, which is fine for this test.</li>
+    </ol>
+  </div>
+
+  <h2>A · One joined track</h2>
+  <div class="box">
+    <p class="note">Every clip and pause joined into one audio file, so the phone only has to keep one thing playing.</p>
+    <div class="row"><button class="main" id="a-play" type="button" disabled>A · Reproducir</button><button id="a-stop" type="button" disabled>Parar</button></div>
+  </div>
+
+  <h2>B · Clip by clip</h2>
+  <div class="box">
+    <p class="note">The same items, but the page starts each clip when the last one ends.</p>
+    <div class="row"><button class="main" id="b-play" type="button" disabled>B · Reproducir</button><button id="b-stop" type="button" disabled>Parar</button></div>
+  </div>
+
+  <h2>Speed</h2>
+  <div class="box">
+    <div class="row speed" id="speed"><button type="button" data-r="0.8">0.8×</button><button type="button" data-r="1" class="on">1×</button><button type="button" data-r="1.2">1.2×</button></div>
+    <p class="now" id="now"></p>
+  </div>
+
+  <h2>Registro</h2>
+  <div class="row" style="margin-bottom:8px"><button id="copy" type="button">Copiar el registro</button><button id="clear" type="button">Borrar</button><span id="copy-msg" class="note"></span></div>
+  <pre id="log"></pre>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var LOG_KEY = "vosea-oido-test-log";
+  var logLines = [];
+  try { logLines = JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch (e) { logLines = []; }
+  var $ = function (id) { return document.getElementById(id); };
+  var t0 = Date.now();
+  function stamp() { var d = new Date(); return d.toTimeString().slice(0, 8) + "." + String(d.getMilliseconds()).padStart(3, "0"); }
+  function log(msg) {
+    var line = stamp() + " [" + (document.visibilityState === "visible" ? "vis" : "HIDDEN") + "] " + msg;
+    logLines.push(line);
+    if (logLines.length > 600) logLines = logLines.slice(-600);
+    try { localStorage.setItem(LOG_KEY, JSON.stringify(logLines)); } catch (e) {}
+    $("log").textContent = logLines.slice().reverse().join("\n");
+  }
+  $("log").textContent = logLines.slice().reverse().join("\n");
+  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  log("---- page opened · " + (standalone ? "home-screen app" : "browser") + " · " + navigator.userAgent);
+  document.addEventListener("visibilitychange", function () { log("visibility → " + document.visibilityState); });
+  window.addEventListener("pagehide", function () { log("pagehide"); });
+  window.addEventListener("pageshow", function () { log("pageshow"); });
+
+  // ---- the items: [Elena, pause, Tomás, longer pause] per phrase
+  var PHRASES = ["¿Me cobrás, por favor?", "Estoy por salir.", "¡Qué bajón!", "Recién llegué."];
+  var VOICES = ["es-AR-ElenaNeural", "es-AR-TomasNeural"];
+  var ROUNDS = 8;               // ≈ 3 minutes in all
+  var GAP_SHORT = 0.8, GAP_LONG = 1.6, RATE = 24000;
+  var clips = [];               // { label, buf: AudioBuffer }
+  var joined = null;            // { url, starts: [sec…], labels: […] }
+  var chain = [];               // [{ url, label, item }]
+  var silence = {};             // seconds → blob url
+
+  var sb = null, session = null;
+  try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { sb = null; }
+  (sb ? sb.auth.getSession() : Promise.resolve({ data: {} })).then(function (r) {
+    session = r && r.data && r.data.session;
+    $("who").innerHTML = session ? '<span class="ok">Signed in:</span> real voices (Elena and Tomás).' : '<span class="bad">Not signed in here:</span> it plays tones instead of voices. That\'s fine for this test.';
+    log(session ? "signed in → voices" : "not signed in → tones");
+  }, function () { $("who").textContent = "Not signed in: tones."; });
+
+  function ctxDecode(ab) {
+    var Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    var c = new Off(1, RATE, RATE);
+    return new Promise(function (res, rej) { var p = c.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
+  }
+  function tone(freq, secs) {
+    var Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    var c = new Off(1, Math.round(RATE * secs), RATE);
+    var o = c.createOscillator(), g = c.createGain();
+    o.frequency.value = freq; o.connect(g); g.connect(c.destination);
+    g.gain.setValueAtTime(0, 0); g.gain.linearRampToValueAtTime(0.25, 0.05); g.gain.setValueAtTime(0.25, secs - 0.1); g.gain.linearRampToValueAtTime(0, secs);
+    o.start(0); o.stop(secs);
+    return c.startRendering ? new Promise(function (res) { var p = c.startRendering(); if (p && p.then) p.then(res); else c.oncomplete = function (e) { res(e.renderedBuffer); }; }) : Promise.reject(new Error("no render"));
+  }
+  function wav(buf) {
+    var data = buf.getChannelData(0), n = data.length, out = new DataView(new ArrayBuffer(44 + n * 2));
+    function s(o, str) { for (var i = 0; i < str.length; i++) out.setUint8(o + i, str.charCodeAt(i)); }
+    s(0, "RIFF"); out.setUint32(4, 36 + n * 2, true); s(8, "WAVE"); s(12, "fmt "); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 1, true);
+    out.setUint32(24, buf.sampleRate, true); out.setUint32(28, buf.sampleRate * 2, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true); s(36, "data"); out.setUint32(40, n * 2, true);
+    for (var i = 0; i < n; i++) { var v = Math.max(-1, Math.min(1, data[i])); out.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7FFF, true); }
+    return URL.createObjectURL(new Blob([out.buffer], { type: "audio/wav" }));
+  }
+  function silentBuf(secs) {
+    var Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    var c = new Off(1, Math.max(1, Math.round(RATE * secs)), RATE);
+    return c.createBuffer(1, Math.max(1, Math.round(RATE * secs)), RATE);
+  }
+  function fetchClip(text, voice) {
+    return sb.functions.invoke("tts", { body: { text: text, voice: voice } }).then(function (res) {
+      if (res.error || !res.data || !res.data.url) throw (res.error || new Error("no url"));
+      return fetch(res.data.url).then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.arrayBuffer(); });
+    }).then(ctxDecode);
+  }
+
+  $("prep").addEventListener("click", function () {
+    $("prep").disabled = true; $("prep-msg").textContent = "Preparando…";
+    var jobs = [];
+    PHRASES.forEach(function (ph, i) {
+      VOICES.forEach(function (v, k) {
+        var label = ph + " · " + (k ? "Tomás" : "Elena");
+        jobs.push(function () { return (session ? fetchClip(ph, v) : tone(k ? 330 + i * 40 : 523 + i * 60, 1.6)).then(function (b) { clips.push({ label: label, item: i, buf: b }); $("prep-msg").textContent = "Preparando " + clips.length + " de " + (PHRASES.length * VOICES.length) + "…"; }); });
+      });
+    });
+    var p = Promise.resolve();
+    jobs.forEach(function (j) { p = p.then(j); });
+    p.then(build).then(function () {
+      $("prep-msg").innerHTML = '<span class="ok">Listo.</span> ' + Math.round(joined.secs) + " s in all.";
+      ["a-play", "b-play"].forEach(function (id) { $(id).disabled = false; });
+      log("prepared: " + clips.length + " clips, joined track " + Math.round(joined.secs) + " s, " + (joined.bytes / 1e6).toFixed(1) + " MB");
+    }).catch(function (e) {
+      $("prep-msg").innerHTML = '<span class="bad">Failed:</span> ' + (e && e.message || e); $("prep").disabled = false;
+      log("prepare failed: " + (e && e.message || e));
+    });
+  });
+
+  function build() {
+    // the sequence: ROUNDS × phrases × [Elena, short gap, Tomás, long gap]
+    var seq = [];
+    for (var r = 0; r < ROUNDS; r++) PHRASES.forEach(function (ph, i) {
+      var e = clips.filter(function (c) { return c.item === i; });
+      seq.push({ buf: e[0].buf, label: e[0].label, item: r * PHRASES.length + i, start: true });
+      seq.push({ gap: GAP_SHORT });
+      seq.push({ buf: e[1].buf, label: e[1].label, item: r * PHRASES.length + i });
+      seq.push({ gap: GAP_LONG });
+    });
+    var total = 0; seq.forEach(function (s) { total += s.gap || s.buf.duration; });
+    var Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    var c = new Off(1, Math.ceil(total * RATE), RATE);
+    var at = 0, starts = [], labels = [];
+    seq.forEach(function (s) {
+      if (s.gap) { at += s.gap; return; }
+      if (s.start) { starts.push(at); labels.push(s.label.split(" · ")[0]); }
+      var src = c.createBufferSource(); src.buffer = s.buf; src.connect(c.destination); src.start(at); at += s.buf.duration;
+    });
+    // B's playlist: each clip and each pause as its own little file
+    [GAP_SHORT, GAP_LONG].forEach(function (g) { silence[g] = wav(silentBuf(g)); });
+    var clipUrl = {}; clips.forEach(function (cl) { clipUrl[cl.label] = wav(cl.buf); });
+    chain = seq.map(function (s) { return s.gap ? { url: silence[s.gap], label: "(pausa)", item: -1 } : { url: clipUrl[s.label], label: s.label, item: s.item }; });
+    return new Promise(function (res) { var p = c.startRendering(); if (p && p.then) p.then(res); else c.oncomplete = function (e) { res(e.renderedBuffer); }; }).then(function (out) {
+      joined = { url: wav(out), starts: starts, labels: labels, secs: total, bytes: 44 + out.length * 2 };
+    });
+  }
+
+  // ---- playback
+  var audio = new Audio();
+  audio.preload = "auto";
+  var mode = null, chainIdx = 0, rate = 1, lastBeat = 0, lastItem = -1;
+  function applyRate() { audio.playbackRate = rate; try { audio.preservesPitch = true; audio.webkitPreservesPitch = true; } catch (e) {} }
+  function itemAt(time) { var s = joined.starts, i = 0; while (i + 1 < s.length && s[i + 1] <= time + 0.01) i++; return i; }
+  function meta(title, artist) {
+    $("now").textContent = title;
+    if (!("mediaSession" in navigator)) return;
+    try { navigator.mediaSession.metadata = new MediaMetadata({ title: title, artist: artist || "voseá · Al oído", album: "Prueba", artwork: [{ src: "icons/icon-512.png", sizes: "512x512", type: "image/png" }, { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] }); } catch (e) {}
+  }
+  audio.addEventListener("play", function () { log(mode + ": play"); if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing"; });
+  audio.addEventListener("pause", function () { log(mode + ": pause at " + audio.currentTime.toFixed(1) + " s"); if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused"; });
+  audio.addEventListener("ratechange", function () { log(mode + ": rate " + audio.playbackRate + (audio.preservesPitch === false ? " (pitch NOT kept)" : "")); });
+  audio.addEventListener("error", function () { log(mode + ": ERROR " + (audio.error && audio.error.code)); });
+  audio.addEventListener("stalled", function () { log(mode + ": stalled"); });
+  audio.addEventListener("timeupdate", function () {
+    if (mode === "A") {
+      var i = itemAt(audio.currentTime);
+      if (i !== lastItem) { lastItem = i; meta(joined.labels[i], "A · " + (i + 1) + " de " + joined.starts.length); log("A: item " + (i + 1) + " «" + joined.labels[i] + "» at " + audio.currentTime.toFixed(1) + " s"); }
+    }
+    if (Date.now() - lastBeat > 15000) { lastBeat = Date.now(); log(mode + ": playing, t=" + audio.currentTime.toFixed(1) + " s"); }
+  });
+  audio.addEventListener("ended", function () {
+    if (mode === "A") { log("A: ended (whole track)"); return; }
+    if (mode === "B") { chainIdx++; if (chainIdx >= chain.length) { log("B: ended (whole list)"); return; } playChain(); }
+  });
+  function playChain() {
+    var c = chain[chainIdx];
+    audio.src = c.url; applyRate();
+    if (c.item >= 0) { meta(c.label, "B · " + (Math.floor(c.item) + 1) + " de " + (PHRASES.length * ROUNDS)); log("B: clip " + (chainIdx + 1) + "/" + chain.length + " «" + c.label + "»"); }
+    var p = audio.play();
+    if (p && p.catch) p.catch(function (e) { log("B: play() REFUSED: " + (e && e.name) + " " + (e && e.message)); });
+  }
+  function start(which) {
+    audio.pause(); mode = which; lastItem = -1;
+    if (which === "A") { audio.src = joined.url; applyRate(); var p = audio.play(); if (p && p.catch) p.catch(function (e) { log("A: play() REFUSED: " + e.name); }); }
+    else { chainIdx = 0; playChain(); }
+    $("a-stop").disabled = which !== "A"; $("b-stop").disabled = which !== "B";
+  }
+  function skip(dir) {
+    log(mode + ": " + (dir > 0 ? "next" : "previous") + " (from the controls)");
+    if (mode === "A") {
+      var i = itemAt(audio.currentTime), into = audio.currentTime - joined.starts[i];
+      var to = dir > 0 ? Math.min(i + 1, joined.starts.length - 1) : (into > 1.5 ? i : Math.max(0, i - 1));
+      audio.currentTime = joined.starts[to];
+    } else if (mode === "B") {
+      // the item now playing (a pause belongs to the clip before it)
+      var k = chainIdx; while (k > 0 && chain[k].item < 0) k--;
+      var cur = chain[k].item, first = {};
+      chain.forEach(function (c, n) { if (c.item >= 0 && first[c.item] === undefined) first[c.item] = n; });
+      var target = dir > 0 ? cur + 1 : (chainIdx > first[cur] ? cur : cur - 1);
+      if (first[target] === undefined) target = cur;
+      chainIdx = first[target]; playChain();
+    }
+  }
+  if ("mediaSession" in navigator) {
+    var acts = {
+      play: function () { log("controls: play"); audio.play(); },
+      pause: function () { log("controls: pause"); audio.pause(); },
+      nexttrack: function () { skip(1); },
+      previoustrack: function () { skip(-1); },
+      seekforward: function () { log("controls: seek forward"); skip(1); },
+      seekbackward: function () { log("controls: seek back"); skip(-1); }
+    };
+    Object.keys(acts).forEach(function (k) { try { navigator.mediaSession.setActionHandler(k, acts[k]); } catch (e) { log("mediaSession: no " + k); } });
+    log("mediaSession: available");
+  } else log("mediaSession: NOT available");
+
+  $("a-play").addEventListener("click", function () { start("A"); });
+  $("b-play").addEventListener("click", function () { start("B"); });
+  $("a-stop").addEventListener("click", function () { audio.pause(); });
+  $("b-stop").addEventListener("click", function () { audio.pause(); });
+  $("speed").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    rate = parseFloat(b.getAttribute("data-r")); applyRate();
+    [].forEach.call($("speed").querySelectorAll("button"), function (x) { x.classList.toggle("on", x === b); });
+  });
+  $("copy").addEventListener("click", function () {
+    var txt = logLines.join("\n");
+    (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { $("copy-msg").textContent = "Copiado."; }, function () {
+      var r = document.createRange(); r.selectNodeContents($("log")); var s = getSelection(); s.removeAllRanges(); s.addRange(r); $("copy-msg").textContent = "Seleccionado: copialo a mano.";
+    });
+  });
+  $("clear").addEventListener("click", function () { logLines = []; try { localStorage.removeItem(LOG_KEY); } catch (e) {} $("log").textContent = ""; log("log cleared"); });
+})();
+</script>
+</body>
+</html>
