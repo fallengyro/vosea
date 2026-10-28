@@ -351,7 +351,7 @@
   function errText(e) {
     // supabase-js hands back the failed Response in e.context: read its JSON for the reason
     var ctx = e && e.context;
-    if (ctx && typeof ctx.json === "function") return ctx.json().then(function (j) { return "HTTP " + ctx.status + " " + (j.error || "") + (j.detail ? " · " + String(j.detail).slice(0, 160) : ""); }, function () { return "HTTP " + ctx.status; });
+    if (ctx && typeof ctx.json === "function") return ctx.json().then(function (j) { return "HTTP " + ctx.status + " " + (j.error || "") + (j.status !== undefined ? " (Azure/ElevenLabs said " + j.status + ")" : "") + (j.detail ? " · " + String(j.detail).slice(0, 200) : " · no detail from the service"); }, function () { return "HTTP " + ctx.status; });
     return Promise.resolve((e && e.message) || String(e));
   }
   function addEnButton(v, premium) {
