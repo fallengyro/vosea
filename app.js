@@ -995,6 +995,7 @@
       warm_set_hora: "La hora",
       warm_set_fechas: "Fechas (sin año)",
       warm_set_escenas: "Escenas: todo lo que dicen los personajes",
+      warm_set_oido: "Al oído: respuestas de las escenas",
       warm_set_count: "{n} clips · ~{mb} MB",
       warm_voices_both: "Las dos voces",
       warm_total: "Total: {n} clips · {chars} caracteres · ~{mb} MB",
@@ -1040,6 +1041,12 @@
       el_welcome_en: "Bienvenida · inglés",
       el_welcome_go: "Generar la bienvenida (≈ {k} créditos)",
       el_welcome_confirm: "Esto genera {what} (≈ {k} créditos). Puede usar el 10 % de reserva. ¿Seguir?",
+      el_oido_title: "Al oído: respuestas de las escenas",
+      el_oido_note: "La mejor respuesta de cada paso de las escenas, para Al oído: en castellano con Valeria y Agustín, y la traducción literal en inglés con Adam.",
+      el_oido_es: "Respuestas · castellano",
+      el_oido_en: "Respuestas · inglés",
+      el_oido_go: "Generar Al oído (≈ {k} créditos)",
+      el_oido_confirm: "Esto genera {what} (≈ {k} créditos). ¿Seguir?",
       el_sql_tag: "Falta correr pending_2026-10-18_tags.sql en Supabase (los audios ya hechos quedan guardados: volvé a tocar Generar después).",
       el_title: "Voces de ElevenLabs",
       el_loading: "Mirando ElevenLabs…",
@@ -2348,6 +2355,7 @@
       warm_set_hora: "Telling time",
       warm_set_fechas: "Dates (without the year)",
       warm_set_escenas: "Escenas: everything the characters say",
+      warm_set_oido: "Al oído: scene answers",
       warm_set_count: "{n} clips · ~{mb} MB",
       warm_voices_both: "Both voices",
       warm_total: "Total: {n} clips · {chars} characters · ~{mb} MB",
@@ -2393,6 +2401,12 @@
       el_welcome_en: "Welcome · English",
       el_welcome_go: "Generate the welcome (≈ {k} credits)",
       el_welcome_confirm: "This makes {what} (≈ {k} credits). It may use the 10% reserve. Continue?",
+      el_oido_title: "Al oído: scene answers",
+      el_oido_note: "The best answer of every scene step, for Al oído: in Spanish with Valeria and Agustín, and the literal English with Adam.",
+      el_oido_es: "Answers · Spanish",
+      el_oido_en: "Answers · English",
+      el_oido_go: "Generate Al oído (≈ {k} credits)",
+      el_oido_confirm: "This makes {what} (≈ {k} credits). Continue?",
       el_sql_tag: "pending_2026-10-18_tags.sql still needs to be run in Supabase (the clips already made are kept: tap Generate again afterwards).",
       el_title: "ElevenLabs voices",
       el_loading: "Checking ElevenLabs…",
@@ -3653,7 +3667,7 @@
   var warmPlan = null;      // { sets: [{key, texts}] }
   var warmRun = null;       // { total, done, hit, miss, error, stop, running }
   var warmVoices = "both";  // "both" | "elena" | "tomas"
-  var warmPicked = { escenas: true, oraciones: true, sonidos: true, numeros: true, precios: true, hora: true, fechas: true, album: true, coleccion: true, miles: false };
+  var warmPicked = { escenas: true, oido: true, oraciones: true, sonidos: true, numeros: true, precios: true, hora: true, fechas: true, album: true, coleccion: true, miles: false };
   var WARM_BYTES_PER_CHAR = 560; // 64 kbit/s mp3 ≈ 8 KB a second; Spanish TTS ≈ 14 characters a second
   var WARM_CONCURRENCY = 4;
   // On the free (F0) resource, a slice of the free month at a time
@@ -3813,6 +3827,15 @@
     var pairs = [];
     try { pairs = warmEscenaPairs(); } catch (e) { console.warn("[warm] escenas:", e && e.message); }
     sets.unshift({ key: "escenas", texts: [], pairs: pairs, chars: 0 });
+    // Al oído (2026-10-28): the scenes' best answers in Elena and Tomás
+    var oPairs = [];
+    try {
+      var oSeen = {};
+      oidoTexts("es").forEach(function (tx) {
+        Object.keys(TTS_VOICES).forEach(function (k) { var v = TTS_VOICES[k]; if (!oSeen[v + "\u0000" + tx]) { oSeen[v + "\u0000" + tx] = true; oPairs.push({ text: tx, voice: v }); } });
+      });
+    } catch (e) { console.warn("[warm] oido:", e && e.message); }
+    sets.splice(1, 0, { key: "oido", texts: [], pairs: oPairs, chars: 0 });
     return { sets: sets };
   }
   function warmVoiceList() {
@@ -4260,6 +4283,32 @@
         elevenRun(welcomeUnits(), { reserve: true });
       });
       var wa = uNode("div", "form-actions"); wa.appendChild(wgo); sec.appendChild(wa);
+    }
+    // Al oído: the scenes' best answers (Valeria and Agustín in Spanish,
+    // Adam in English)
+    var ou = oidoUnits(), oTodo = 0, oChars = 0, oNames = [], ol = uNode("ul", "el-units el-oido");
+    ou.forEach(function (u) {
+      var ready = elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] === u.sig;
+      var li = uNode("li", "el-unit" + (ready ? " is-ready" : ""));
+      li.setAttribute("data-unit", u.vk + "|" + u.role);
+      li.appendChild(uNode("span", "el-unit-n", u.name));
+      li.appendChild(uNode("span", "count", ready ? "✓ " + t("el_ready") : t("el_unit_cost", { n: progNum(u.texts.length), c: progNum(u.chars) })));
+      li.title = t("el_unit_credits", { k: progNum(elCredits(u.chars)) });
+      ol.appendChild(li);
+      if (!ready) { oTodo++; oChars += u.chars; oNames.push(u.name); }
+    });
+    sec.appendChild(uNode("h5", "el-sub", t("el_oido_title")));
+    sec.appendChild(uNode("p", "usage-note", t("el_oido_note")));
+    sec.appendChild(ol);
+    if (oTodo) {
+      var ogo = uNode("button", "btn-secondary", t("el_oido_go", { k: progNum(elCredits(oChars)) }));
+      ogo.type = "button"; ogo.id = "el-oido-go";
+      ogo.disabled = busy || !st.limit || !!st.error || !elevenVoicesSql;
+      ogo.addEventListener("click", function () {
+        if (!window.confirm(t("el_oido_confirm", { what: oNames.join(", "), k: progNum(elCredits(oChars)) }))) return;
+        elevenRun(oidoUnits());
+      });
+      var oa = uNode("div", "form-actions"); oa.appendChild(ogo); sec.appendChild(oa);
     }
     var actions = uNode("div", "form-actions");
     var go = uNode("button", "btn-primary", busy ? t("el_stop") : t("el_go"));
@@ -5863,7 +5912,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "187";
+  var VOSEA_BUILD = "188";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7523,6 +7572,71 @@
     return null;
   }
   function welcomeHasAudio(n) { return n >= 0 && welcomeReadyTag(n) !== null; }
+
+  // ---- Al oído: the scenes' best answers (2026-10-28) ----
+  // mason: start Al oído with each your-turn step's default (best) answer.
+  // In Al oído it plays: the literal English (escenas.js
+  // VOSEA_ESCENAS_LIT) → the Spanish in Elena, Tomás, Valeria, Agustín →
+  // the English again. Made here: Valeria and Agustín (Spanish) and Adam
+  // (English, "eleven:adam" in the tts function; not a scene voice, so not
+  // in ELEVEN_VOICES) from the Uso page, Elena and Tomás in the warm-up
+  // ("Al oído: respuestas"). No mood tag: the answers are yours, not a
+  // character's. Units are saved as voice_units (voice, "oido-best", lang).
+  // See claude/vosea-al-oido-plan.md.
+  var OIDO_LIT = window.VOSEA_ESCENAS_LIT || {};
+  var OIDO_EN_VOICE = { vk: "adam", label: "Adam" };
+  var OIDO_ES_VOICES = ["valeria", "agustin"];
+  // "Hi, {m:Martina|Martín}!" → both forms (in order), plain text → itself
+  function oidoForms(text) {
+    text = String(text);
+    var m = /\{(\w+):([^|}]*)\|([^}]*)\}/.exec(text);
+    if (!m) return [text.trim()];
+    var a = text.slice(0, m.index), b = text.slice(m.index + m[0].length);
+    return oidoForms(a + m[2] + b).concat(oidoForms(a + m[3] + b));
+  }
+  // every best answer with its English: [{ scene, step, pick, es, en }]
+  function oidoBestPairs() {
+    var out = [];
+    ESCENAS.forEach(function (sc) {
+      var lit = OIDO_LIT[sc.id] || [], n = 0;
+      sc.steps.forEach(function (st, i) {
+        if (!st.you) return;
+        var en = lit[n++], best = st.best;
+        if (!best || !en) return;
+        var keys = typeof best === "object" ? Object.keys(best) : [null];
+        keys.forEach(function (k) {
+          var es1 = k === null ? best : best[k], en1 = typeof en === "object" ? en[k] : en;
+          if (typeof es1 !== "string" || typeof en1 !== "string") return;
+          var fe = oidoForms(es1), fn = oidoForms(en1);
+          fe.forEach(function (x, j) { out.push({ scene: sc.id, step: i, pick: k, es: x, en: fn[Math.min(j, fn.length - 1)] }); });
+        });
+      });
+    });
+    return out;
+  }
+  window.voseaOidoPairs = function () { return oidoBestPairs(); }; // tests
+  function oidoTexts(lang) {
+    var seen = {}, out = [];
+    oidoBestPairs().forEach(function (p) { var tx = lang === "en" ? p.en : p.es; if (tx && !seen[tx]) { seen[tx] = true; out.push(tx); } });
+    return out;
+  }
+  function oidoUnit(vk, lang) {
+    var texts = oidoTexts(lang), chars = 0;
+    texts.forEach(function (tx) { chars += elevenSpoken(tx, "").length; });
+    var label = vk === OIDO_EN_VOICE.vk ? OIDO_EN_VOICE.label : ELEVEN_VOICES[vk].label;
+    return {
+      vk: vk, sc: { id: "oido-best" }, role: lang, tag: "", texts: texts, chars: chars, lang: lang,
+      name: t(lang === "en" ? "el_oido_en" : "el_oido_es") + " · " + label,
+      sig: elevenFnv(ELEVEN_VER + "\n" + vk + "\n\n" + lang + "\n" + texts.join("\n"))
+    };
+  }
+  function oidoUnits() {
+    var out = [];
+    OIDO_ES_VOICES.forEach(function (vk) { if (ELEVEN_VOICES[vk]) out.push(oidoUnit(vk, "es")); });
+    out.push(oidoUnit(OIDO_EN_VOICE.vk, "en"));
+    return out;
+  }
+  window.voseaOidoUnits = function () { return oidoUnits(); }; // tests
   // The welcome speaks by itself (2026-10-18, mason: "instead of having an
   // escuchar button… have them speak immediately and then change the button
   // out for a silent button"). The button mutes; muted is remembered on the

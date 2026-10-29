@@ -573,3 +573,117 @@ window.VOSEA_ESCENAS = [
     ]
   }
 ];
+
+// Al oído (2026-10-28): the literal English of each your-turn step's best
+// answer, in step order (one entry per `you` step; an object keyed like
+// the step's `best` when it has a pick). Gender forms {k:a|b} follow the
+// same role as in the Spanish. Reviewed by mason ("the respuestas seem
+// fine"); the review copy is C:\Dev\vosea data\al-oido\respuestas-ingles.md.
+// Changing a line changes the "Al oído: respuestas" premium unit's sig,
+// so it shows as not made until it is generated again.
+window.VOSEA_ESCENAS_LIT = {
+  panaderia: [
+    "Half a dozen croissants, please.",
+    { "manteca": "The butter ones.", "grasa": "The lard ones." },
+    "No, nothing else. How much is it?",
+    { "tarjeta": "With a card.", "efectivo": "In cash." },
+    "Thanks, likewise!"
+  ],
+  kiosco: [
+    "Hi, will you load the SUBE for me?",
+    "Five thousand pesos.",
+    "Yes, an alfajor too.",
+    { "chocolate": "Chocolate, please.", "dulce": "Dulce de leche, please." },
+    "Do you have change for ten thousand?",
+    "Thanks! Bye."
+  ],
+  cafe: [
+    { "cortado": "A cortado, I think.", "cafeconleche": "A coffee with milk, I think." },
+    { "cortado": "For me, a cortado and a pastry.", "cafeconleche": "For me, a coffee with milk and a pastry." },
+    { "dulce": "Dulce de leche.", "crema": "Custard." },
+    "Good! Little by little.",
+    "Will you bring us the check, please?",
+    "Thanks, likewise!"
+  ],
+  colectivo: [
+    "Hi, does it go past Plaza Italia?",
+    "Will you tell me when we get there?",
+    "Thank you so much!",
+    { "amigos": "Yes, I'm going to meet up with a friend.", "botanico": "Yes, I'm going to the Botanical Garden." },
+    "Excuse me, I get off at the next one.",
+    "Thanks for everything! Bye."
+  ],
+  farmacia: [
+    { "jarabe": "I have a cough. Do you have any cough syrup?", "pastillas": "I have a cough. Do you have cough drops?" },
+    { "ayer": "Since yesterday.", "anoche": "Since last night." },
+    "No, but my head hurts.",
+    "Do I need a prescription?",
+    { "jarabe": "Every how many hours do I take it?", "pastillas": "Every how many hours do I take them?" },
+    "OK. How much is it?",
+    "Thanks!"
+  ],
+  juntada: [
+    "Hi, {m:Martina|Martín}! Nice to meet you.",
+    "I'm from the United States.",
+    { "anio": "It's been a year that I've lived here.", "meses": "It's been six months that I've lived here." },
+    "I'm learning Spanish with an app.",
+    "OK, great! What do I bring?",
+    "OK! I'm going to the kiosco and I'll be back."
+  ],
+  portero: [
+    "Good morning. Did a package come for me?",
+    "I'm from 4A.",
+    "What time do they cut off the water?",
+    "Yes, the elevator doesn't work.",
+    { "rechazar": "No, thanks, it's fine.", "aceptar": "Yes, sure! Thank you so much." },
+    "Thanks for letting me know, {j:Julia|Julio}."
+  ],
+  taxi: [
+    "To Santa Fe and Coronel Díaz, please.",
+    { "autopista": "Taking the highway is fine.", "libertador": "Taking Libertador is fine." },
+    "Thanks! I'm learning little by little.",
+    "Do you accept cards?",
+    "Here is fine, thanks.",
+    { "efectivo": "Here you go. Keep the change.", "transferencia": "I'll pay you by transfer, OK?" },
+    "Thanks, likewise!"
+  ],
+  delivery: [
+    "Hi, I wanted to order a large mozzarella pizza.",
+    { "carne": "Yes, half a dozen beef empanadas.", "jamon": "Yes, half a dozen ham and cheese empanadas." },
+    "Gorriti 4500, third floor, apartment B.",
+    { "efectivo": "In cash.", "tarjeta": "With a card." },
+    { "efectivo": "Yes, I'll pay with fifty thousand.", "tarjeta": "With debit." },
+    "Perfect, thanks! Bye."
+  ],
+  medico: [
+    "Yes, I have an appointment at ten.",
+    "Yes, here you go.",
+    "My throat hurts and I have a fever.",
+    { "lunes": "Since Monday.", "sabado": "Since Saturday." },
+    { "ibuprofeno": "Yes, I took ibuprofen.", "paracetamol": "Yes, I took acetaminophen." },
+    "Yes, perfect. Thanks!"
+  ],
+  depto: [
+    "Hi, I've come to see the apartment.",
+    "How many rooms does it have?",
+    "Are the building fees included?",
+    { "perro": "Can you have a dog?", "gato": "Can you have a cat?" },
+    "When would it be available?",
+    "It interests me. What do I need?",
+    "Great, thank you so much!"
+  ],
+  tienda: [
+    { "campera": "Hi, I'm looking for a jacket. Can I try on the one in the window?", "pantalon": "Hi, I'm looking for a pair of pants. Can I try on the pair in the window?" },
+    { "campera": "It's a little big on me. Do you have it one size smaller?", "pantalon": "They're a little big on me. Do you have them one size smaller?" },
+    { "campera": "It fits me perfectly! I'll take it.", "pantalon": "They fit me perfectly! I'll take them." },
+    { "zapatillas": "Yes, I also wanted to see the white sneakers.", "mocasines": "Yes, I also wanted to see the brown loafers." },
+    "Forty.",
+    { "zapatillas": "They're a little tight on me. Do you have them in forty-one?", "mocasines": "They're a little tight on me. Do you have them in forty-one?" },
+    { "zapatillas": "Yes, sure, bring them to me.", "mocasines": "Yes, sure, bring them to me." },
+    { "zapatillas": "These fit me well. I'll take them too.", "mocasines": "These fit me well. I'll take them too." },
+    { "bufanda": "Yes, that scarf too. It's for my sister: will you gift-wrap it for me?", "cinturon": "Yes, that belt too. It's for my brother: will you gift-wrap it for me?" },
+    { "bufanda": "And if my sister doesn't like it, can she exchange it?", "cinturon": "And if my brother doesn't like it, can he exchange it?" },
+    { "cuotas": "Can I pay in three interest-free installments?", "debito": "With debit." },
+    "Thank you so much! Bye."
+  ]
+};
