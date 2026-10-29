@@ -2684,6 +2684,38 @@
   .col-bar .btn-primary { background: var(--accent-ink); color: var(--accent-deep); border-color: var(--accent-ink); min-height: 44px; }
 
   .deck-overlay { z-index: 95; }
+  /* Al oído (2026-10-28): the listening sheet, opened from Hoy */
+  .oido-lead { font-size: 14px; color: var(--ink-soft); line-height: 1.45; margin: 6px 0 14px; }
+  .oido-scenes-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .oido-scenes-head .flash-group-label { margin: 0; }
+  .oido-all { min-height: 36px; }
+  .oido-scenes { margin: 6px 0 4px; }
+  .oido-prep { padding: 28px 0 18px; text-align: center; }
+  .oido-prep-msg { font-size: 15px; color: var(--ink); margin: 0 0 12px; }
+  .oido-bar { height: 6px; border-radius: 3px; background: var(--paper-sunken); overflow: hidden; }
+  .oido-bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .oido-player { padding: 6px 0 4px; text-align: center; }
+  .oido-pos { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--ink-soft); margin: 4px 0 14px; }
+  .oido-es { font-family: "Fraunces", Georgia, serif; font-size: 26px; font-weight: 600; line-height: 1.25; color: var(--ink); margin: 0 0 6px; min-height: 2.5em; display: flex; align-items: flex-end; justify-content: center; }
+  .oido-en { font-size: 15px; color: var(--ink-soft); line-height: 1.4; margin: 0 0 18px; min-height: 2.8em; }
+  /* one row: English, the voices (three or four), English */
+  .oido-steps { list-style: none; padding: 0; margin: 0 auto 8px; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; max-width: 440px; }
+  .oido-step { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; padding: 6px 2px 5px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); font-size: 12px; line-height: 1.2; }
+  .oido-step-who { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .oido-step-sp { font-size: 11px; opacity: .8; margin-top: 1px; }
+  .oido-step.is-past { color: var(--ink); border-color: var(--line); background: var(--paper-sunken); }
+  .oido-step.is-now { background: var(--accent-deep); border-color: var(--accent-deep); color: var(--accent-ink); font-weight: 700; }
+  .oido-now { font-size: 13.5px; color: var(--ink-soft); margin: 4px 0 14px; min-height: 1.4em; }
+  .oido-controls { display: flex; align-items: center; justify-content: center; gap: 22px; margin: 4px 0 12px; }
+  .oido-ctl { width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .oido-ctl svg { width: 22px; height: 22px; fill: currentColor; }
+  .oido-ctl.oido-play { width: 72px; height: 72px; background: var(--accent-deep); border-color: var(--accent-deep); color: var(--accent-ink); }
+  .oido-ctl.oido-play svg { width: 30px; height: 30px; }
+  .oido-ctl:hover { border-color: var(--accent); }
+  .oido-lock { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 4px; }
+  .oido-missing { font-size: 12.5px; color: var(--ink-soft); margin: 0; }
+  .oido-missing:empty { display: none; }
+  .oido-again-row { margin-top: 4px; }
   .deck-card { max-width: 560px; padding-top: 14px; }
   .deck-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
   .deck-head h2 { font-family: "Fraunces", Georgia, serif; font-style: italic; font-size: 22px; margin: 0; }

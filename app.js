@@ -1047,6 +1047,36 @@
       el_oido_en: "Respuestas · inglés",
       el_oido_go: "Generar Al oído (≈ {k} créditos)",
       el_oido_confirm: "Esto genera {what} (≈ {k} créditos). ¿Seguir?",
+      hoy_k_oido: "Al oído",
+      hoy_oido_title: "Escuchá las respuestas de las escenas",
+      hoy_oido_sub: "En inglés y después en cuatro voces. Sigue sonando con el teléfono bloqueado.",
+      hoy_oido_today: "Hoy: {min} min · {n} frases",
+      hoy_oido_btn: "Escuchar",
+      oido_lead: "Cada respuesta: el inglés literal, la frase en castellano con Elena, Tomás, Valeria y Agustín (a distintas velocidades) y otra vez el inglés.",
+      oido_scenes_label: "Escenas",
+      oido_all: "Todas",
+      oido_start: "Escuchar ▸",
+      oido_count: "{n} respuestas · unos {min} min",
+      oido_count_one: "1 respuesta · unos {min} min",
+      oido_none: "Elegí al menos una escena.",
+      oido_quiet_note: "El modo silencioso está activado: Al oído suena igual. Usá auriculares.",
+      oido_prep: "Preparando… {done} de {total} audios",
+      oido_prep_fail: "No se pudieron preparar los audios: {msg}",
+      oido_no_clips: "todavía no hay audios para estas respuestas",
+      oido_missing: "{n} audios todavía no existen y se saltean.",
+      oido_missing_one: "1 audio todavía no existe y se saltea.",
+      oido_pos: "{i} de {n} · {scene}",
+      oido_en: "Inglés",
+      oido_now: "Ahora: {who}",
+      oido_lock: "Podés bloquear el teléfono: sigue sonando, y los auriculares pausan y saltan.",
+      oido_done: "Listo: {n} respuestas · {min} min.",
+      oido_again: "Elegir otra vez",
+      oido_play_aria: "Reproducir",
+      oido_pause_aria: "Pausa",
+      oido_again_aria: "Escuchar otra vez",
+      oido_prev_aria: "Repetir la respuesta",
+      oido_next_aria: "Siguiente respuesta",
+      oido_limit_aria: "Cuántas respuestas",
       el_sql_tag: "Falta correr pending_2026-10-18_tags.sql en Supabase (los audios ya hechos quedan guardados: volvé a tocar Generar después).",
       el_title: "Voces de ElevenLabs",
       el_loading: "Mirando ElevenLabs…",
@@ -2407,6 +2437,36 @@
       el_oido_en: "Answers · English",
       el_oido_go: "Generate Al oído (≈ {k} credits)",
       el_oido_confirm: "This makes {what} (≈ {k} credits). Continue?",
+      hoy_k_oido: "Al oído",
+      hoy_oido_title: "Listen to the scenes' answers",
+      hoy_oido_sub: "In English, then in four voices. It keeps playing with the phone locked.",
+      hoy_oido_today: "Today: {min} min · {n} phrases",
+      hoy_oido_btn: "Listen",
+      oido_lead: "Each answer: the literal English, the Spanish in Elena, Tomás, Valeria and Agustín (at different speeds), then the English again.",
+      oido_scenes_label: "Scenes",
+      oido_all: "All",
+      oido_start: "Listen ▸",
+      oido_count: "{n} answers · about {min} min",
+      oido_count_one: "1 answer · about {min} min",
+      oido_none: "Pick at least one scene.",
+      oido_quiet_note: "Quiet mode is on: Al oído still plays. Use earbuds.",
+      oido_prep: "Getting ready… {done} of {total} clips",
+      oido_prep_fail: "Couldn't get the clips ready: {msg}",
+      oido_no_clips: "there are no clips for these answers yet",
+      oido_missing: "{n} clips don't exist yet and are skipped.",
+      oido_missing_one: "1 clip doesn't exist yet and is skipped.",
+      oido_pos: "{i} of {n} · {scene}",
+      oido_en: "English",
+      oido_now: "Now: {who}",
+      oido_lock: "You can lock your phone: it keeps playing, and your earbuds pause and skip.",
+      oido_done: "Done: {n} answers · {min} min.",
+      oido_again: "Choose again",
+      oido_play_aria: "Play",
+      oido_pause_aria: "Pause",
+      oido_again_aria: "Listen again",
+      oido_prev_aria: "Repeat the answer",
+      oido_next_aria: "Next answer",
+      oido_limit_aria: "How many answers",
       el_sql_tag: "pending_2026-10-18_tags.sql still needs to be run in Supabase (the clips already made are kept: tap Generate again afterwards).",
       el_title: "ElevenLabs voices",
       el_loading: "Checking ElevenLabs…",
@@ -5912,7 +5972,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "188";
+  var VOSEA_BUILD = "189";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7364,6 +7424,15 @@
       box.appendChild(packCard);
     }
 
+    // Al oído (2026-10-28, mason: it starts from Hoy). Today's listening
+    // is its own line; it doesn't count toward the card goal.
+    if (oidoAllItems().length) {
+      var od = oidoToday();
+      box.appendChild(hoyCard({ id: "hoy-oido", kicker: t("hoy_k_oido"), title: t("hoy_oido_title"),
+        sub: od.n || od.ms >= 60000 ? t("hoy_oido_today", { min: progNum(Math.max(1, Math.round(od.ms / 60000))), n: progNum(od.n) }) : t("hoy_oido_sub"),
+        btn: t("hoy_oido_btn"), onGo: function () { openOido(); } }));
+    }
+
     // Aprender
     var tp = hoyTopicPick();
     if (tp) {
@@ -7637,6 +7706,391 @@
     return out;
   }
   window.voseaOidoUnits = function () { return oidoUnits(); }; // tests
+  // ================= Al oído: the player (2026-10-28) =================
+  // mason's picks: it starts from Hoy; a session is the scenes you pick
+  // (all by default) and 10 · 20 · Todas, shuffled across them; each answer
+  // plays the literal English (Adam) → the Spanish in Elena, Tomás, Valeria
+  // and Agustín in a new order each time, two at 1×, one at 0.9× and one at
+  // 1.1× → the English again. Claude's calls: clip by clip on one <audio>
+  // (step 0 showed it keeps going with the screen locked, and each clip can
+  // have its own speed with the pitch kept), with «Pausa suave» (a silent
+  // loop while paused, so iOS doesn't put the page to sleep and the earbuds
+  // can bring it back); the pauses are silent clips, not timers. Missing
+  // clips are skipped, never made while listening. Listening doesn't count
+  // toward the card goal: Hoy shows today's minutes and phrases, kept on
+  // this device. See claude/vosea-al-oido-plan.md.
+  var OIDO_PREF_KEY = "vosea-oido-prefs";   // { scenes: [ids] | null (all), limit: "10"|"20"|"all" }
+  var OIDO_DAYS_KEY = "vosea-oido-days";    // { "YYYY-MM-DD": { ms, n } }
+  var OIDO_FORMS_KEY = "vosea-oido-forms";  // item key → how many times played (Martina / Martín take turns)
+  var OIDO_GAP = { voice: 0.8, en: 1.2, item: 1.6 };
+  var OIDO_SPEEDS = [1, 1, 0.9, 1.1];
+  var OIDO_ES = ["elena", "tomas", "valeria", "agustin"];
+  var OIDO_SECS_PER_ITEM = 17;
+  var OIDO_SOFT_MAX = 10 * 60000;
+  var oido = { bound: false, view: "setup", items: [], seq: [], idx: 0, state: "idle", soft: null, audio: null, blobs: [], silence: {}, token: 0, tickAt: 0, heardMs: 0, heard: 0, missing: 0 };
+  function oidoEl(id) { return document.getElementById(id); }
+  function oidoRead(key, def) { try { var v = JSON.parse(localStorage.getItem(key) || "null"); return v === null ? def : v; } catch (e) { return def; } }
+  function oidoWrite(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
+  function oidoPrefs() {
+    var p = oidoRead(OIDO_PREF_KEY, {});
+    return { scenes: Array.isArray(p.scenes) ? p.scenes : null, limit: p.limit === "10" || p.limit === "all" ? p.limit : "20" };
+  }
+  function oidoDayKey() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function oidoToday() { var all = oidoRead(OIDO_DAYS_KEY, {}); var d = all[oidoDayKey()]; return { ms: (d && d.ms) || 0, n: (d && d.n) || 0 }; }
+  function oidoAddToday(ms, n) {
+    if (!ms && !n) return;
+    var all = oidoRead(OIDO_DAYS_KEY, {}), k = oidoDayKey(), d = all[k] || { ms: 0, n: 0 };
+    d.ms += Math.max(0, Math.round(ms)); d.n += n; all[k] = d;
+    // keep about two months
+    Object.keys(all).sort().slice(0, -62).forEach(function (x) { delete all[x]; });
+    oidoWrite(OIDO_DAYS_KEY, all);
+  }
+  window.voseaOidoToday = function () { return oidoToday(); }; // tests
+  // the answers as items: one per step and pick option, with its forms
+  var oidoItemsMemo = null;
+  function oidoAllItems() {
+    if (oidoItemsMemo) return oidoItemsMemo;
+    var by = {}, out = [];
+    oidoBestPairs().forEach(function (p) {
+      var key = p.scene + "|" + p.step + "|" + (p.pick || "");
+      if (!by[key]) { by[key] = { key: key, scene: p.scene, forms: [] }; out.push(by[key]); }
+      by[key].forms.push({ es: p.es, en: p.en });
+    });
+    return (oidoItemsMemo = out);
+  }
+  function oidoShuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+  function oidoSceneIds() { return escPathOrder().map(function (sc) { return sc.id; }).filter(function (id) { return oidoAllItems().some(function (it) { return it.scene === id; }); }); }
+  function oidoChosen() { var p = oidoPrefs(), ids = oidoSceneIds(); return p.scenes ? ids.filter(function (id) { return p.scenes.indexOf(id) !== -1; }) : ids; }
+  function oidoPoolSize() { var ch = oidoChosen(); return oidoAllItems().filter(function (it) { return ch.indexOf(it.scene) !== -1; }).length; }
+  function oidoSessionSize() { var n = oidoPoolSize(), l = oidoPrefs().limit; return l === "all" ? n : Math.min(n, Number(l)); }
+  function oidoMinutes(n) { return Math.max(1, Math.round(n * OIDO_SECS_PER_ITEM / 60)); }
+  function oidoSpeed(r) { return (r === 1 ? "1" : r.toLocaleString(currentLang === "en" ? "en-US" : "es-AR")) + "×"; }
+  function oidoVoiceName(vk) { return vk === "adam" ? "Adam" : escVoiceLabel(vk); }
+  // a session: shuffled items, each with its form, voice order and speeds
+  function oidoBuild() {
+    var ch = oidoChosen(), pool = oidoShuffle(oidoAllItems().filter(function (it) { return ch.indexOf(it.scene) !== -1; }));
+    var lim = oidoPrefs().limit, n = lim === "all" ? pool.length : Math.min(pool.length, Number(lim));
+    var turns = oidoRead(OIDO_FORMS_KEY, {});
+    var items = pool.slice(0, n).map(function (it) {
+      var c = Number(turns[it.key]) || 0, f = it.forms[c % it.forms.length];
+      if (it.forms.length > 1) turns[it.key] = c + 1;
+      var vs = oidoShuffle(OIDO_ES), sp = oidoShuffle(OIDO_SPEEDS);
+      return { key: it.key, scene: it.scene, es: f.es, en: f.en, voices: vs.map(function (vk, i) { return { vk: vk, rate: sp[i] }; }) };
+    });
+    oidoWrite(OIDO_FORMS_KEY, turns);
+    return items;
+  }
+  // ---- clips ----
+  function oidoMemoKey(vk, text, lang) {
+    if (vk === "elena" || vk === "tomas") return ttsKey(text, vk, null);
+    var take = elevenTakeOf(vk, "", text);
+    if (ELEVEN_VOICES[vk]) return ttsKey(text, vk, { tag: "", take: take, lang: lang });
+    return "eleven:" + vk + "\u0000" + String(text).trim() + "\u0000\u0000" + take + (lang === "en" ? "\u0000en" : "");
+  }
+  // the clip's address, or null when it hasn't been made (ElevenLabs lines
+  // are only looked up here; Azure ones are made if they're missing, within
+  // the usual limits)
+  function oidoResolve(vk, text, lang) {
+    var key = oidoMemoKey(vk, text, lang);
+    if (ttsUrlMemo[key]) return Promise.resolve(ttsUrlMemo[key]);
+    if (vk === "elena" || vk === "tomas") return ttsResolveUrl(text, false, vk).then(function (r) { return r.url; });
+    var body = { text: String(text).trim(), voice: "eleven:" + vk, tag: "", take: elevenTakeOf(vk, "", text) };
+    if (lang === "en") body.lang = "en";
+    return supabaseClient.functions.invoke("tts", { body: body }).then(function (res) {
+      if (res.error && res.error.context && res.error.context.status === 404) return null;
+      if (res.error || !res.data || !res.data.url) throw (res.error || new Error("no_url"));
+      if (res.data.stored !== false) { ttsUrlMemo[key] = res.data.url; saveTtsUrlMemo(); }
+      return res.data.url;
+    });
+  }
+  function oidoSilence(secs) {
+    if (oido.silence[secs]) return oido.silence[secs];
+    var rate = 8000, n = Math.max(1, Math.round(rate * secs * (window.__oidoGapScale || 1))), buf = new ArrayBuffer(44 + n * 2), dv = new DataView(buf);
+    function s(o, str) { for (var i = 0; i < str.length; i++) dv.setUint8(o + i, str.charCodeAt(i)); }
+    s(0, "RIFF"); dv.setUint32(4, 36 + n * 2, true); s(8, "WAVE"); s(12, "fmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, rate, true); dv.setUint32(28, rate * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); s(36, "data"); dv.setUint32(40, n * 2, true);
+    return (oido.silence[secs] = URL.createObjectURL(new Blob([buf], { type: "audio/wav" })));
+  }
+  // every clip of the session, downloaded before play (so a locked phone
+  // doesn't wait on the network)
+  function oidoPrepare(items, token) {
+    var jobs = [], seen = {};
+    items.forEach(function (it) {
+      var specs = [{ vk: "adam", text: it.en, lang: "en" }].concat(it.voices.map(function (v) { return { vk: v.vk, text: it.es, lang: "es" }; }));
+      specs.forEach(function (sp) { var k = sp.vk + "\u0000" + sp.lang + "\u0000" + sp.text; if (!seen[k]) { seen[k] = true; jobs.push({ k: k, sp: sp }); } });
+    });
+    var got = {}, done = 0, k = 0;
+    function say() { oidoEl("oido-prep-msg").textContent = t("oido_prep", { done: progNum(done), total: progNum(jobs.length) }); oidoEl("oido-prep-bar").style.width = (jobs.length ? Math.round(done * 100 / jobs.length) : 100) + "%"; }
+    say();
+    function worker() {
+      if (token !== oido.token || k >= jobs.length) return Promise.resolve();
+      var j = jobs[k++];
+      return oidoResolve(j.sp.vk, j.sp.text, j.sp.lang).then(function (url) {
+        if (!url) return null;
+        return ttsFetchBlob(url).then(function (src) { oido.blobs.push(src); return src; }, function () { return url; });
+      }).catch(function () { return null; }).then(function (src) {
+        got[j.k] = src; done++;
+        if (token === oido.token) say();
+        return worker();
+      });
+    }
+    return Promise.all([worker(), worker(), worker(), worker(), worker(), worker()]).then(function () { return got; });
+  }
+  // the play list: [{ src, rate, item, step }] with the pauses as silent clips
+  function oidoSequence(items, got) {
+    var seq = [], kept = [], missing = 0;
+    items.forEach(function (it) {
+      var en = got["adam\u0000en\u0000" + it.en];
+      var vs = it.voices.filter(function (v) { var s = got[v.vk + "\u0000es\u0000" + it.es]; if (!s) missing++; return !!s; });
+      if (!en) { missing++; return; } // without the English there's nothing to frame it
+      if (!vs.length) return;
+      var n = kept.length; kept.push(it); it.voices = vs;
+      seq.push({ src: en, rate: 1, item: n, step: 0, first: true });
+      seq.push({ src: oidoSilence(OIDO_GAP.en), gap: true, item: n, step: 0 });
+      vs.forEach(function (v, i) {
+        seq.push({ src: got[v.vk + "\u0000es\u0000" + it.es], rate: v.rate, item: n, step: i + 1 });
+        seq.push({ src: oidoSilence(i === vs.length - 1 ? OIDO_GAP.en : OIDO_GAP.voice), gap: true, item: n, step: i + 1 });
+      });
+      seq.push({ src: en, rate: 1, item: n, step: vs.length + 1, last: true });
+      seq.push({ src: oidoSilence(OIDO_GAP.item), gap: true, item: n, step: vs.length + 1, end: true });
+    });
+    return { seq: seq, items: kept, missing: missing };
+  }
+  // ---- playback ----
+  function oidoAudio() {
+    if (oido.audio) return oido.audio;
+    var a = oido.audio = new Audio();
+    a.preload = "auto";
+    a.addEventListener("ended", function () {
+      if (oido.soft || oido.state !== "playing") return;
+      var s = oido.seq[oido.idx];
+      if (s && s.end) { oido.heard++; oidoAddToday(0, 1); }
+      oido.idx++;
+      if (oido.idx >= oido.seq.length) { oidoFinish(); return; }
+      oidoPlaySeg();
+    });
+    a.addEventListener("pause", function () {
+      // iOS sends "pause" at the end of every clip, before "ended": only a
+      // pause in the middle (a call, another app) changes the state
+      if (oido.soft || oido.switching || oido.state !== "playing" || a.ended) return;
+      if (a.duration && a.duration - a.currentTime < 0.3) return;
+      oidoTick(); oido.state = "paused"; oidoRender();
+    });
+    a.addEventListener("error", function () {
+      if (oido.soft || oido.state !== "playing") return;
+      setTimeout(function () { if (oido.state === "playing" && !oido.soft) { oido.idx++; if (oido.idx >= oido.seq.length) oidoFinish(); else oidoPlaySeg(); } }, 200);
+    });
+    a.addEventListener("playing", function () { oido.switching = false; });
+    a.addEventListener("timeupdate", function () { if (oido.soft && Date.now() - oido.soft.at > OIDO_SOFT_MAX) { oido.soft = null; a.loop = false; a.pause(); oidoRender(); } });
+    return a;
+  }
+  function oidoRate(a, r) {
+    try { a.preservesPitch = true; a.webkitPreservesPitch = true; a.mozPreservesPitch = true; } catch (e) {}
+    a.defaultPlaybackRate = r; a.playbackRate = r;
+  }
+  function oidoPlaySeg() {
+    var a = oidoAudio(), s = oido.seq[oido.idx];
+    if (!s) return;
+    a.loop = false;
+    oido.switching = true; // the new src fires a "pause" that isn't yours
+    a.src = s.src;
+    oidoRate(a, s.gap ? 1 : s.rate);
+    var p = a.play();
+    if (p && p.catch) p.catch(function () { if (oido.state === "playing") { oidoTick(); oido.state = "paused"; oidoRender(); } });
+    oidoRender();
+  }
+  function oidoTick() { if (oido.tickAt) { var ms = Date.now() - oido.tickAt; oido.heardMs += ms; oidoAddToday(ms, 0); } oido.tickAt = 0; }
+  function oidoPlay() {
+    if (!oido.seq.length) return;
+    if (oido.state === "done") { oido.idx = 0; oido.heard = 0; }
+    oido.state = "playing"; oido.tickAt = Date.now();
+    if (oido.soft) oido.soft = null;
+    oidoPlaySeg();
+  }
+  function oidoPause() {
+    if (oido.state !== "playing") return;
+    oidoTick();
+    oido.state = "paused";
+    // Pausa suave: a silent loop keeps the page awake; play starts the
+    // current clip again
+    var a = oidoAudio();
+    oido.soft = { at: Date.now() };
+    a.loop = true; a.src = oidoSilence(1); oidoRate(a, 1);
+    var p = a.play(); if (p && p.catch) p.catch(function () { oido.soft = null; });
+    oidoRender();
+  }
+  function oidoToggle() { if (oido.state === "playing") oidoPause(); else oidoPlay(); }
+  // next: the next answer; previous: this answer from the top, or the one
+  // before when it has only just started
+  function oidoSkip(dir) {
+    if (!oido.seq.length) return;
+    var cur = oido.seq[Math.min(oido.idx, oido.seq.length - 1)].item, target = cur;
+    if (dir > 0) target = cur + 1;
+    else { var start = oido.seq.findIndex(function (s) { return s.item === cur; }); if (oido.idx - start <= 1 && cur > 0) target = cur - 1; }
+    var at = oido.seq.findIndex(function (s) { return s.item === target; });
+    if (at === -1) { if (dir > 0) { oidoFinish(); } return; }
+    oido.idx = at;
+    if (oido.state === "playing" || oido.soft || oido.state === "paused") { oido.soft = null; if (oido.state !== "playing") { oido.state = "playing"; oido.tickAt = Date.now(); } oidoPlaySeg(); }
+    else oidoRender();
+  }
+  function oidoFinish() {
+    oidoTick();
+    var a = oidoAudio(); a.loop = false; try { a.pause(); } catch (e) {}
+    oido.state = "done"; oido.soft = null;
+    oido.idx = oido.seq.length - 1;
+    oidoRender();
+  }
+  function oidoMedia(on) {
+    if (!("mediaSession" in navigator)) return;
+    var h = on ? {
+      play: function () { oidoPlay(); },
+      pause: function () { oidoPause(); },
+      nexttrack: function () { oidoSkip(1); },
+      previoustrack: function () { oidoSkip(-1); }
+    } : { play: null, pause: null, nexttrack: null, previoustrack: null };
+    // only ⏮ ⏭ (step 0: with seek handlers iOS shows ±10 s instead)
+    Object.keys(h).forEach(function (k) { try { navigator.mediaSession.setActionHandler(k, h[k]); } catch (e) {} });
+    ["seekforward", "seekbackward", "seekto"].forEach(function (k) { try { navigator.mediaSession.setActionHandler(k, null); } catch (e) {} });
+    if (!on) { try { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = "none"; } catch (e) {} }
+  }
+  function oidoMeta(it) {
+    if (!("mediaSession" in navigator) || !it) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: it.es, artist: it.en, album: "voseá · Al oído",
+        artwork: [{ src: "icons/icon-512.png", sizes: "512x512", type: "image/png" }, { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] });
+      navigator.mediaSession.playbackState = oido.state === "playing" ? "playing" : "paused";
+    } catch (e) {}
+  }
+  var OIDO_ICONS = {
+    prev: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg>',
+    next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>'
+  };
+  // ---- the sheet ----
+  function oidoShow(view) {
+    oido.view = view;
+    ["setup", "prep", "player"].forEach(function (v) { oidoEl("oido-" + v).hidden = v !== view; });
+  }
+  function oidoRenderSetup() {
+    var p = oidoPrefs(), ids = oidoSceneIds(), ch = oidoChosen(), box = oidoEl("oido-scenes");
+    box.textContent = "";
+    ids.forEach(function (id) {
+      var sc = escById(id), on = ch.indexOf(id) !== -1;
+      var b = progEl("button", "chip" + (on ? " active" : ""), topicText(escCast(sc).name));
+      b.type = "button"; b.setAttribute("data-scene", id); b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.addEventListener("click", function () {
+        var cur = oidoChosen(), i = cur.indexOf(id);
+        if (i === -1) cur.push(id); else cur.splice(i, 1);
+        var pr = oidoPrefs(); pr.scenes = cur.length === ids.length ? null : cur; oidoWrite(OIDO_PREF_KEY, pr);
+        oidoRenderSetup();
+      });
+      box.appendChild(b);
+    });
+    var all = oidoEl("oido-all");
+    all.hidden = ch.length === ids.length;
+    [].forEach.call(oidoEl("oido-limit").querySelectorAll("button"), function (b) { b.classList.toggle("active", b.getAttribute("data-limit") === p.limit); });
+    var n = oidoSessionSize();
+    oidoEl("oido-count").textContent = n ? t(n === 1 ? "oido_count_one" : "oido_count", { n: progNum(n), min: progNum(oidoMinutes(n)) }) : "";
+    oidoEl("oido-start").disabled = !n;
+    if (!n) oidoEl("oido-msg").textContent = t("oido_none");
+    else if (oidoEl("oido-msg").getAttribute("data-kind") === "none") oidoEl("oido-msg").textContent = "";
+    oidoEl("oido-msg").setAttribute("data-kind", n ? "" : "none");
+    oidoEl("oido-quiet-note").hidden = !quietMode;
+  }
+  function oidoRender() {
+    if (oido.view !== "player") return;
+    var s = oido.seq[Math.min(oido.idx, oido.seq.length - 1)];
+    if (!s) return;
+    var it = oido.items[s.item], sc = escById(it.scene);
+    oidoEl("oido-pos").textContent = t("oido_pos", { i: progNum(s.item + 1), n: progNum(oido.items.length), scene: sc ? topicText(escCast(sc).name) : "" });
+    oidoEl("oido-es").textContent = it.es;
+    oidoEl("oido-en").textContent = it.en;
+    var steps = oidoEl("oido-steps");
+    steps.textContent = "";
+    var labels = [{ who: t("oido_en"), sp: "" }].concat(it.voices.map(function (v) { return { who: oidoVoiceName(v.vk), sp: oidoSpeed(v.rate) }; })).concat([{ who: t("oido_en"), sp: "" }]);
+    labels.forEach(function (l, i) {
+      var li = progEl("li", "oido-step" + (i === s.step ? " is-now" : "") + (i < s.step || oido.state === "done" ? " is-past" : ""));
+      li.appendChild(progEl("span", "oido-step-who", l.who));
+      if (l.sp) li.appendChild(progEl("span", "oido-step-sp", l.sp));
+      steps.appendChild(li);
+    });
+    var now = labels[s.step];
+    oidoEl("oido-now").textContent = oido.state === "done" ? t("oido_done", { n: progNum(oido.heard), min: progNum(Math.max(1, Math.round(oido.heardMs / 60000))) })
+      : t("oido_now", { who: now.who + (now.sp ? " · " + now.sp : "") });
+    var pb = oidoEl("oido-play"), playing = oido.state === "playing";
+    pb.innerHTML = playing ? OIDO_ICONS.pause : OIDO_ICONS.play;
+    pb.setAttribute("aria-label", t(playing ? "oido_pause_aria" : (oido.state === "done" ? "oido_again_aria" : "oido_play_aria")));
+    oidoEl("oido-missing").textContent = oido.missing ? t(oido.missing === 1 ? "oido_missing_one" : "oido_missing", { n: progNum(oido.missing) }) : "";
+    oidoMeta(it);
+  }
+  function oidoStart() {
+    var items = oidoBuild();
+    if (!items.length) return;
+    var token = ++oido.token;
+    oidoShow("prep");
+    oidoAudio(); // made inside the tap, so iOS lets it play later
+    try { var a0 = oido.audio; a0.src = oidoSilence(0.2); var p0 = a0.play(); if (p0 && p0.catch) p0.catch(function () {}); } catch (e) {}
+    oidoPrepare(items, token).then(function (got) {
+      if (token !== oido.token) return;
+      var r = oidoSequence(items, got);
+      if (!r.seq.length) { oidoShow("setup"); oidoEl("oido-msg").textContent = t("oido_prep_fail", { msg: t("oido_no_clips") }); return; }
+      oido.seq = r.seq; oido.items = r.items; oido.missing = r.missing; oido.idx = 0; oido.heard = 0; oido.heardMs = 0;
+      oidoShow("player");
+      oidoMedia(true);
+      oidoPlay();
+    }, function (e) {
+      if (token !== oido.token) return;
+      oidoShow("setup"); oidoEl("oido-msg").textContent = t("oido_prep_fail", { msg: (e && e.message) || "" });
+    });
+  }
+  function oidoStop() {
+    oido.token++;
+    oidoTick();
+    if (oido.audio) { oido.audio.loop = false; try { oido.audio.pause(); } catch (e) {} oido.audio.removeAttribute("src"); try { oido.audio.load(); } catch (e) {} }
+    oido.state = "idle"; oido.soft = null; oido.seq = []; oido.items = [];
+    oido.blobs.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} });
+    oido.blobs = [];
+    oidoMedia(false);
+  }
+  function oidoBind() {
+    if (oido.bound) return;
+    oido.bound = true;
+    oidoEl("oido-close").addEventListener("click", closeOido);
+    oidoEl("oido-start").addEventListener("click", oidoStart);
+    oidoEl("oido-all").addEventListener("click", function () { var pr = oidoPrefs(); pr.scenes = null; oidoWrite(OIDO_PREF_KEY, pr); oidoRenderSetup(); });
+    oidoEl("oido-limit").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      var pr = oidoPrefs(); pr.limit = b.getAttribute("data-limit"); oidoWrite(OIDO_PREF_KEY, pr); oidoRenderSetup();
+    });
+    oidoEl("oido-play").addEventListener("click", oidoToggle);
+    oidoEl("oido-prev").addEventListener("click", function () { oidoSkip(-1); });
+    oidoEl("oido-next").addEventListener("click", function () { oidoSkip(1); });
+    oidoEl("oido-prev").innerHTML = OIDO_ICONS.prev;
+    oidoEl("oido-next").innerHTML = OIDO_ICONS.next;
+    oidoEl("oido-again").addEventListener("click", function () { oidoStop(); oidoShow("setup"); oidoRenderSetup(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !oidoEl("oido-overlay").hidden) closeOido(); });
+  }
+  function openOido() {
+    if (!currentUser || !oidoAllItems().length) return;
+    oidoBind();
+    var ov = oidoEl("oido-overlay");
+    ov.hidden = false;
+    document.body.classList.add("deck-open");
+    oidoEl("oido-msg").textContent = "";
+    oidoShow("setup");
+    oidoRenderSetup();
+    try { ov.querySelector(".deck-card").scrollTop = 0; } catch (e) {}
+    try { oidoEl("oido-close").focus({ preventScroll: true }); } catch (e) {}
+  }
+  function closeOido() {
+    oidoStop();
+    oidoEl("oido-overlay").hidden = true;
+    if (el.deckOverlay.hidden) document.body.classList.remove("deck-open");
+    renderHoySoon();
+  }
+  window.voseaOido = { open: function () { openOido(); }, state: function () { return { view: oido.view, state: oido.state, idx: oido.idx, seq: oido.seq.length, items: oido.items.map(function (x) { return { key: x.key, es: x.es, en: x.en, voices: x.voices }; }), soft: !!oido.soft, missing: oido.missing, heard: oido.heard, rate: oido.audio ? oido.audio.playbackRate : 0, pitch: oido.audio ? oido.audio.preservesPitch !== false : null }; }, skip: oidoSkip, toggle: oidoToggle, seq: function () { return oido.seq; } }; // tests
+
   // The welcome speaks by itself (2026-10-18, mason: "instead of having an
   // escuchar button… have them speak immediately and then change the button
   // out for a silent button"). The button mutes; muted is remembered on the

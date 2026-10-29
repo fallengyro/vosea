@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="188">
+<meta name="vosea-build" content="189">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -920,6 +920,56 @@
       </div>
     </div>
   </section>
+  </div>
+  </div>
+
+  <!-- Al oído (2026-10-28): listening only, opened from Hoy. The setup, the
+       "Preparando" step and the player are one sheet. See app.js's
+       "Al oído: the player". -->
+  <div class="modal-overlay deck-overlay oido-overlay" id="oido-overlay" hidden>
+  <div class="modal-card deck-card oido-card" role="dialog" aria-modal="true" aria-labelledby="oido-title">
+    <div class="deck-head">
+      <h2 id="oido-title">Al oído</h2>
+      <button type="button" class="icon-btn" id="oido-close" data-i18n="close">Cerrar</button>
+    </div>
+    <section id="oido-setup">
+      <p class="oido-lead" data-i18n="oido_lead">Cada respuesta: el inglés literal, la frase en castellano con Elena, Tomás, Valeria y Agustín (a distintas velocidades) y otra vez el inglés.</p>
+      <div class="oido-scenes-head">
+        <p class="flash-group-label" data-i18n="oido_scenes_label">Escenas</p>
+        <button type="button" class="hoy-link oido-all" id="oido-all" data-i18n="oido_all" hidden>Todas</button>
+      </div>
+      <div class="chip-group oido-scenes" id="oido-scenes"></div>
+      <p class="flash-mode-note is-warn" id="oido-quiet-note" data-i18n="oido_quiet_note" hidden>El modo silencioso está activado: Al oído suena igual. Usá auriculares.</p>
+      <p class="form-msg" id="oido-msg" role="status"></p>
+      <div class="flash-start-row">
+        <button type="button" class="btn-primary" id="oido-start" data-i18n="oido_start">Escuchar ▸</button>
+        <div class="lang-toggle topic-limit" id="oido-limit" role="group" data-i18n-aria-label="oido_limit_aria" aria-label="Cuántas respuestas">
+          <button type="button" class="lang-option" data-limit="10">10</button>
+          <button type="button" class="lang-option" data-limit="20">20</button>
+          <button type="button" class="lang-option" data-limit="all" data-i18n="topic_limit_all">Todas</button>
+        </div>
+        <span class="flash-deck-count" id="oido-count" aria-live="polite"></span>
+      </div>
+    </section>
+    <section id="oido-prep" class="oido-prep" hidden>
+      <p class="oido-prep-msg" id="oido-prep-msg" role="status" aria-live="polite"></p>
+      <div class="oido-bar"><span id="oido-prep-bar"></span></div>
+    </section>
+    <section id="oido-player" class="oido-player" hidden>
+      <p class="oido-pos" id="oido-pos"></p>
+      <p class="oido-es" id="oido-es" lang="es"></p>
+      <p class="oido-en" id="oido-en" lang="en"></p>
+      <ol class="oido-steps" id="oido-steps"></ol>
+      <p class="oido-now" id="oido-now" aria-live="polite"></p>
+      <div class="oido-controls">
+        <button type="button" class="oido-ctl" id="oido-prev" data-i18n-aria-label="oido_prev_aria" aria-label="Repetir la respuesta"></button>
+        <button type="button" class="oido-ctl oido-play" id="oido-play" aria-label="Reproducir"></button>
+        <button type="button" class="oido-ctl" id="oido-next" data-i18n-aria-label="oido_next_aria" aria-label="Siguiente respuesta"></button>
+      </div>
+      <p class="oido-lock" data-i18n="oido_lock">Podés bloquear el teléfono: sigue sonando, y los auriculares pausan y saltan.</p>
+      <p class="oido-missing" id="oido-missing"></p>
+      <div class="oido-again-row"><button type="button" class="hoy-link" id="oido-again" data-i18n="oido_again">Elegir otra vez</button></div>
+    </section>
   </div>
   </div>
 
