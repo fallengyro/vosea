@@ -3013,6 +3013,11 @@
 .import-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
 .field label.import-file-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; text-transform: none; letter-spacing: 0; color: var(--ink); font-weight: 600; cursor: pointer; }
 .import-file-btn:hover { border-color: var(--accent); }
+/* after the import (2026-10-29): nothing left to choose, only «Listo» */
+.import-done .import-file-field { display: none; }
+.import-done #import-json-textarea { opacity: .65; }
+.import-done #import-json-result-msg { color: var(--teal); font-weight: 600; }
+.import-done #import-json-result-msg::before { content: "✓ "; }
 .import-file-input:focus-visible + .import-file-btn { outline: 2px solid var(--accent); outline-offset: 2px; }
 .import-file-name { font-size: 13px; color: var(--ink-soft); font-style: italic; min-width: 0; overflow-wrap: anywhere; }
 .import-file-name.has-file { font-style: normal; color: var(--ink); }

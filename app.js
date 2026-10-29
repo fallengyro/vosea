@@ -395,6 +395,8 @@
       flash_no_source: "Activá al menos una fuente (verbos, vocabulario o frases).",
       flash_no_cards: "No hay tarjetas para esta combinación de filtros — probá activar más tiempos, personas o fuentes.",
       close: "Cerrar",
+      btn_import_done: "Listo",
+      import_json_done_heading: "Se importó",
       share_label_shared_list: "Lista compartida",
       flash_hint: "Tocá la tarjeta para dar vuelta · deslizá para cambiar",
       flash_prev: "‹ Anterior",
@@ -1783,6 +1785,8 @@
       flash_no_source: "Turn on at least one source (verbs, vocabulary, or phrases).",
       flash_no_cards: "There are no cards for this filter combination — try enabling more tenses, persons, or sources.",
       close: "Close",
+      btn_import_done: "Done",
+      import_json_done_heading: "Imported",
       share_label_shared_list: "Shared list",
       flash_hint: "Tap the card to flip · swipe to change",
       flash_prev: "‹ Previous",
@@ -5971,7 +5975,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "190";
+  var VOSEA_BUILD = "192";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21694,6 +21698,31 @@
     var loWrap = document.getElementById("import-list-only-wrap");
     if (loWrap) loWrap.hidden = true;
     importParsed = null;
+    importJsonDone(false);
+  }
+  // (2026-10-29) mason: after Confirmar importación "all of the buttons just
+  // fade out, and you need to click cancel to leave the window. this could
+  // imply the import is to be canceled". Once it's in, the window says so:
+  // Validar, Confirmar and «Solo en la lista» go, the text can't be edited,
+  // and Cancelar becomes «Listo».
+  function importJsonDone(done) {
+    var card = el.importJsonOverlay.querySelector(".modal-card");
+    if (card) card.classList.toggle("import-done", !!done);
+    el.importJsonTextarea.readOnly = !!done;
+    el.importJsonFile.disabled = !!done;
+    el.importJsonValidateBtn.hidden = !!done;
+    if (done) {
+      el.importJsonConfirmBtn.hidden = true;
+      var loWrap = document.getElementById("import-list-only-wrap");
+      if (loWrap) loWrap.hidden = true;
+    }
+    var h = el.importJsonPreviewListWrap.querySelector("h4");
+    if (h) { h.setAttribute("data-i18n", done ? "import_json_done_heading" : "import_json_preview_heading"); h.textContent = t(done ? "import_json_done_heading" : "import_json_preview_heading"); }
+    var c = el.importJsonCancelBtn;
+    c.setAttribute("data-i18n", done ? "btn_import_done" : "btn_cancel");
+    c.textContent = t(done ? "btn_import_done" : "btn_cancel");
+    c.classList.toggle("btn-primary", !!done);
+    c.classList.toggle("btn-secondary", !done);
   }
 
   function openImportJsonModal() {
@@ -22161,6 +22190,7 @@
     importParsed.listOnly = !!(lo && lo.checked && importParsed.listName);
     runImport(importParsed, function (msg) { el.importJsonResultMsg.textContent = msg; }).then(function (r) {
       if (!r.ok) el.importJsonConfirmBtn.disabled = false;
+      else importJsonDone(true);
     });
   }
 
@@ -22669,18 +22699,50 @@
   // Practicar bar steps aside (styles.css). It comes back when the focus
   // leaves every field, a moment later so hopping between fields doesn't
   // make it flicker.
+  //
+  // (2026-10-29) mason: the floating "+ Verbo" "keeps disappearing when I
+  // am doing textbox entered searches… if I open and close the filters
+  // button then the add word/verb button comes back". On a phone the
+  // keyboard can go away while the search box keeps the focus (iOS: the
+  // keyboard's ⌄, swiping it down), and no focusout comes. So on a touch
+  // screen "typing" also needs the keyboard to be up: the visual viewport
+  // is then clearly shorter than the window. Just after a field gets the
+  // focus the keyboard is still on its way, so that moment counts as up.
+  // Enter / Buscar in a search box also closes the keyboard now.
+  var kbdGraceUntil = 0, kbdGraceTimer = null;
+  function kbdTouch() { try { return window.matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } }
+  function keyboardUp() {
+    var vv = window.visualViewport;
+    if (!vv || !kbdTouch()) return true;
+    if (Date.now() < kbdGraceUntil) return true;
+    return window.innerHeight - vv.height > 120;
+  }
+  function typingNow() { return kbdField(document.activeElement) && keyboardUp(); }
+  function kbdField(n) {
+    if (!n || !n.tagName) return false;
+    if (n.isContentEditable || n.tagName === "TEXTAREA" || n.tagName === "SELECT") return true;
+    if (n.tagName !== "INPUT") return false;
+    return !/^(checkbox|radio|button|submit|reset|file|range|color|image|hidden)$/i.test(n.type || "text");
+  }
+  var kbdListeners = [];
+  function kbdChanged() { document.documentElement.classList.toggle("is-typing", typingNow()); kbdListeners.forEach(function (f) { f(); }); }
   (function () {
     var root = document.documentElement, off = null;
-    function isField(n) {
-      if (!n || !n.tagName) return false;
-      if (n.isContentEditable || n.tagName === "TEXTAREA" || n.tagName === "SELECT") return true;
-      if (n.tagName !== "INPUT") return false;
-      return !/^(checkbox|radio|button|submit|reset|file|range|color|image|hidden)$/i.test(n.type || "text");
-    }
-    document.addEventListener("focusin", function (e) { if (isField(e.target)) { clearTimeout(off); root.classList.add("is-typing"); } });
+    document.addEventListener("focusin", function (e) {
+      if (!kbdField(e.target)) return;
+      clearTimeout(off);
+      kbdGraceUntil = Date.now() + 900;
+      clearTimeout(kbdGraceTimer); kbdGraceTimer = setTimeout(kbdChanged, 950);
+      root.classList.add("is-typing");
+    });
     document.addEventListener("focusout", function () {
       clearTimeout(off);
-      off = setTimeout(function () { if (!isField(document.activeElement)) root.classList.remove("is-typing"); }, 120);
+      off = setTimeout(function () { if (!kbdField(document.activeElement)) root.classList.remove("is-typing"); }, 120);
+    });
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", kbdChanged);
+    ["search", "word-search", "phrase-search", "topic-search"].forEach(function (id) {
+      var inp = document.getElementById(id);
+      if (inp) inp.addEventListener("keydown", function (e) { if (e.key === "Enter" && kbdTouch()) inp.blur(); });
     });
   })();
   el.form.addEventListener("submit", handleSubmit);
@@ -23583,7 +23645,7 @@
     var panel = c && document.getElementById(c.panel);
     var phone = fsheetIsPhone();
     var show = !!(c && panel && currentUser && !el.appScreen.hidden && currentTab === "col" && !panel.hidden &&
-      !panel.classList.contains("is-form") && !panel.classList.contains("is-item") && !(phone && colTyping));
+      !panel.classList.contains("is-form") && !panel.classList.contains("is-item") && !(phone && colTyping && keyboardUp()));
     if (show) {
       var txt = t(c.label), lab = colFab.querySelector(".col-fab-t");
       if (lab.textContent !== txt) lab.textContent = txt;
@@ -23668,6 +23730,7 @@
   }
   window.addEventListener("scroll", function () { if (!colStuckRaf) colStuckRaf = requestAnimationFrame(colStuckCheck); }, { passive: true });
   window.addEventListener("resize", colFabUpdate);
+  kbdListeners.push(colFabUpdate);
   colFabUpdate();
 
   el.flashSrcVerbs.addEventListener("change", function () {
