@@ -1047,11 +1047,9 @@
       el_oido_en: "Respuestas · inglés",
       el_oido_go: "Generar Al oído (≈ {k} créditos)",
       el_oido_confirm: "Esto genera {what} (≈ {k} créditos). ¿Seguir?",
-      hoy_k_oido: "Al oído",
-      hoy_oido_title: "Escuchá las respuestas de las escenas",
-      hoy_oido_sub: "En inglés y después en cuatro voces. Sigue sonando con el teléfono bloqueado.",
-      hoy_oido_today: "Hoy: {min} min · {n} frases",
-      hoy_oido_btn: "Escuchar",
+      set_oido_label: "Al oído",
+      set_oido_btn: "Escuchar las escenas…",
+      set_oido_note: "Solo escuchar: el inglés y la respuesta en cuatro voces, con el teléfono bloqueado. En prueba.",
       oido_lead: "Cada respuesta: el inglés literal, la frase en castellano con Elena, Tomás, Valeria y Agustín (a distintas velocidades) y otra vez el inglés.",
       oido_scenes_label: "Escenas",
       oido_all: "Todas",
@@ -2437,11 +2435,9 @@
       el_oido_en: "Answers · English",
       el_oido_go: "Generate Al oído (≈ {k} credits)",
       el_oido_confirm: "This makes {what} (≈ {k} credits). Continue?",
-      hoy_k_oido: "Al oído",
-      hoy_oido_title: "Listen to the scenes' answers",
-      hoy_oido_sub: "In English, then in four voices. It keeps playing with the phone locked.",
-      hoy_oido_today: "Today: {min} min · {n} phrases",
-      hoy_oido_btn: "Listen",
+      set_oido_label: "Al oído",
+      set_oido_btn: "Listen to the scenes…",
+      set_oido_note: "Listening only: the English and the answer in four voices, with the phone locked. Being tried out.",
       oido_lead: "Each answer: the literal English, the Spanish in Elena, Tomás, Valeria and Agustín (at different speeds), then the English again.",
       oido_scenes_label: "Scenes",
       oido_all: "All",
@@ -3326,6 +3322,9 @@
     renderBackupStatus();
     refreshBackupStatus();
     refreshPushSettings();
+    var of = document.getElementById("settings-oido-field"), on = !!(currentUser && oidoAllItems().length);
+    if (of) of.hidden = !on;
+    if (document.getElementById("settings-oido-note")) document.getElementById("settings-oido-note").hidden = !on;
     el.settingsOverlay.hidden = false;
     var card = el.settingsOverlay.querySelector(".modal-card");
     if (card) card.scrollTop = 0;
@@ -5972,7 +5971,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "189";
+  var VOSEA_BUILD = "190";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7424,15 +7423,6 @@
       box.appendChild(packCard);
     }
 
-    // Al oído (2026-10-28, mason: it starts from Hoy). Today's listening
-    // is its own line; it doesn't count toward the card goal.
-    if (oidoAllItems().length) {
-      var od = oidoToday();
-      box.appendChild(hoyCard({ id: "hoy-oido", kicker: t("hoy_k_oido"), title: t("hoy_oido_title"),
-        sub: od.n || od.ms >= 60000 ? t("hoy_oido_today", { min: progNum(Math.max(1, Math.round(od.ms / 60000))), n: progNum(od.n) }) : t("hoy_oido_sub"),
-        btn: t("hoy_oido_btn"), onGo: function () { openOido(); } }));
-    }
-
     // Aprender
     var tp = hoyTopicPick();
     if (tp) {
@@ -7707,7 +7697,8 @@
   }
   window.voseaOidoUnits = function () { return oidoUnits(); }; // tests
   // ================= Al oído: the player (2026-10-28) =================
-  // mason's picks: it starts from Hoy; a session is the scenes you pick
+  // mason's picks: it started from Hoy, and moved to Configuración
+  // (2026-10-29: "it messes up the flow of hoy"); a session is the scenes you pick
   // (all by default) and 10 · 20 · Todas, shuffled across them; each answer
   // plays the literal English (Adam) → the Spanish in Elena, Tomás, Valeria
   // and Agustín in a new order each time, two at 1×, one at 0.9× and one at
@@ -8087,8 +8078,13 @@
     oidoStop();
     oidoEl("oido-overlay").hidden = true;
     if (el.deckOverlay.hidden) document.body.classList.remove("deck-open");
-    renderHoySoon();
   }
+  // Configuración → Práctica → «Escuchar las escenas…» (the settings
+  // window closes first)
+  (function () {
+    var b = document.getElementById("settings-oido");
+    if (b) b.addEventListener("click", function () { closeSettings(); openOido(); });
+  })();
   window.voseaOido = { open: function () { openOido(); }, state: function () { return { view: oido.view, state: oido.state, idx: oido.idx, seq: oido.seq.length, items: oido.items.map(function (x) { return { key: x.key, es: x.es, en: x.en, voices: x.voices }; }), soft: !!oido.soft, missing: oido.missing, heard: oido.heard, rate: oido.audio ? oido.audio.playbackRate : 0, pitch: oido.audio ? oido.audio.preservesPitch !== false : null }; }, skip: oidoSkip, toggle: oidoToggle, seq: function () { return oido.seq; } }; // tests
 
   // The welcome speaks by itself (2026-10-18, mason: "instead of having an

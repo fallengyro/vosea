@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="189">
+<meta name="vosea-build" content="190">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1404,6 +1404,14 @@
       </div>
       <p class="flash-setup-note set-note" data-i18n="set_goal_short">Tarjetas por día para sumar a tu racha.</p>
       <p class="flash-setup-note set-more" id="set-more-goal" hidden data-i18n="play_racha_rule">Cuenta cada tarjeta que diste vuelta o calificaste, en cualquier modo. Tenés un día libre por semana.</p>
+      <!-- Al oído (2026-10-29, mason: "for now i want to launch it from the
+           configuration until i figure out how it fits in the app. it messes
+           up the flow of hoy") -->
+      <div class="field oido-field" id="settings-oido-field">
+        <div class="set-label-row"><label data-i18n="set_oido_label">Al oído</label></div>
+        <button type="button" class="btn-secondary" id="settings-oido" data-i18n="set_oido_btn">Escuchar las escenas…</button>
+      </div>
+      <p class="flash-setup-note set-note" id="settings-oido-note" data-i18n="set_oido_note">Solo escuchar: el inglés y la respuesta en cuatro voces, con el teléfono bloqueado. En prueba.</p>
     </section>
     <section class="set-group">
       <h4 class="set-group-h" data-i18n="set_g_data">Tus datos</h4>
