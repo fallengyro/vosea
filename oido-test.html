@@ -10,6 +10,9 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <title>voseá · prueba Al oído</title>
 <!--
+  2026-10-28: mason picked Adam (a voice-library voice) as the English
+  voice; Rachel is gone. The HD row fails in his Azure region.
+
   Round 3 (2026-10-27): the standard English voices sounded poor, so section
   1 now compares Azure's HD voices (Dragon HD) with premium voices, on the
   same three lines. Needs the updated tts function. The rest is round 2.
@@ -71,7 +74,7 @@
     <p class="note">The English before and after each line. Each button plays the same three lines from the scenes (the first time, each is made once and saved, so a second tap is instant). Pick the one you'd like to hear a thousand times.</p>
     <p class="note"><b>Azure HD</b> (free allowance). Emma2 and Andrew2 are the “conversational” versions.</p>
     <div class="row" id="en-voices"></div>
-    <p class="note" style="margin-top:12px"><b>Premium</b> (uses paid credits, about 100 characters a tap, once). Valeria and Agustín are your Spanish voices reading English; Rachel and Adam are native English.</p>
+    <p class="note" style="margin-top:12px"><b>Premium</b> (uses paid credits, about 100 characters a tap, once). Valeria and Agustín are your Spanish voices reading English; Adam (your pick, 2026-10-28) is the English voice for Al oído.</p>
     <div class="row" id="en-premium"></div>
     <p class="now" id="en-now"></p>
   </div>
@@ -151,7 +154,7 @@
   // English voices to choose from (tts allows these since 2026-10-27)
   var HD = ":DragonHDLatestNeural";
   var EN_VOICES = [["en-US-Ava" + HD, "Ava HD"], ["en-US-Emma" + HD, "Emma HD"], ["en-US-Andrew" + HD, "Andrew HD"], ["en-US-Brian" + HD, "Brian HD"], ["en-US-Emma2" + HD, "Emma2 HD"], ["en-US-Andrew2" + HD, "Andrew2 HD"]];
-  var EN_PREMIUM = [["eleven:valeria", "Valeria"], ["eleven:agustin", "Agustín"], ["eleven:rachel", "Rachel"], ["eleven:adam", "Adam"]];
+  var EN_PREMIUM = [["eleven:valeria", "Valeria"], ["eleven:agustin", "Agustín"], ["eleven:adam", "Adam"]];
   var EN_SAMPLES = ["Half a dozen croissants, please.", "Sorry, we're out. We have other pastries, though.", "Could you take me to the airport?"];
   var sb = null, session = null;
   try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { sb = null; }
