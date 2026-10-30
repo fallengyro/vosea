@@ -24,6 +24,29 @@
     } catch (e) {}
   })();
 
+  // ================= The link in the confirmation email (2026-10-29) =================
+  // mason: two new users "got the email but… the button in the email
+  // didn't work". The link comes back to the app with the result in the
+  // address: #access_token=…&type=signup when it worked (supabase-js signs
+  // you in from it), or #error=…&error_code=otp_expired&error_description=…
+  // when it had expired or was already used (some mail services open links
+  // ahead of time to scan them). The app used to ignore both. It's read here,
+  // before the client starts; an error is taken out of the address so it
+  // isn't shown again on reload. See authLinkNotice() below.
+  var authLinkResult = (function () {
+    try {
+      var h = new URLSearchParams(String(location.hash || "").replace(/^#/, "")), q = new URLSearchParams(location.search || "");
+      var code = h.get("error_code") || q.get("error_code"), err = h.get("error") || q.get("error"), desc = h.get("error_description") || q.get("error_description");
+      if (code || (err && desc)) {
+        try { history.replaceState(null, "", location.pathname); } catch (e) {}
+        return { error: code || err, desc: desc || "" };
+      }
+      if (h.get("access_token") && h.get("type")) return { ok: true, type: h.get("type") };
+    } catch (e) {}
+    return null;
+  })();
+  window.voseaAuthLink = function () { return authLinkResult; }; // tests
+
   // ================= Supabase client =================
   var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   var currentUser = null;
@@ -1446,6 +1469,14 @@
       msg_lista_creada_sin_items: " La lista se creó pero no se pudieron agregar sus ítems: {msg}",
       msg_se_creo_lista: " Se creó la lista “{name}” en tu cuenta.",
       msg_email_confirmacion: "Te enviamos un email de confirmación a {email}. Confirmá tu cuenta y después iniciá sesión.",
+      auth_link_expired: "El enlace del email venció o ya se usó. Si ya confirmaste tu cuenta, iniciá sesión. Si no, escribí tu email y pedí uno nuevo.",
+      auth_link_failed: "El enlace del email no funcionó ({msg}). Si ya confirmaste tu cuenta, iniciá sesión. Si no, escribí tu email y pedí uno nuevo.",
+      auth_not_confirmed: "Todavía no confirmaste tu email. Buscá el email de voseá (mirá también en spam) o pedí uno nuevo.",
+      auth_resend_btn: "Reenviar el email de confirmación",
+      auth_resend_need_email: "Escribí tu email arriba y tocá de nuevo.",
+      auth_resend_sent: "Listo: te reenviamos el email a {email}. Usá el enlace nuevo; el anterior ya no sirve.",
+      auth_resend_fail: "No se pudo reenviar: {msg}",
+      auth_confirmed_toast: "¡Listo! Tu cuenta está confirmada.",
       preposicion_note: "Se usa con la preposición “{prep}”.",
       th_imp_abbrev: "Afirm.",
       unit_verbo_s: " verbo",
@@ -2836,6 +2867,14 @@
       msg_lista_creada_sin_items: " The list was created but its items couldn't be added: {msg}",
       msg_se_creo_lista: " Created the list “{name}” in your account.",
       msg_email_confirmacion: "We sent a confirmation email to {email}. Confirm your account and then log in.",
+      auth_link_expired: "The email link expired or was already used. If you've already confirmed your account, log in. If not, type your email and ask for a new one.",
+      auth_link_failed: "The email link didn't work ({msg}). If you've already confirmed your account, log in. If not, type your email and ask for a new one.",
+      auth_not_confirmed: "You haven't confirmed your email yet. Look for the voseá email (check spam too) or ask for a new one.",
+      auth_resend_btn: "Resend the confirmation email",
+      auth_resend_need_email: "Type your email above and tap again.",
+      auth_resend_sent: "Done: we sent the email again to {email}. Use the new link; the old one no longer works.",
+      auth_resend_fail: "Couldn't resend: {msg}",
+      auth_confirmed_toast: "Done! Your account is confirmed.",
       preposicion_note: "Used with the preposition “{prep}.”",
       th_imp_abbrev: "Aff.",
       unit_verbo_s: " verb",
@@ -4725,6 +4764,36 @@
     { key: "ustedes", label: "ustedes" }
   ];
   var REFLEXIVE_PRONOUNS = { yo: "me", vos: "te", el: "se", nosotros: "nos", ellos: "se" };
+  // (2026-10-29) mason: "i added vestirse and it was not designated as
+  // reflexive". RAE marks only some senses "pronominal", and the sense
+  // picked for the definition was vestir's ordinary one. An infinitive
+  // typed with -se is reflexive whatever the sense: the box is ticked as
+  // you type it (and unticked again if you take the -se off, when it was
+  // ticked that way), and after Buscar en RAE. Ticking or unticking the box
+  // puts the pronouns on the table's filled cells (visto → me visto) or
+  // takes them off; the imperativo is left alone (its pronoun goes on the
+  // end: vestite).
+  var reflexiveAuto = false;
+  function infinitiveIsReflexive(s) { return /(ar|er|ir|ír)se$/i.test(String(s || "").trim()); }
+  function applyReflexivePronouns(on) {
+    PERSONS.forEach(function (p) {
+      var pr = REFLEXIVE_PRONOUNS[p.key];
+      TENSES.concat(SUBJ_TENSES).forEach(function (tn) {
+        var inp = document.getElementById("f-" + tn.key + "-" + p.key);
+        if (!inp || !inp.value.trim()) return;
+        var v = inp.value.trim(), has = v.toLowerCase().indexOf(pr + " ") === 0;
+        if (on && !has) inp.value = pr + " " + v;
+        else if (!on && has) inp.value = v.slice(pr.length + 1);
+      });
+    });
+  }
+  function setReflexive(on, auto) {
+    reflexiveAuto = !!(on && auto);
+    if (el.fReflexive.checked === on) return;
+    el.fReflexive.checked = on;
+    applyReflexivePronouns(on);
+    renderFormIrregularity();
+  }
 
   // "Tipo gustar" verbs (gustar, doler, encantar, ...) are grammatically
   // regular but almost never used with the person as the grammatical
@@ -5975,7 +6044,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "192";
+  var VOSEA_BUILD = "195";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6843,6 +6912,7 @@
     el.fTransitivity.value = "transitivo";
     el.fPreposicion.value = "";
     el.fReflexive.checked = false;
+    reflexiveAuto = false;
     el.fAuxiliar.checked = false;
     el.fGustarLike.checked = false;
     el.fPersonalDefinition.value = "";
@@ -6877,6 +6947,7 @@
     el.fTransitivity.value = data.transitivity || "transitivo";
     el.fPreposicion.value = data.preposicion || "";
     el.fReflexive.checked = !!data.reflexive;
+    reflexiveAuto = false;
     el.fAuxiliar.checked = !!data.auxiliar;
     el.fGustarLike.checked = !!data.gustar_like;
     el.fPersonalDefinition.value = data.personal_definition || "";
@@ -10074,7 +10145,7 @@
           fillIfEmpty(el.fNotes, data.notes);
           fillIfEmpty(el.fPreposicion, data.preposicion);
           if (data.transitivity) el.fTransitivity.value = data.transitivity;
-          if (data.reflexive) el.fReflexive.checked = true;
+          if (data.reflexive || infinitiveIsReflexive(term)) setReflexive(true, false);
           if (data.gerundio) el.fGerundio.value = data.gerundio;
           if (data.participio) el.fParticipio.value = data.participio;
 
@@ -22380,6 +22451,7 @@
     el.tabSignup.classList.toggle("active", mode === "signup");
     el.authSubmit.textContent = mode === "login" ? t("auth_submit_login") : t("auth_signup_tab");
     el.authMsg.textContent = "";
+    authResendShow(false);
   }
 
   // ---- opening (2026-10-18) ----
@@ -22431,10 +22503,12 @@
         loadPracticeHistory(false).then(function () { renderHoySoon(); playCheckRacha(); });
       }
       if (currentShareList) renderSharePreview();
+      authLinkNotice(true);
     } else {
       el.authScreen.hidden = false;
       el.appScreen.hidden = true;
       bootFinish();
+      authLinkNotice(false);
       el.acctMenuUsage.hidden = true;
       el.usageOverlay.hidden = true;
       usageData = null;
@@ -22504,6 +22578,44 @@
     return email.split("@")[0];
   }
 
+  // where the confirmation link should bring you back (Supabase only uses
+  // it if it's in Authentication → URL Configuration → Redirect URLs;
+  // otherwise the Site URL)
+  function authAppUrl() { return location.origin + location.pathname.replace(/index\.html$/, ""); }
+  function authResendShow(on) {
+    var box = document.getElementById("auth-resend");
+    if (box) box.hidden = !on;
+    var m = document.getElementById("auth-resend-msg");
+    if (m && !on) m.textContent = "";
+  }
+  function authResend() {
+    var email = el.authEmail.value.trim(), m = document.getElementById("auth-resend-msg"), b = document.getElementById("auth-resend-btn");
+    m.style.color = "var(--danger)";
+    if (!email) { m.textContent = t("auth_resend_need_email"); try { el.authEmail.focus(); } catch (e) {} return; }
+    b.disabled = true;
+    m.textContent = "";
+    Promise.resolve(supabaseClient.auth.resend({ type: "signup", email: email, options: { emailRedirectTo: authAppUrl() } })).then(function (res) {
+      if (res && res.error) throw res.error;
+      m.style.color = "var(--accent-deep)";
+      m.textContent = t("auth_resend_sent", { email: email });
+    }).catch(function (err) {
+      m.textContent = t("auth_resend_fail", { msg: (err && err.message) || String(err) });
+    }).then(function () { b.disabled = false; });
+  }
+  // after the link: what happened, once
+  var authLinkShown = false;
+  function authLinkNotice(signedIn) {
+    if (!authLinkResult || authLinkShown) return;
+    authLinkShown = true;
+    if (authLinkResult.error && !signedIn) {
+      el.authMsg.style.color = "var(--danger)";
+      el.authMsg.textContent = authLinkResult.error === "otp_expired" ? t("auth_link_expired") : t("auth_link_failed", { msg: authLinkResult.desc || authLinkResult.error });
+      authResendShow(true);
+    } else if (authLinkResult.ok && signedIn && authLinkResult.type === "signup") {
+      setTimeout(function () { showPackToast(t("auth_confirmed_toast"), false); }, 1200);
+    }
+  }
+
   function handleAuthSubmit(evt) {
     evt.preventDefault();
     el.authMsg.textContent = "";
@@ -22515,7 +22627,7 @@
       ? supabaseClient.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
           if (res.error) throw res.error;
         })
-      : supabaseClient.auth.signUp({ email: email, password: password }).then(function (res) {
+      : supabaseClient.auth.signUp({ email: email, password: password, options: { emailRedirectTo: authAppUrl() } }).then(function (res) {
           if (res.error) throw res.error;
           if (res.data && !res.data.session) {
             // setAuthMode() clears authMsg as part of switching tabs, so it
@@ -22526,11 +22638,18 @@
             setAuthMode("login");
             el.authMsg.textContent = t("msg_email_confirmacion", { email: email });
             el.authMsg.style.color = "var(--accent-deep)";
+            authResendShow(true);
           }
         });
 
     action.catch(function (err) {
       el.authMsg.style.color = "var(--danger)";
+      // signing in before confirming: say so, and offer a new email
+      if (authMode === "login" && err && (err.code === "email_not_confirmed" || /not confirmed/i.test(err.message || ""))) {
+        el.authMsg.textContent = t("auth_not_confirmed");
+        authResendShow(true);
+        return;
+      }
       el.authMsg.textContent = (err && err.message) || String(err);
     }).finally(function () {
       el.authSubmit.disabled = false;
@@ -22557,6 +22676,7 @@
   el.tabLogin.addEventListener("click", function () { setAuthMode("login"); });
   el.tabSignup.addEventListener("click", function () { setAuthMode("signup"); });
   el.authForm.addEventListener("submit", handleAuthSubmit);
+  (function () { var rb = document.getElementById("auth-resend-btn"); if (rb) rb.addEventListener("click", authResend); })();
   el.acctTrigger.addEventListener("click", toggleAcctMenu);
   el.acctMenuSettings.addEventListener("click", function () {
     closeAcctMenu();
@@ -22711,11 +22831,26 @@
   // Enter / Buscar in a search box also closes the keyboard now.
   var kbdGraceUntil = 0, kbdGraceTimer = null;
   function kbdTouch() { try { return window.matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } }
+  // (2026-10-29, second try) mason: the + "disappears briefly when the
+  // keyboard pops up but then reappears just above the keyboard". On iOS
+  // window.innerHeight shrinks with the keyboard too, so comparing it with
+  // the visual viewport said "no keyboard". Now the visual viewport is
+  // compared with the tallest it has been at this width (and the layout
+  // viewport, which the keyboard doesn't change on iOS).
+  var kbdTall = { w: 0, h: 0 };
+  function kbdBase() {
+    var vv = window.visualViewport, w = Math.round(vv ? vv.width : window.innerWidth);
+    if (kbdTall.w !== w) kbdTall = { w: w, h: 0 }; // turned the phone
+    var h = vv ? vv.height : 0;
+    if (h > kbdTall.h && !kbdField(document.activeElement)) kbdTall.h = h;
+    return Math.max(kbdTall.h, document.documentElement.clientHeight || 0);
+  }
   function keyboardUp() {
     var vv = window.visualViewport;
     if (!vv || !kbdTouch()) return true;
+    var base = kbdBase();
     if (Date.now() < kbdGraceUntil) return true;
-    return window.innerHeight - vv.height > 120;
+    return base - vv.height > 120;
   }
   function typingNow() { return kbdField(document.activeElement) && keyboardUp(); }
   function kbdField(n) {
@@ -22739,7 +22874,7 @@
       clearTimeout(off);
       off = setTimeout(function () { if (!kbdField(document.activeElement)) root.classList.remove("is-typing"); }, 120);
     });
-    if (window.visualViewport) window.visualViewport.addEventListener("resize", kbdChanged);
+    if (window.visualViewport) { window.visualViewport.addEventListener("resize", kbdChanged); kbdBase(); }
     ["search", "word-search", "phrase-search", "topic-search"].forEach(function (id) {
       var inp = document.getElementById(id);
       if (inp) inp.addEventListener("keydown", function (e) { if (e.key === "Enter" && kbdTouch()) inp.blur(); });
@@ -22748,10 +22883,14 @@
   el.form.addEventListener("submit", handleSubmit);
   el.form.addEventListener("input", function (e) {
     var id = (e.target && e.target.id) || "";
-    if (id === "f-infinitive") { var tyI = verbTypeOf(el.fInfinitive.value); if (tyI) el.fType.value = tyI; }
+    if (id === "f-infinitive") {
+      var tyI = verbTypeOf(el.fInfinitive.value); if (tyI) el.fType.value = tyI;
+      if (infinitiveIsReflexive(el.fInfinitive.value)) { if (!el.fReflexive.checked) setReflexive(true, true); }
+      else if (reflexiveAuto) setReflexive(false);
+    }
     if (/^f-(presente|preterito|imperfecto|impersonal|infinitive)/.test(id) || id === "f-reflexive") renderFormIrregularity();
   });
-  el.fReflexive.addEventListener("change", function () { renderFormIrregularity(); });
+  el.fReflexive.addEventListener("change", function () { reflexiveAuto = false; applyReflexivePronouns(el.fReflexive.checked); renderFormIrregularity(); });
   el.fRaeLookup.addEventListener("click", function () { lookupInRae("verb"); });
   el.fGustarLike.addEventListener("change", function () {
     el.fPersonalDefinitionWrap.hidden = !el.fGustarLike.checked;

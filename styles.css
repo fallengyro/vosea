@@ -321,6 +321,9 @@
     max-width: 400px;
     margin: 12vh auto 0;
   }
+  .auth-resend { margin-top: 10px; }
+  .auth-resend .btn-secondary { width: 100%; }
+  .auth-resend .form-msg { margin-top: 8px; }
   .auth-card {
     border: 1px solid var(--line);
     border-radius: 10px;

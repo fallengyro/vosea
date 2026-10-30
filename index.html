@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="192">
+<meta name="vosea-build" content="195">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -82,6 +82,11 @@
       </div>
       <button type="submit" class="btn-primary" id="auth-submit" data-i18n="auth_submit_login">Entrar</button>
       <p class="form-msg" id="auth-msg"></p>
+      <!-- (2026-10-29) a new confirmation email, after a link that didn't work -->
+      <div class="auth-resend" id="auth-resend" hidden>
+        <button type="button" class="btn-secondary" id="auth-resend-btn" data-i18n="auth_resend_btn">Reenviar el email de confirmación</button>
+        <p class="form-msg" id="auth-resend-msg" role="status" aria-live="polite"></p>
+      </div>
     </form>
   </div>
 </section>
