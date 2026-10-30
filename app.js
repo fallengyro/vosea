@@ -6044,7 +6044,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "196";
+  var VOSEA_BUILD = "197";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -13584,6 +13584,10 @@
       var it = tp.items.find(function (x) { return x.id === unitKey; });
       if (!it) return null;
       var full = topicPlain(it.es);
+      // chips on the answer side (2026-10-29, «Ser y estar en pasado»: the
+      // tense of each verb, mason: "indicate if the verb(s) in the preterito
+      // or imperfecto")
+      if (Array.isArray(it.chips) && it.chips.length) base.backChips = it.chips.filter(Boolean).map(function (x) { return typeof x === "object" ? topicText(x) : x; });
       return Object.assign(base, {
         frontMain: topicGapped(it.es), backMain: full, backSpeak: full, backSub: it.p,
         sentence: it.es, cue: it.en, choice: it.choice || ((topicRange(tp, it.part) || {}).choice) || tp.choice || "",
