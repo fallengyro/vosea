@@ -3109,7 +3109,9 @@ body.item-sheet-open { overflow: hidden; }
 .dback .dback-btn { display: none; }
 .dback-grab { display: none; }
 @media (max-width: 640px) { .dback-grab { display: block; position: absolute; left: 50%; top: 5px; transform: translateX(-50%); width: 44px; height: 5px; border-radius: 3px; background: var(--line); } }
-.dback-close { border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-soft); border-radius: 8px; padding: 6px 12px; font: 600 14px "Public Sans", sans-serif; cursor: pointer; }
+/* × (2026-10-29), like .modal-x */
+.dback-close { flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink-soft); font-size: 26px; line-height: 1; cursor: pointer; }
+.dback-close:hover, .dback-close:focus-visible { background: var(--paper-sunken); color: var(--ink); }
 .dback-nav { display: inline-flex; align-items: center; gap: 4px; font: 12.5px "JetBrains Mono", monospace; color: var(--ink-soft); }
 .dback-step { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 8px; width: 32px; height: 30px; font-size: 18px; line-height: 1; cursor: pointer; }
 .dback-step:disabled { opacity: .35; }

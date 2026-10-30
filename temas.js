@@ -6,6 +6,8 @@
 // new items take the next free id, so practice history keeps its keys).
 // 2026-10-27: «Empezar, seguir, terminar» added (estar por, empezar a, volver a,
 // dejar de…; source /home/claude/tema-fases/add/empezar-terminar.json).
+// 2026-10-29: «Ser y estar en pasado» added (era / fue, estaba / estuvo,
+// ¿cómo estuvo?; source /home/claude/tema-fases/add/ser-estar-pasado.json).
 window.VOSEA_TEMAS = [
  {
   "id": "presentarse",
@@ -8017,6 +8019,447 @@ window.VOSEA_TEMAS = [
     "es": "Ya [estamos] en lo de Sofi, ¿venís?",
     "en": "We're already at Sofi's place. Are you coming?",
     "p": "estar en · dónde está alguien"
+   }
+  ]
+ },
+ {
+  "id": "ser-estar-pasado",
+  "name": {
+   "es": "Ser y estar en pasado",
+   "en": "Ser and estar in the past"
+  },
+  "desc": {
+   "es": "Era o fue, estaba o estuvo: cómo era algo y cómo salió.",
+   "en": "Era or fue, estaba or estuvo: how things were and how they went."
+  },
+  "intro": {
+   "es": "En pasado, ser y estar tienen dos formas cada uno. Era y estaba describen cómo eran o estaban las cosas en ese momento, de fondo: «era tarde», «estaba cansado». Fue y estuvo cierran algo terminado: un evento, un día, un tiempo con límite: «fue un día largo», «estuve enfermo toda la semana». Para contar cómo salió algo, acá se dice «¿cómo estuvo?» y «estuvo buenísimo». Ojo: fue también es el pasado de ir.",
+   "en": "In the past, ser and estar each have two forms. Era and estaba describe how things were at that moment, as the background: “era tarde,” “estaba cansado.” Fue and estuvo close off something finished: an event, a day, a stretch of time with an end: “fue un día largo,” “estuve enfermo toda la semana.” To say how something went, people here say “¿cómo estuvo?” and “estuvo buenísimo.” Careful: fue is also the past of ir."
+  },
+  "tag": {
+   "es": "era · fue · estaba · estuvo",
+   "en": "era · fue · estaba · estuvo"
+  },
+  "fam": [
+   "ser-estar",
+   "pasado"
+  ],
+  "parts": [
+   {
+    "key": "era-fue",
+    "label": {
+     "es": "ser: era o fue",
+     "en": "ser: era or fue"
+    },
+    "choice": "era · fue"
+   },
+   {
+    "key": "estaba-estuvo",
+    "label": {
+     "es": "estar: estaba o estuvo",
+     "en": "estar: estaba or estuvo"
+    },
+    "choice": "estaba · estuvo"
+   },
+   {
+    "key": "ser-o-estar",
+    "label": {
+     "es": "¿ser o estar? en pasado",
+     "en": "ser or estar? in the past"
+    },
+    "choice": "ser · estar"
+   },
+   {
+    "key": "como-estuvo",
+    "label": {
+     "es": "¿cómo estuvo? · ¿cómo fue?",
+     "en": "how was it? how did it go?"
+    },
+    "choice": "fue · estuvo"
+   }
+  ],
+  "lesson": [
+   {
+    "f": "era = cómo era, la edad, la hora, antes (de fondo) · fue = un evento, un día, un tiempo terminado",
+    "ex": "Cuando [era] chico vivía en un pueblo. [Fue] un día larguísimo."
+   },
+   {
+    "f": "estaba = cómo o dónde estaba en ese momento · estuvo = cuánto tiempo, alguna vez, un tiempo cerrado",
+    "ex": "[Estaba] muy cansado. [Estuve] enfermo toda la semana."
+   },
+   {
+    "f": "ser: quién, cómo era, de dónde, la hora, dónde fue un evento · estar: cómo o dónde estaba",
+    "ex": "La fiesta [fue] en lo de Martín, pero él no [estaba]."
+   },
+   {
+    "f": "¿cómo estuvo? → estuvo buenísimo, bien, re aburrido · fue + sustantivo (fue un desastre) · ¿cómo te fue? es ir",
+    "ex": "¿Cómo [estuvo] la fiesta? La mudanza [fue] un desastre."
+   }
+  ],
+  "items": [
+   {
+    "id": "sep01",
+    "part": "era-fue",
+    "es": "Mi abuela [era] muy cariñosa con todos.",
+    "en": "My grandma was very affectionate with everyone.",
+    "p": "era · cómo era"
+   },
+   {
+    "id": "sep02",
+    "part": "era-fue",
+    "es": "Cuando [era] chico, vivía en un pueblo.",
+    "en": "When I was a kid, I lived in a small town.",
+    "p": "era · la edad, de fondo"
+   },
+   {
+    "id": "sep03",
+    "part": "era-fue",
+    "es": "[Eran] las once cuando llegamos.",
+    "en": "It was eleven when we got there.",
+    "p": "eran · la hora"
+   },
+   {
+    "id": "sep04",
+    "part": "era-fue",
+    "es": "La casa de mis viejos [era] enorme.",
+    "en": "My parents' house was huge.",
+    "p": "era · descripción"
+   },
+   {
+    "id": "sep05",
+    "part": "era-fue",
+    "es": "El recital [fue] en el Luna Park.",
+    "en": "The concert was at Luna Park.",
+    "p": "fue · dónde fue un evento"
+   },
+   {
+    "id": "sep06",
+    "part": "era-fue",
+    "es": "[Fue] un día larguísimo.",
+    "en": "It was a really long day.",
+    "p": "fue · un día terminado"
+   },
+   {
+    "id": "sep07",
+    "part": "era-fue",
+    "es": "¿Cómo [fue] la entrevista?",
+    "en": "How did the interview go?",
+    "p": "fue · cómo salió"
+   },
+   {
+    "id": "sep08",
+    "part": "era-fue",
+    "es": "Ese verano [fue] el mejor de mi vida.",
+    "en": "That summer was the best of my life.",
+    "p": "fue · un tiempo cerrado"
+   },
+   {
+    "id": "sep09",
+    "part": "era-fue",
+    "es": "Antes este barrio [era] muy tranquilo.",
+    "en": "This neighborhood used to be really quiet.",
+    "p": "era · antes"
+   },
+   {
+    "id": "sep10",
+    "part": "era-fue",
+    "es": "¿Vos [eras] el más chico de tu familia?",
+    "en": "Were you the youngest in your family?",
+    "p": "eras · vos"
+   },
+   {
+    "id": "sep11",
+    "part": "era-fue",
+    "es": "[Fue] mi profe de inglés durante tres años.",
+    "en": "She was my English teacher for three years.",
+    "p": "fue · un tiempo con límite"
+   },
+   {
+    "id": "sep12",
+    "part": "era-fue",
+    "es": "La película [era] en blanco y negro.",
+    "en": "The movie was in black and white.",
+    "p": "era · cómo era"
+   },
+   {
+    "id": "sep13",
+    "part": "era-fue",
+    "es": "¿Quién [fue] el que llamó anoche?",
+    "en": "Who was it that called last night?",
+    "p": "fue · quién, una vez"
+   },
+   {
+    "id": "sep14",
+    "part": "estaba-estuvo",
+    "es": "[Estaba] muy cansado, así que me fui a dormir.",
+    "en": "I was really tired, so I went to bed.",
+    "p": "estaba · cómo estaba"
+   },
+   {
+    "id": "sep15",
+    "part": "estaba-estuvo",
+    "es": "[Estuve] enfermo toda la semana.",
+    "en": "I was sick all week.",
+    "p": "estuve · un tiempo cerrado"
+   },
+   {
+    "id": "sep16",
+    "part": "estaba-estuvo",
+    "es": "¿Dónde [estabas] cuando te llamé?",
+    "en": "Where were you when I called you?",
+    "p": "estabas · vos, dónde"
+   },
+   {
+    "id": "sep17",
+    "part": "estaba-estuvo",
+    "es": "[Estuvimos] tres días en Mendoza.",
+    "en": "We were in Mendoza for three days.",
+    "p": "estuvimos · cuánto tiempo"
+   },
+   {
+    "id": "sep18",
+    "part": "estaba-estuvo",
+    "es": "El súper ya [estaba] cerrado.",
+    "en": "The supermarket was already closed.",
+    "p": "estaba · cómo estaba"
+   },
+   {
+    "id": "sep19",
+    "part": "estaba-estuvo",
+    "es": "¿[Estuviste] alguna vez en Bariloche?",
+    "en": "Have you ever been to Bariloche?",
+    "p": "estuviste · alguna vez"
+   },
+   {
+    "id": "sep20",
+    "part": "estaba-estuvo",
+    "es": "El café [estaba] helado.",
+    "en": "The coffee was ice cold.",
+    "p": "estaba · cómo estaba"
+   },
+   {
+    "id": "sep21",
+    "part": "estaba-estuvo",
+    "es": "[Estuve] dos horas en la fila del banco.",
+    "en": "I was in line at the bank for two hours.",
+    "p": "estuve · cuánto tiempo"
+   },
+   {
+    "id": "sep22",
+    "part": "estaba-estuvo",
+    "es": "Mi hermana [estaba] de vacaciones en Brasil.",
+    "en": "My sister was on vacation in Brazil.",
+    "p": "estaba de vacaciones"
+   },
+   {
+    "id": "sep23",
+    "part": "estaba-estuvo",
+    "es": "Ayer [estuvo] nublado todo el día.",
+    "en": "Yesterday it was cloudy all day.",
+    "p": "estuvo · el día entero"
+   },
+   {
+    "id": "sep24",
+    "part": "estaba-estuvo",
+    "es": "Cuando entré, todos [estaban] en la cocina.",
+    "en": "When I walked in, everyone was in the kitchen.",
+    "p": "estaban · la escena"
+   },
+   {
+    "id": "sep25",
+    "part": "estaba-estuvo",
+    "es": "¿Cuánto tiempo [estuviste] en el hospital?",
+    "en": "How long were you in the hospital?",
+    "p": "estuviste · cuánto tiempo"
+   },
+   {
+    "id": "sep26",
+    "part": "estaba-estuvo",
+    "es": "[Estaba] nerviosa antes del examen.",
+    "en": "I was nervous before the exam.",
+    "p": "estaba · el ánimo"
+   },
+   {
+    "id": "sep27",
+    "part": "ser-o-estar",
+    "es": "La fiesta [fue] en lo de Martín, pero él no [estaba].",
+    "en": "The party was at Martín's place, but he wasn't there.",
+    "p": "un evento: fue · una persona: estaba"
+   },
+   {
+    "id": "sep28",
+    "part": "ser-o-estar",
+    "es": "El chico [era] simpático, pero ese día [estaba] de mal humor.",
+    "en": "The guy was nice, but that day he was in a bad mood.",
+    "p": "cómo era · cómo estaba"
+   },
+   {
+    "id": "sep29",
+    "part": "ser-o-estar",
+    "es": "El restaurante [era] caro, pero la comida [estaba] buenísima.",
+    "en": "The restaurant was expensive, but the food was amazing.",
+    "p": "era caro · estaba buenísima"
+   },
+   {
+    "id": "sep30",
+    "part": "ser-o-estar",
+    "es": "[Era] tarde y [estábamos] todos cansados.",
+    "en": "It was late and we were all tired.",
+    "p": "era tarde · estábamos cansados"
+   },
+   {
+    "id": "sep31",
+    "part": "ser-o-estar",
+    "es": "Mi viejo [era] médico y siempre [estaba] de guardia.",
+    "en": "My dad was a doctor and he was always on call.",
+    "p": "la profesión · estar de guardia"
+   },
+   {
+    "id": "sep32",
+    "part": "ser-o-estar",
+    "es": "[Fue] una sorpresa: no [estaba] en mis planes.",
+    "en": "It was a surprise: it wasn't in my plans.",
+    "p": "fue + sustantivo · estar en"
+   },
+   {
+    "id": "sep33",
+    "part": "ser-o-estar",
+    "es": "La clase [era] aburrida y yo [estaba] aburrido.",
+    "en": "The class was boring and I was bored.",
+    "p": "ser aburrido · estar aburrido"
+   },
+   {
+    "id": "sep34",
+    "part": "ser-o-estar",
+    "es": "¿De dónde [era] tu profe? ¿[Estaba] contenta acá?",
+    "en": "Where was your teacher from? Was she happy here?",
+    "p": "de dónde · cómo estaba"
+   },
+   {
+    "id": "sep35",
+    "part": "ser-o-estar",
+    "es": "El departamento [era] lindo, pero [estaba] sucio.",
+    "en": "The apartment was nice, but it was dirty.",
+    "p": "cómo era · cómo estaba"
+   },
+   {
+    "id": "sep36",
+    "part": "ser-o-estar",
+    "es": "¿Ya [estabas] lista cuando llegó el taxi?",
+    "en": "Were you ready when the taxi came?",
+    "p": "estar listo = preparado"
+   },
+   {
+    "id": "sep37",
+    "part": "ser-o-estar",
+    "es": "[Era] la primera vez que [estaba] en Buenos Aires.",
+    "en": "It was the first time I'd been in Buenos Aires.",
+    "p": "era la primera vez · estaba en"
+   },
+   {
+    "id": "sep38",
+    "part": "ser-o-estar",
+    "es": "La reunión [fue] a las diez y [estuvo] bastante bien.",
+    "en": "The meeting was at ten and it went pretty well.",
+    "p": "fue a las · estuvo bien"
+   },
+   {
+    "id": "sep39",
+    "part": "ser-o-estar",
+    "es": "Mi abuelo [era] alto, pero de viejo [estaba] muy flaco.",
+    "en": "My grandpa was tall, but in his old age he was very thin.",
+    "p": "cómo era · cómo estaba"
+   },
+   {
+    "id": "sep40",
+    "part": "como-estuvo",
+    "es": "¿Cómo [estuvo] la fiesta? [Estuvo] buenísima.",
+    "en": "How was the party? It was great.",
+    "p": "¿cómo estuvo? · estuvo buenísima"
+   },
+   {
+    "id": "sep41",
+    "part": "como-estuvo",
+    "es": "La cena [estuvo] riquísima, gracias.",
+    "en": "Dinner was delicious, thanks.",
+    "p": "estuvo · la comida"
+   },
+   {
+    "id": "sep42",
+    "part": "como-estuvo",
+    "es": "[Fue] un placer conocerte.",
+    "en": "It was a pleasure to meet you.",
+    "p": "fue un placer"
+   },
+   {
+    "id": "sep43",
+    "part": "como-estuvo",
+    "es": "El partido [estuvo] re aburrido.",
+    "en": "The game was really boring.",
+    "p": "estuvo re + adjetivo"
+   },
+   {
+    "id": "sep44",
+    "part": "como-estuvo",
+    "es": "¿Qué tal [estuvo] el finde?",
+    "en": "How was the weekend?",
+    "p": "¿qué tal estuvo?"
+   },
+   {
+    "id": "sep45",
+    "part": "como-estuvo",
+    "es": "La mudanza [fue] un desastre.",
+    "en": "The move was a disaster.",
+    "p": "fue + sustantivo"
+   },
+   {
+    "id": "sep46",
+    "part": "como-estuvo",
+    "es": "[Estuvo] lindo el paseo por San Telmo.",
+    "en": "The walk around San Telmo was nice.",
+    "p": "estuvo lindo"
+   },
+   {
+    "id": "sep47",
+    "part": "como-estuvo",
+    "es": "¿Cómo te [fue] en el examen?",
+    "en": "How did your exam go?",
+    "p": "te fue: es ir, no ser"
+   },
+   {
+    "id": "sep48",
+    "part": "como-estuvo",
+    "es": "Esa cena [fue] lo mejor del viaje.",
+    "en": "That dinner was the best part of the trip.",
+    "p": "fue lo mejor"
+   },
+   {
+    "id": "sep49",
+    "part": "como-estuvo",
+    "es": "La película [estuvo] bien, nada más.",
+    "en": "The movie was OK, nothing special.",
+    "p": "estuvo bien"
+   },
+   {
+    "id": "sep50",
+    "part": "como-estuvo",
+    "es": "El viaje [fue] largo, pero [estuvo] buenísimo.",
+    "en": "The trip was long, but it was great.",
+    "p": "fue largo · estuvo buenísimo"
+   },
+   {
+    "id": "sep51",
+    "part": "como-estuvo",
+    "es": "[Fue] una semana complicada en el laburo.",
+    "en": "It was a rough week at work.",
+    "p": "fue + sustantivo"
+   },
+   {
+    "id": "sep52",
+    "part": "como-estuvo",
+    "es": "¡[Estuvo] genial tu cumple!",
+    "en": "Your birthday party was great!",
+    "p": "estuvo genial"
    }
   ]
  },

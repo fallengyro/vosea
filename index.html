@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="195">
+<meta name="vosea-build" content="196">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -832,7 +832,7 @@
   <span class="deck-grab" aria-hidden="true"></span>
   <div class="deck-head">
     <h2 id="deck-title" data-i18n="deck_title">Armar el mazo</h2>
-    <button type="button" class="icon-btn" id="deck-close" data-i18n="close">Cerrar</button>
+    <button type="button" class="modal-x" id="deck-close" data-i18n-aria-label="close" aria-label="Cerrar">×</button>
   </div>
   <section id="flashcards-panel" hidden>
     <div class="flash-setup">
@@ -935,7 +935,7 @@
   <div class="modal-card deck-card oido-card" role="dialog" aria-modal="true" aria-labelledby="oido-title">
     <div class="deck-head">
       <h2 id="oido-title">Al oído</h2>
-      <button type="button" class="icon-btn" id="oido-close" data-i18n="close">Cerrar</button>
+      <button type="button" class="modal-x" id="oido-close" data-i18n-aria-label="close" aria-label="Cerrar">×</button>
     </div>
     <section id="oido-setup">
       <p class="oido-lead" data-i18n="oido_lead">Cada respuesta: el inglés literal, la frase en castellano con Elena, Tomás, Valeria y Agustín (a distintas velocidades) y otra vez el inglés.</p>

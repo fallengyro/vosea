@@ -6044,7 +6044,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "195";
+  var VOSEA_BUILD = "196";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -13430,12 +13430,15 @@
   var TOPIC_ORDER = [
     ["abecedario", "A1"], ["vocales", "A1"], ["diptongos", "A1"], ["consonantes", "A1"], ["c-g", "A1"],
     ["numeros", "A1"], ["precios", "A1"], ["hora", "A1"], ["fechas", "A1"],
-    ["presentarse", "A1"], ["pronombres", "A1"], ["articulos", "A1"], ["verbos", "A1"], ["irregulares", "A1"], ["presente", "A1"], ["hay-estar", "A1"],
+    ["presentarse", "A1"], ["pronombres", "A1"], ["articulos", "A1"], ["verbos", "A1"], ["irregulares", "A1"], ["presente", "A1"],
+    // ser y estar moved to A1 (2026-10-29, mason: "I feel like those are
+    // some of the first verbs you learn"), just before hay / estar
+    ["ser-estar", "A1"], ["hay-estar", "A1"],
     ["preguntas", "A1"], ["demostrativos", "A1"], ["gustar", "A1"], ["cuantos", "A1"], ["hay-que", "A1"],
     ["ir-a", "A1"], ["dia-a-dia", "A1"], ["comparativos", "A1"], ["se-impersonal", "A1"], ["ciudad", "A1"],
     ["saber-poder", "A2"], ["gerundio", "A2"], ["preterito", "A2"], ["ya-todavia", "A2"], ["empezar-terminar", "A2"],
-    ["objeto-directo", "A2"], ["ser-estar", "A2"],
-    ["imperfecto", "A2"], ["historia", "A2"],
+    ["objeto-directo", "A2"],
+    ["imperfecto", "A2"], ["historia", "A2"], ["ser-estar-pasado", "A2"],
     // Objeto indirecto and Me lo · se lo sit next to the imperative, as in
     // Aula del Sur 2, U11 (2026-10-11, the new flow)
     ["objeto-indirecto", "A2"], ["dobles", "A2"], ["imperativo", "A2"], ["futuro", "A2"], ["condicional", "A2"],
@@ -13703,13 +13706,15 @@
     { lvl: "A1", title: L("Para arrancar", "Getting started"), groups: [
       { name: L("Sonidos y números", "Sounds and numbers"), temas: ["abecedario", "vocales", "diptongos", "consonantes", "c-g", "numeros", "precios", "hora", "fechas"] },
       { name: L("Quién sos", "Who you are"), temas: ["presentarse", "pronombres", "articulos", "verbos", "irregulares", "presente"] },
-      { name: L("Qué hay y qué te gusta", "What there is and what you like"), temas: ["hay-estar", "preguntas", "demostrativos", "gustar", "cuantos"] },
+      { name: L("Qué es, qué hay y qué te gusta", "What it is, what there is, what you like"), temas: ["ser-estar", "hay-estar", "preguntas", "demostrativos", "gustar", "cuantos"] },
       { name: L("Tu día y tu barrio", "Your day and your neighborhood"), temas: ["hay-que", "ir-a", "dia-a-dia", "comparativos", "se-impersonal", "ciudad"] }
     ] },
     { lvl: "A2", title: L("Moverte solo", "Getting around on your own"), groups: [
       { name: L("Lo que podés y lo que pasó", "What you can do and what happened"), temas: ["saber-poder", "gerundio", "preterito", "ya-todavia", "empezar-terminar"] },
-      { name: L("Lo y la · ser y estar", "Lo and la · ser and estar"), temas: ["objeto-directo", "ser-estar"] },
-      { name: L("Antes y después", "Then and now"), temas: ["imperfecto", "historia"] },
+      { name: L("Lo y la", "Lo and la"), temas: ["objeto-directo"] },
+      // «Ser y estar en pasado» (2026-10-29, mason: "I have a lot of trouble
+      // with them in past tense") after the imperfect and the story Tema
+      { name: L("Antes y después", "Then and now"), temas: ["imperfecto", "historia", "ser-estar-pasado"] },
       { name: L("Pedir: le, se lo, el imperativo", "Asking: le, se lo, the imperative"), temas: ["objeto-indirecto", "dobles", "imperativo"] },
       { name: L("Planes y cortesía", "Plans and courtesy"), temas: ["futuro", "condicional", "conectores"] }
     ] },
@@ -23545,7 +23550,9 @@
       nav.appendChild(ui.backPrev); nav.appendChild(ui.backPos); nav.appendChild(ui.backNext);
       ui.back.appendChild(nav);
       // (2026-10-26) the item is a card over the list: ‹ N de M › and Cerrar
-      var cl = mk("button", "dback-close", t("item_close")); cl.type = "button"; cl.setAttribute("data-i18n", "item_close");
+      // (2026-10-29, mason: "an X would be a little more minimalist and
+      // cleaner": ×, with Cerrar as its label for screen readers)
+      var cl = mk("button", "dback-close", "×"); cl.type = "button"; cl.setAttribute("aria-label", t("item_close")); cl.setAttribute("data-i18n-aria-label", "item_close");
       cl.addEventListener("click", function () { c.deselect(); });
       ui.back.appendChild(cl);
       ui.back.appendChild(mk("span", "dback-grab"));
