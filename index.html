@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="200">
+<meta name="vosea-build" content="201">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1101,7 +1101,12 @@
     </button>
     <p class="flash-setup-note" id="lists-intro" data-i18n="lists_intro">Armá listas con lo que quieras (verbos, palabras y frases juntos, por ejemplo todo lo de «la cocina») y compartilas. Mientras una lista está activa, sus ítems están en tu colección; apagala y se van, salvo los que te quedaste.</p>
 
-    <p class="lists-count" id="lists-count"></p>
+    <!-- (2026-10-31) the count row sticks to the top like the other parts,
+         with ↑ Arriba once it's stuck -->
+    <div class="col-sum lists-sum" id="lists-count-row" hidden>
+      <span id="lists-count"></span>
+      <button type="button" class="col-sum-top" id="lists-top" data-i18n-aria-label="col_top_aria" aria-label="Volver arriba"><span class="col-sum-top-ico">↑</span><span data-i18n="col_top">Arriba</span></button>
+    </div>
     <ul class="card-list lists-list" id="lists-list"></ul>
     <p class="form-msg" id="lists-empty-msg" hidden data-i18n="lists_empty">Todavía no creaste ninguna lista.</p>
 

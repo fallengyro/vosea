@@ -6072,7 +6072,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "200";
+  var VOSEA_BUILD = "201";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21204,11 +21204,11 @@
     el.listsEmptyMsg.hidden = allLists.length !== 0;
     // (2026-10-30, mockup C) the explanation only while there are no lists;
     // a count line like the other parts
-    var intro = document.getElementById("lists-intro"), cnt = document.getElementById("lists-count");
+    var intro = document.getElementById("lists-intro"), cnt = document.getElementById("lists-count"), cntRow = document.getElementById("lists-count-row");
     if (intro) intro.hidden = allLists.length !== 0;
+    if (cntRow) cntRow.hidden = !allLists.length;
     if (cnt) {
       var onN = allLists.filter(function (l) { return l.data.enabled; }).length;
-      cnt.hidden = !allLists.length;
       cnt.textContent = allLists.length ? t(allLists.length === 1 ? "lists_count_one" : "lists_count", { n: allLists.length, on: onN }) : "";
     }
     var mine = allLists.filter(function (l) { return l.data.role === "owner"; });
@@ -24062,7 +24062,14 @@
       var stuck = r.height > 0 && r.top <= 0.5 && window.scrollY > 0;
       if (ui.sum.classList.contains("is-stuck") !== stuck) ui.sum.classList.toggle("is-stuck", stuck);
     });
+    // Listas' count row (2026-10-31)
+    var ls = document.getElementById("lists-count-row");
+    if (ls) {
+      var lr = ls.getBoundingClientRect(), lStuck = !ls.hidden && lr.height > 0 && lr.top <= 0.5 && window.scrollY > 0;
+      if (ls.classList.contains("is-stuck") !== lStuck) ls.classList.toggle("is-stuck", lStuck);
+    }
   }
+  (function () { var lt = document.getElementById("lists-top"); if (lt) lt.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); }); })();
   window.addEventListener("scroll", function () { if (!colStuckRaf) colStuckRaf = requestAnimationFrame(colStuckCheck); }, { passive: true });
   window.addEventListener("resize", colFabUpdate);
   kbdListeners.push(colFabUpdate);
