@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="197">
+<meta name="vosea-build" content="198">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1088,12 +1088,24 @@
   </section>
 
   <section id="lists-panel" hidden>
-    <p class="flash-setup-note" data-i18n="lists_intro">Armá listas con lo que quieras (verbos, palabras y frases juntos, por ejemplo todo lo de «la cocina») y compartilas. Mientras una lista está activa, sus ítems están en tu colección; apagala y se van, salvo los que te quedaste.</p>
+    <!-- (2026-10-30, mason picked mockup C) like the other parts: the
+         explanation only while you have no lists, a Biblioteca card at the
+         top, a count line, the lists filling the page, and a floating
+         «+ Lista» (the old Crear lista / Biblioteca row is hidden) -->
+    <button type="button" class="lists-lib-card" id="lists-lib-card">
+      <span class="lists-lib-text">
+        <span class="lists-lib-title" data-i18n="btn_library">Biblioteca</span>
+        <span class="lists-lib-sub" data-i18n="lists_lib_sub">Listas publicadas por tus amigos y voseá</span>
+      </span>
+      <span class="lists-lib-chev" aria-hidden="true">›</span>
+    </button>
+    <p class="flash-setup-note" id="lists-intro" data-i18n="lists_intro">Armá listas con lo que quieras (verbos, palabras y frases juntos, por ejemplo todo lo de «la cocina») y compartilas. Mientras una lista está activa, sus ítems están en tu colección; apagala y se van, salvo los que te quedaste.</p>
 
+    <p class="lists-count" id="lists-count"></p>
     <ul class="card-list lists-list" id="lists-list"></ul>
     <p class="form-msg" id="lists-empty-msg" hidden data-i18n="lists_empty">Todavía no creaste ninguna lista.</p>
 
-    <div class="toolbar-row">
+    <div class="toolbar-row lists-old-row">
       <button class="add-toggle" id="toggle-add-list" type="button" data-i18n="btn_create_list_toggle">+ Crear lista</button>
       <button class="seed-btn" id="open-library" type="button" data-i18n="btn_library">Biblioteca</button>
     </div>

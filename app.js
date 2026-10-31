@@ -1316,6 +1316,11 @@
       fab_verb_aria: "Agregar un verbo",
       fab_word_aria: "Agregar una palabra",
       fab_phrase_aria: "Agregar una frase",
+      fab_list: "Lista",
+      fab_list_aria: "Crear una lista",
+      lists_lib_sub: "Listas publicadas por tus amigos y voseá",
+      lists_count: "{n} listas · {on} en tu colección",
+      lists_count_one: "1 lista · {on} en tu colección",
       set_g_practice: "Práctica",
       set_g_data: "Tus datos",
       set_g_adv: "Avanzado",
@@ -2714,6 +2719,11 @@
       fab_verb_aria: "Add a verb",
       fab_word_aria: "Add a word",
       fab_phrase_aria: "Add a phrase",
+      fab_list: "List",
+      fab_list_aria: "Create a list",
+      lists_lib_sub: "Lists published by your friends and voseá",
+      lists_count: "{n} lists · {on} in your collection",
+      lists_count_one: "1 list · {on} in your collection",
       set_g_practice: "Practice",
       set_g_data: "Your data",
       set_g_adv: "Advanced",
@@ -6044,7 +6054,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "197";
+  var VOSEA_BUILD = "198";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21029,6 +21039,15 @@
   function renderListsPanel() {
     el.listsList.innerHTML = "";
     el.listsEmptyMsg.hidden = allLists.length !== 0;
+    // (2026-10-30, mockup C) the explanation only while there are no lists;
+    // a count line like the other parts
+    var intro = document.getElementById("lists-intro"), cnt = document.getElementById("lists-count");
+    if (intro) intro.hidden = allLists.length !== 0;
+    if (cnt) {
+      var onN = allLists.filter(function (l) { return l.data.enabled; }).length;
+      cnt.hidden = !allLists.length;
+      cnt.textContent = allLists.length ? t(allLists.length === 1 ? "lists_count_one" : "lists_count", { n: allLists.length, on: onN }) : "";
+    }
     var mine = allLists.filter(function (l) { return l.data.role === "owner"; });
     var shared = allLists.filter(function (l) { return l.data.role !== "owner"; });
     var sections = shared.length ? [["lists_section_mine", mine], ["lists_section_shared", shared]] : [[null, mine]];
@@ -23779,7 +23798,10 @@
   var COL_ADD = {
     verbs: { panel: "verbs-panel", form: el.form, detail: el.detail, open: function () { openForm("add"); }, cancel: function () { closeForm(); }, label: "fab_verb", aria: "fab_verb_aria", back: "nav_verbs", name: function () { return el.fInfinitive.value.trim(); } },
     words: { panel: "words-panel", form: el.wordForm, detail: el.wordDetail, open: function () { openWordForm("add"); }, cancel: function () { closeWordForm(); }, label: "fab_word", aria: "fab_word_aria", back: "nav_words", name: function () { return el.wfWord.value.trim(); } },
-    phrases: { panel: "phrases-panel", form: el.phraseForm, detail: el.phraseDetail, open: function () { openPhraseForm("add"); }, cancel: function () { closePhraseForm(); }, label: "fab_phrase", aria: "fab_phrase_aria", back: "nav_phrases", name: function () { return el.pfPhrase.value.trim(); } }
+    phrases: { panel: "phrases-panel", form: el.phraseForm, detail: el.phraseDetail, open: function () { openPhraseForm("add"); }, cancel: function () { closePhraseForm(); }, label: "fab_phrase", aria: "fab_phrase_aria", back: "nav_phrases", name: function () { return el.pfPhrase.value.trim(); } },
+    // (2026-10-30, mason: "a similar +List floating button") Nueva lista as
+    // its own screen too, ‹ Listas to go back
+    lists: { panel: "lists-panel", form: el.listForm, detail: el.listDetail, open: function () { openListForm(); }, cancel: function () { closeListForm(); }, label: "fab_list", aria: "fab_list_aria", back: "nav_lists", name: function () { return ""; } }
   };
   var colFab = document.createElement("button");
   colFab.type = "button"; colFab.className = "col-fab"; colFab.id = "col-fab"; colFab.hidden = true;
@@ -24030,6 +24052,7 @@
   el.publishSave.addEventListener("click", savePublish);
   el.publishCancel.addEventListener("click", closePublish);
   el.openLibraryBtn.addEventListener("click", openLibrary);
+  (function () { var lc = document.getElementById("lists-lib-card"); if (lc) lc.addEventListener("click", openLibrary); })();
   el.libraryClose.addEventListener("click", closeLibrary);
   el.goneKeep.addEventListener("click", goneKeepClick);
   el.goneSkip.addEventListener("click", showNextGone);
