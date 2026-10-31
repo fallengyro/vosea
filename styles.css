@@ -3270,7 +3270,11 @@ button.play-racha-goal { background: none; border: 0; padding: 2px 0; font: inhe
    everything under it moved. The row keeps the height it has with a
    button; and the border is always there (transparent) on every part, so
    sticking changes nothing but colors. */
-.col-sum.lists-sum { min-height: 44px; }
+.col-sum.lists-sum, .col-sum.ld-sum { min-height: 44px; }
+/* a list's row sits on the card's color, and the card's padding */
+.col-sum.ld-sum { background: var(--paper-raised); margin: 6px -22px 10px; padding: 6px 22px; }
+@media (max-width: 640px) { .col-sum.ld-sum { margin: 6px -14px 10px; padding: 6px 14px; } }
+.ld-sum .ld-practice[hidden] { display: none; }
 .col-fab { position: fixed; z-index: 60; right: max(16px, calc((100vw - 760px) / 2 + 8px)); bottom: calc(20px + env(safe-area-inset-bottom));
   display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 13px 20px 13px 16px;
   background: var(--accent-deep); color: var(--accent-ink, #fff); font: 700 15px "Public Sans", sans-serif; cursor: pointer;

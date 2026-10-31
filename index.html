@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="202">
+<meta name="vosea-build" content="203">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1155,8 +1155,16 @@
         </div>
       </div>
       <div class="ld-actrow">
-        <button class="btn-primary ld-practice" id="ld-practice" type="button" data-i18n="btn_list_practice">Practicar</button>
         <div class="ld-onoff" id="ld-onoff" hidden></div>
+      </div>
+      <!-- (2026-10-31, mason: "There should be a similar return to top button
+           and row when you enter a list detail. Some of the lists are quite
+           long") the count + Practicar row, sticky like the other parts,
+           with ↑ Arriba once it's stuck -->
+      <div class="col-sum ld-sum" id="ld-sum" hidden>
+        <span id="ld-sum-text"></span>
+        <button type="button" class="col-sum-top" id="ld-top" data-i18n-aria-label="col_top_aria" aria-label="Volver arriba"><span class="col-sum-top-ico">↑</span><span data-i18n="col_top">Arriba</span></button>
+        <button class="col-sum-btn ld-practice" id="ld-practice" type="button" data-i18n="btn_list_practice">Practicar</button>
       </div>
       <!-- Compartir: the link, and (commit 128) its on/off switch and a new
            link, kept together with the link itself. -->

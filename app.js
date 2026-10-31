@@ -6072,7 +6072,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "202";
+  var VOSEA_BUILD = "203";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21459,6 +21459,8 @@
     el.ldVerbsGroup.hidden = true;
     el.ldWordsGroup.hidden = true;
     el.ldPhrasesGroup.hidden = true;
+    var ldSum0 = document.getElementById("ld-sum");
+    if (ldSum0) ldSum0.hidden = true;
     renderListSelectBar();
     supabaseClient.from("list_items").select("*").eq("list_id", id).then(function (res) {
       if (selectedListId !== id) return;
@@ -21477,6 +21479,8 @@
       wordRows.forEach(function (row) { el.ldWordsItems.appendChild(listItemRow(row, entry)); });
       phraseRows.forEach(function (row) { el.ldPhrasesItems.appendChild(listItemRow(row, entry)); });
       el.ldPractice.hidden = rows.length === 0;
+      var ldSum = document.getElementById("ld-sum");
+      if (ldSum) { ldSum.hidden = rows.length === 0; document.getElementById("ld-sum-text").textContent = listMetaText(rows.length); }
       var keepable = rows.some(function (r) { return !ownHas(r.item_type, r.data); });
       el.ldSelectBtn.hidden = !keepable && !listSelectMode;
     });
@@ -24062,14 +24066,15 @@
       var stuck = r.height > 0 && r.top <= 0.5 && window.scrollY > 0;
       if (ui.sum.classList.contains("is-stuck") !== stuck) ui.sum.classList.toggle("is-stuck", stuck);
     });
-    // Listas' count row (2026-10-31)
-    var ls = document.getElementById("lists-count-row");
-    if (ls) {
+    // Listas' count row and a list's (2026-10-31)
+    ["lists-count-row", "ld-sum"].forEach(function (id) {
+      var ls = document.getElementById(id);
+      if (!ls) return;
       var lr = ls.getBoundingClientRect(), lStuck = !ls.hidden && lr.height > 0 && lr.top <= 0.5 && window.scrollY > 0;
       if (ls.classList.contains("is-stuck") !== lStuck) ls.classList.toggle("is-stuck", lStuck);
-    }
+    });
   }
-  (function () { var lt = document.getElementById("lists-top"); if (lt) lt.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); }); })();
+  ["lists-top", "ld-top"].forEach(function (id) { var lt = document.getElementById(id); if (lt) lt.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); }); });
   window.addEventListener("scroll", function () { if (!colStuckRaf) colStuckRaf = requestAnimationFrame(colStuckCheck); }, { passive: true });
   window.addEventListener("resize", colFabUpdate);
   kbdListeners.push(colFabUpdate);
