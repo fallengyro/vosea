@@ -1790,7 +1790,6 @@
   }
 
   /* ================= listas compartidas ================= */
-  #lists-list { max-height: 260px; }
   /* Listas like the other parts (2026-10-30, mockup C) */
   .lists-old-row { display: none !important; }
   .lists-lib-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--paper-raised); border-radius: 14px; padding: 12px 14px; margin: 0 0 12px; cursor: pointer; color: var(--ink); font: inherit; }
@@ -3165,7 +3164,7 @@ button.sterm-lab { cursor: pointer; text-decoration: underline; text-underline-o
 
 /* A list's page, simpler (2026-10-25, commit 143) */
 #ld-share-btn, #ld-share-row { display: none !important; }
-.ld-back { display: none; }
+.ld-back { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--accent); font: 600 15px "Public Sans", sans-serif; padding: 2px 0 8px; cursor: pointer; }
 .ld-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .ld-head-text { min-width: 0; }
 .ld-metaline { margin: 2px 0 0; font: 13.5px "Public Sans", sans-serif; color: var(--ink-soft); }
@@ -3189,11 +3188,13 @@ button.sterm-lab { cursor: pointer; text-decoration: underline; text-underline-o
 #list-detail .detail-actions-footer { display: none; }
 .ld-people-group { margin-top: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-raised); padding: 10px 12px 12px; }
 .ld-people-note { margin: 6px 0 8px; font-size: 12.5px; color: var(--ink-soft); }
+/* (2026-10-30) on desktop too: the lists fill the page (mason: "the
+   scroller on desktop leaves a lot of empty space"), and a list opens as its
+   own screen with ‹ Listas, as on a phone */
+#lists-panel.is-item > .flash-setup-note, #lists-panel.is-item #lists-list, #lists-panel.is-item > .toolbar-row, #lists-panel.is-item #lists-empty-msg, #lists-panel.is-item #list-form,
+#lists-panel.is-item #lists-lib-card, #lists-panel.is-item #lists-count { display: none !important; }
+#lists-list { max-height: none; overflow: visible; }
 @media (max-width: 640px) {
-  #lists-panel.is-item > .flash-setup-note, #lists-panel.is-item #lists-list, #lists-panel.is-item > .toolbar-row, #lists-panel.is-item #lists-empty-msg, #lists-panel.is-item #list-form,
-  #lists-panel.is-item #lists-lib-card, #lists-panel.is-item #lists-count { display: none !important; }
-  /* the lists fill the page on a phone (the list opens as its own screen) */
-  #lists-list { max-height: none; overflow: visible; }
   .ld-back { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--accent); font: 600 15px "Public Sans", sans-serif; padding: 2px 0 8px; cursor: pointer; }
 }
 

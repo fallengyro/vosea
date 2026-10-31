@@ -6054,7 +6054,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "198";
+  var VOSEA_BUILD = "199";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21267,7 +21267,7 @@
         panel.classList.toggle("is-item", open);
         ldMenuClose();
         if (open) { ldLastOpen = selectedListId; ldMenuRefresh(); }
-        if (!ldIsPhone()) return;
+        // (2026-10-30) desktop too: the list is its own screen there now
         if (open && !was) setTimeout(function () { window.scrollTo({ top: 0, behavior: "instant" }); }, 30);
         else if (!open && was) {
           var id = ldLastOpen;
