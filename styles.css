@@ -2716,6 +2716,10 @@
   .oido-step-who { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .oido-step-sp { font-size: 11px; opacity: .8; margin-top: 1px; }
   .oido-step.is-past { color: var(--ink); border-color: var(--line); background: var(--paper-sunken); }
+  /* a voice whose clip doesn't exist (2026-10-31: found while playing) */
+  .oido-step.is-missing { opacity: .45; text-decoration: line-through; }
+  .oido-keep-clear { min-height: 0; padding: 0 2px; }
+  #settings-oido-keep-field[hidden], #settings-oido-keep-note[hidden] { display: none; }
   .oido-step.is-now { background: var(--accent-deep); border-color: var(--accent-deep); color: var(--accent-ink); font-weight: 700; }
   .oido-now { font-size: 13.5px; color: var(--ink-soft); margin: 4px 0 14px; min-height: 1.4em; }
   .oido-controls { display: flex; align-items: center; justify-content: center; gap: 22px; margin: 4px 0 12px; }

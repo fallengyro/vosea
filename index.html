@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="199">
+<meta name="vosea-build" content="200">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1429,6 +1429,15 @@
         <button type="button" class="btn-secondary" id="settings-oido" data-i18n="set_oido_btn">Escuchar las escenas…</button>
       </div>
       <p class="flash-setup-note set-note" id="settings-oido-note" data-i18n="set_oido_note">Solo escuchar: el inglés y la respuesta en cuatro voces, con el teléfono bloqueado. En prueba.</p>
+      <!-- (2026-10-31) keep Al oído's clips in this browser: off by default -->
+      <div class="field" id="settings-oido-keep-field">
+        <div class="set-label-row"><label data-i18n="set_oido_keep_label">Guardar los audios en este teléfono</label></div>
+        <div class="lang-toggle" role="group" id="settings-oido-keep">
+          <button type="button" class="lang-option" data-keep="0" data-i18n="set_oido_keep_off">No</button>
+          <button type="button" class="lang-option" data-keep="1" data-i18n="set_oido_keep_on">Sí</button>
+        </div>
+      </div>
+      <p class="flash-setup-note set-note" id="settings-oido-keep-note"><span data-i18n="set_oido_keep_note">Así repetir una escena no descarga nada. Ocupan lugar en el teléfono; podés borrarlos cuando quieras.</span> <span id="settings-oido-keep-size"></span> <button type="button" class="hoy-link oido-keep-clear" id="settings-oido-keep-clear" data-i18n="set_oido_keep_clear" hidden>Borrar</button></p>
     </section>
     <section class="set-group">
       <h4 class="set-group-h" data-i18n="set_g_data">Tus datos</h4>
