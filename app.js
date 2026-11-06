@@ -6101,7 +6101,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "206";
+  var VOSEA_BUILD = "207";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -23459,6 +23459,27 @@
     }
   });
   el.settingsClose.addEventListener("click", closeSettings);
+  // A × in the corner of a window, shown only once the window scrolls
+  // (2026-11-06, mason: "a close (or "X") in the upper right… once they
+  // require scrolling that would put the current close button off
+  // screen"): Configuración and Amigos, the windows from the ⋮ menu (Uso
+  // has had its × since 2026-10-26). It is checked whenever the window or
+  // anything in it changes size (Avanzado opening, the friends loading).
+  function modalScrollX(xId, onClose) {
+    var x = document.getElementById(xId), card = x && x.closest(".modal-card");
+    if (!x || !card) return;
+    x.addEventListener("click", onClose);
+    function check() { x.hidden = !(card.scrollHeight > card.clientHeight + 2); }
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(check);
+      ro.observe(card);
+      Array.prototype.forEach.call(card.children, function (c) { ro.observe(c); });
+    }
+    window.addEventListener("resize", check);
+    card.addEventListener("toggle", check, true); // <details> Avanzado
+  }
+  modalScrollX("settings-x", closeSettings);
+  modalScrollX("amo-x", function () { closeAmigosWindow(); });
   Array.prototype.forEach.call(el.settingsOverlay.querySelectorAll(".set-info"), function (b) {
     b.addEventListener("click", function () { setInfoOpen(b, b.getAttribute("aria-expanded") !== "true"); });
   });

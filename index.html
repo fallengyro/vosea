@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="206">
+<meta name="vosea-build" content="207">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1239,7 +1239,10 @@
      access point in the settings". Te reto links here. -->
 <div class="modal-overlay" id="amigos-overlay" hidden>
   <div class="modal-card amigos-card">
-    <h3 data-i18n="amo_title">Amigos</h3>
+    <div class="modal-head">
+      <h3 data-i18n="amo_title">Amigos</h3>
+      <button type="button" class="modal-x" id="amo-x" data-scroll-x hidden data-i18n-aria-label="close" aria-label="Cerrar">×</button>
+    </div>
     <p class="flash-setup-note" data-i18n="amo_intro">Con tus amigos podés compartir listas y retarse en Te reto.</p>
     <p class="form-msg is-warn" id="amo-missing" data-i18n="am_missing" hidden></p>
     <div id="amo-body">
@@ -1380,7 +1383,13 @@
        longer one is behind the "i". The daily goal moved here from Hoy's
        racha card (tapping "hoy: N de 20" there opens it). -->
   <div class="modal-card settings-card">
-    <h3 data-i18n="settings_title">Configuración</h3>
+    <!-- × in the corner once the window scrolls (2026-11-06, mason: "once
+         they require scrolling that would put the current close button off
+         screen"); the header row stays at the top. -->
+    <div class="modal-head">
+      <h3 data-i18n="settings_title">Configuración</h3>
+      <button type="button" class="modal-x" id="settings-x" data-scroll-x hidden data-i18n-aria-label="close" aria-label="Cerrar">×</button>
+    </div>
     <section class="set-group">
       <h4 class="set-group-h" data-i18n="set_g_app">La app</h4>
       <div class="field">
