@@ -6101,7 +6101,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "205";
+  var VOSEA_BUILD = "206";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -16369,7 +16369,7 @@
   function escLine(p, i) {
     if (p.lines[i] !== undefined) return p.lines[i];
     var s = p.sc.steps[i];
-    var line = escFill(p, escPick(s.es));
+    var line = escFill(p, p.charla ? charlaWording(p, i, s.es) : escPick(s.es));
     p.lines[i] = line;
     return line;
   }
@@ -17292,7 +17292,7 @@
       if (!reply && cur) reply = firstMatch(cur.resp, false);
       if (!reply) (c.temas || []).some(function (tm) { if (tm === cur) return false; reply = firstMatch(tm.resp, false); return !!reply; });
       if (!reply && cur) reply = firstMatch(cur.resp, true);
-      if (!reply) reply = st.byId[escPick(["r_mira", "r_bueno"])].item;
+      if (!reply) reply = st.byId[charlaLeastUsed(p, ["interes", "bien"]) || "r_mira"].item;
     }
     if (reply) say.push(reply.id);
     return { say: say, how: "keywords" };
@@ -17349,6 +17349,46 @@
       escAdvance();
     });
   }
+  // ---- variety (2026-11-06, mason: "it used «a mira» a lot") ----
+  // Which wording of a line: never one already said in this talk if
+  // there's another, and preferably one that doesn't start like, or share
+  // words with, the last few lines (so no «¡Ah, mirá vos!» right after
+  // «¡Mirá vos!…»).
+  var CHARLA_FILLERS = { ah: 1, uh: 1, uy: 1, ay: 1, che: 1, y: 1, bueno: 1, si: 1, ja: 1, no: 1, noo: 1 };
+  function charlaOpener(t) { var w = speechNorm(t).split(" "); while (w.length > 1 && CHARLA_FILLERS[w[0]]) w.shift(); return w[0] || ""; }
+  function charlaWords(t) { return speechNorm(t).split(" ").filter(function (w) { return w.length >= 4; }); }
+  function charlaWording(p, i, list) {
+    list = (list || []).filter(Boolean);
+    if (list.length < 2) return list[0] || "";
+    var st = p.charla, used = st.usedTexts || (st.usedTexts = {}), recent = [];
+    for (var j = i - 1; j >= 0 && recent.length < 4; j--) if (p.sc.steps[j].r && p.lines[j] !== undefined) recent.push(p.lines[j]);
+    var openers = recent.map(charlaOpener), words = {};
+    recent.forEach(function (t) { charlaWords(t).forEach(function (w) { words[w] = true; }); });
+    var best = [], top = Infinity;
+    list.forEach(function (t) {
+      var n = (used[t] ? 10 : 0) + (openers.indexOf(charlaOpener(t)) !== -1 ? 3 : 0) + charlaWords(t).filter(function (w) { return words[w]; }).length;
+      if (n < top) { top = n; best = [t]; } else if (n === top) best.push(t);
+    });
+    var pick = escPick(best);
+    used[pick] = true;
+    return pick;
+  }
+  // A reaction already said this talk: the least-used one of its group
+  // instead (ties at random).
+  function charlaRotate(p, id) {
+    var st = p.charla, e = st.byId[id];
+    if (!e || e.kind !== "reaccion" || !e.item.grupo || e.item.de || !st.played[id]) return id;
+    return charlaLeastUsed(p, [e.item.grupo]) || id;
+  }
+  function charlaLeastUsed(p, grupos) {
+    var st = p.charla, best = [], top = Infinity;
+    (p.sc.charla.pool || []).forEach(function (x) {
+      if (x.kind !== "reaccion" || x.de || grupos.indexOf(x.grupo) === -1) return;
+      var n = st.played[x.id] || 0;
+      if (n < top) { top = n; best = [x.id]; } else if (n === top) best.push(x.id);
+    });
+    return best.length ? escPick(best) : null;
+  }
   window.voseaCharlaPicks = function () { return escPlay && escPlay.charla ? escPlay.charla.picks.slice() : null; }; // tests
   window.voseaCharlaState = function () { var c = escPlay && escPlay.charla; return c ? { tags: c.tags, flags: c.flags, played: c.played, steps: escPlay.sc.steps.map(function (x) { return x.chId + (x.you ? "?" : "") + (x.chFrom ? "@" + x.chFrom : ""); }) } : null; }; // tests
   window.voseaOpenEscena = function (id) { setMainTab("play"); openEscenas(true, id); }; // tests
@@ -17357,6 +17397,7 @@
     var c = p.sc.charla, st = p.charla, ids = [];
     var seen = {};
     (pick.say || []).forEach(function (id) {
+      id = charlaRotate(p, id); // a reaction said before → another of its group
       var e = st.byId[id];
       if (!e || seen[id] || e.kind === "inicio" || e.kind === "fin") return;
       if (e.topic === "inicio" && st.turn !== 1) return;
@@ -17412,7 +17453,7 @@
       asked = charlaPush(p, e.item, k, topic) || asked;
       said++;
     });
-    if (endNow && !said) charlaPush(p, st.byId[escPick(["r_mira", "r_bueno"])].item, "reaccion");
+    if (endNow && !said) charlaPush(p, st.byId[charlaLeastUsed(p, ["interes", "bien"]) || "r_mira"].item, "reaccion");
     // a detour: you answered (or asked about) another topic
     if (replyTopic && replyTopic !== "inicio" && st.current && replyTopic !== st.current) st.detours++; else if (replyTopic) st.detours = 0;
     if (endNow) { charlaEnding(p); return; }

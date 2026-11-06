@@ -651,12 +651,12 @@ window.VOSEA_ESCENAS = [
               you: "Say how you know {m:Martina|Martín}.", best: "Trabajamos en el mismo lugar.", alts: ["{m:La|Lo} conozco del laburo.", "Vivimos en el mismo edificio.", "Nos conocimos por un amigo en común."] }
           ],
           resp: [
-            { id: "con_lab", marca: "trabaja", when: "from work", kw: ["trabaj", "laburo", "oficina"], es: ["¡Ah, mirá! ¿Y en qué laburan?", "¿Del laburo? ¡Mirá vos! ¿Y qué hacen?"], sigue: "lab_q1", cubre: "laburo" },
+            { id: "con_lab", marca: "trabaja", when: "from work", kw: ["trabaj", "laburo", "oficina"], es: ["¡Ah, mirá! ¿Y en qué laburan?", "¿Del laburo? ¡Qué bueno! ¿Y qué hacen?"], sigue: "lab_q1", cubre: "laburo" },
             { id: "con_vec", when: "neighbors, the same building", kw: ["vecin", "edificio", "mismo piso", "al lado", "enfrente"], es: ["¿En serio? Entonces vivís acá cerca. ¿Te gusta Villa Crespo?", "¡Ah, viven en el mismo edificio! ¿Y qué tal el barrio, te gusta?"],
               you: "Say if you like Villa Crespo.", best: "Sí, me encanta. Es muy tranquilo.", alts: ["Sí, hay muchos bares lindos.", "Me gusta, pero es un poco ruidoso."], cubre: "barrio" },
-            { id: "con_clase", when: "a Spanish class or course", kw: ["castellano", "espanol", "profe", ["clase", "idioma"]], es: ["¡Qué bueno! Con razón hablás tan bien.", "¡Ah, mirá! Con razón hablás re bien."] },
+            { id: "con_clase", when: "a Spanish class or course", kw: ["castellano", "espanol", "profe", ["clase", "idioma"]], es: ["¡Qué bueno! Con razón hablás tan bien.", "¡Ah, claro! Con razón hablás re bien."] },
             { id: "con_amigo", when: "through a friend, a partner, someone in common", kw: ["amig", "novi", "pareja", "marido", "mujer", "espos", "en comun"], es: ["Ah, claro. {m:Martina|Martín} conoce a medio Buenos Aires.", "Ah, claro, {m:Martina|Martín} conoce a todo el mundo."] },
-            { id: "con_otro", when: "anything else (a hobby, the gym, an app, a trip…)", kw: [], es: ["Ah, mirá vos. {m:Martina|Martín} siempre junta gente de todos lados.", "¡Qué bueno! Acá hay gente de todos lados, eh."] }
+            { id: "con_otro", when: "anything else (a hobby, the gym, an app, a trip…)", kw: [], es: ["Ah, qué bueno. {m:Martina|Martín} siempre junta gente de todos lados.", "¡Qué bueno! Acá hay gente de todos lados, eh."] }
           ],
           vos: { id: "con_vos", es: ["Nos conocimos en la facu. Estudiamos diseño, hace como diez años.", "De la facu. Cursamos diseño en el mismo grupo, ¡hace como diez años ya!"] } },
         { id: "origen", name: { es: "De dónde sos", en: "Where you're from" },
@@ -677,7 +677,7 @@ window.VOSEA_ESCENAS = [
             { id: "ori_poco", when: "here a short time (days, weeks, months)", kw: ["semana", "mes", "dias", "recien", "poco"], es: ["Ah, recién llegaste. ¿Y qué tal, te estás acostumbrando?", "¡Recién llegaste! ¿Y qué tal todo, te vas acostumbrando?"],
               you: "Say how it's going so far.", best: "Sí, de a poco. Me encanta.", alts: ["Más o menos, todavía me pierdo.", "Sí, ya me estoy acostumbrando."] },
             { id: "ori_mucho", when: "here a long time (a year or more)", kw: ["ano", "anos"], es: ["¡Uh, ya sos casi de acá!", "¡Ah, entonces ya sos de acá!"] },
-            { id: "ori_lejos", when: "says a country or city", kw: ["estados unidos", "eeuu", "norteamerica", "canada", "inglaterra", "irlanda", "escocia", "alemania", "francia", "australia", "italia", "espana", "brasil", "mexico", "chile", "colombia", "soy de", "vengo de", "nueva york", "california", "texas", "londres"], es: ["¡Uh, re lejos! ¿Y hace cuánto que estás acá?", "¡Mirá vos, de tan lejos! ¿Y hace mucho que estás acá?"], sigue: "ori_q2" }
+            { id: "ori_lejos", when: "says a country or city", kw: ["estados unidos", "eeuu", "norteamerica", "canada", "inglaterra", "irlanda", "escocia", "alemania", "francia", "australia", "italia", "espana", "brasil", "mexico", "chile", "colombia", "soy de", "vengo de", "nueva york", "california", "texas", "londres"], es: ["¡Uh, re lejos! ¿Y hace cuánto que estás acá?", "¡Uh, de tan lejos! ¿Y hace mucho que estás acá?"], sigue: "ori_q2" }
           ],
           vos: { id: "ori_vos", es: ["Yo soy de Rosario. Me vine para estudiar y me quedé, ya van ocho años.", "De Rosario. Vine a estudiar y me quedé… ¡ya van ocho años!"] } },
         { id: "barrio", name: { es: "Buenos Aires y tu barrio", en: "Buenos Aires and your barrio" },
@@ -707,11 +707,11 @@ window.VOSEA_ESCENAS = [
           resp: [
             { id: "lab_nada", when: "not working right now, retired, on a break", kw: ["no trabajo", "no estoy trabajando", "jubilad", "descans", "vacaciones", "nada"], es: ["¡Qué envidia! Disfrutalo.", "¡Qué lujo! Aprovechalo."] },
             { id: "lab_casa", marca: "trabaja", when: "works from home", kw: ["desde casa", "desde mi casa", "remoto", "home office", "en casa", "freelance"], es: ["¡Uh, como yo! Lo mejor es laburar en pantuflas.", "¡Como yo! Laburar en pantuflas no tiene precio."] },
-            { id: "lab_estudio", marca: "trabaja", when: "studies", kw: ["estudi", "facu", "universidad", "curso", "maestria"], es: ["¡Qué bueno! ¿Y qué estudiás?", "¡Mirá vos! ¿Y qué estás estudiando?"],
+            { id: "lab_estudio", marca: "trabaja", when: "studies", kw: ["estudi", "facu", "universidad", "curso", "maestria"], es: ["¡Qué bueno! ¿Y qué estudiás?", "¡Qué copado! ¿Y qué estás estudiando?"],
               you: "Say what you're studying.", best: "Estudio castellano.", alts: ["Estoy haciendo una maestría.", "Estudio cocina."] },
             { id: "lab_ofi", marca: "trabaja", when: "works at an office or a place outside home", kw: ["oficina", "empresa", "banco", "escuela", "hospital", "negocio", "local"], es: ["¿Y la oficina queda lejos? Acá el viaje te mata.", "¿Y te queda cerca? Acá viajar en hora pico es un garrón."],
               you: "Say how you get to work.", best: "Voy en subte, son veinte minutos.", alts: ["Queda cerca, voy caminando.", "Tomo el colectivo, tardo media hora."] },
-            { id: "lab_otro", marca: "trabaja", when: "names any other job", kw: ["soy", "trabajo", "laburo", "hago"], es: ["¡Qué interesante! ¿Y te gusta?", "¡Mirá vos! ¿Y te gusta lo que hacés?"],
+            { id: "lab_otro", marca: "trabaja", when: "names any other job", kw: ["soy", "trabajo", "laburo", "hago"], es: ["¡Qué interesante! ¿Y te gusta?", "¡Ah, qué bien! ¿Y te gusta lo que hacés?"],
               you: "Say if you like your job.", best: "Sí, me encanta.", alts: ["Sí, aunque a veces es mucho.", "Más o menos, la verdad."] }
           ],
           vos: { id: "lab_vos", es: ["Soy {n:diseñadora gráfica|diseñador gráfico}. Laburo desde casa, así que a veces no salgo en todo el día.", "Hago diseño gráfico, desde casa. ¡Hay días que no salgo ni a la esquina!"] } },
@@ -756,7 +756,7 @@ window.VOSEA_ESCENAS = [
             { id: "fut_newells", marca: "futbolero", when: "Newell's (his team's rival)", kw: ["newell", "nuls", "lepros"], es: ["¡Uh, de Newell's! Me partiste el corazón. Yo soy de Central.", "¿De Newell's? ¡No! Yo soy de Central, somos rivales."] },
             { id: "fut_boca", marca: "futbolero", when: "Boca", kw: ["boca", "xeneize"], es: ["¡Uh, de Boca! Bueno, nadie es perfecto.", "¿De Boca? Bueno… nadie es perfecto, eh."] },
             { id: "fut_river", marca: "futbolero", when: "River", kw: ["river", "millonario"], es: ["¡Uh, gallina! No, mentira, todo bien.", "¿De River? ¡Uh! No, mentira, todo bien."] },
-            { id: "fut_otro", marca: "futbolero", when: "another club", kw: ["racing", "independiente", "san lorenzo", "velez", "huracan", "estudiantes", "talleres", "lanus", "banfield", "argentinos", "tigre", "chacarita", "atlanta", "ferro", "platense", "gimnasia", "belgrano"], es: ["¡Mirá vos! Tenés buen gusto.", "¡Ah, mirá! Eso habla bien de vos."] },
+            { id: "fut_otro", marca: "futbolero", when: "another club", kw: ["racing", "independiente", "san lorenzo", "velez", "huracan", "estudiantes", "talleres", "lanus", "banfield", "argentinos", "tigre", "chacarita", "atlanta", "ferro", "platense", "gimnasia", "belgrano"], es: ["¡Bien ahí! Tenés buen gusto.", "¡Ah, mirá! Eso habla bien de vos."] },
             { id: "fut_si", marca: "futbolero", when: "likes soccer but names no team", kw: ["me encanta", "me gusta", "si"], es: ["¡Bien! ¿Y de qué cuadro sos?", "¡Bien ahí! ¿Y de qué equipo sos?"], sigue: "fut_q1" }
           ],
           vos: { id: "fut_vos", es: ["Yo soy de Central, de Rosario. Sufro mucho, pero lo amo.", "De Central, obvio. Sufro un montón, pero lo amo."] } },
@@ -808,22 +808,30 @@ window.VOSEA_ESCENAS = [
           resp: [
             { id: "cas_perdon", when: "apologizes for their Spanish, says it's bad or hard", kw: ["perdon", "mi castellano", "mi espanol", "no hablo bien", "hablo mal", "me cuesta"], es: ["¡Pero no, te entiendo perfecto! Hablás re bien.", "¡Para nada! Se te entiende perfecto."] },
             { id: "cas_clase", when: "classes, a teacher, a school", kw: ["clase", "profe", "escuela", "curso", "instituto"], es: ["Se nota. Y acá practicás todo el día.", "Se nota. Y viviendo acá, practicás todo el tiempo."] },
-            { id: "cas_app", when: "an app, on their own, series, videos", kw: ["app", "aplicacion", "solo", "sola", "series", "videos", "youtube", "podcast"], es: ["¡Mirá vos! Y encima hablás como alguien de acá.", "¡Qué bien! Y encima con voseo y todo."] },
+            { id: "cas_app", when: "an app, on their own, series, videos", kw: ["app", "aplicacion", "solo", "sola", "series", "videos", "youtube", "podcast"], es: ["¡Impresionante! Y encima hablás como alguien de acá.", "¡Qué bien! Y encima con voseo y todo."] },
             { id: "cas_voseo", when: "the voseo or the accent is hard", kw: ["voseo", "tonada", "acento", "mezclo", "dificil"], es: ["Es que acá hablamos raro. Nadie dice «tú», tranqui.", "Tranqui, acá hablamos raro. Con el «vos» ya estás."] },
             { id: "cas_bien", when: "it's going well, likes learning it", kw: ["bien", "me gusta", "me encanta", "facil", "acostumbre"], es: ["¡Se nota! Vas re bien.", "¡Bien ahí! Se nota que le ponés ganas."] }
           ],
           vos: { id: "cas_vos", es: ["¿Yo? Del inglés sé lo justo. Te envidio, eh.", "¿Yo? Inglés, lo justo y necesario. Te admiro, eh."] } }
       ],
       pool: [
-        { id: "r_bueno", kind: "reaccion", when: "something good", es: ["¡Qué bueno!", "¡Buenísimo!"] },
-        { id: "r_mira", kind: "reaccion", when: "something interesting or new", es: ["¡Ah, mirá vos!", "¡Mirá vos!"] },
-        { id: "r_lindo", kind: "reaccion", when: "something nice or sweet", es: ["¡Qué lindo!", "¡Ay, qué lindo!"] },
-        { id: "r_serio", kind: "reaccion", when: "something surprising", es: ["¿En serio?", "¿Posta?"] },
-        { id: "r_nocreo", kind: "reaccion", when: "something very surprising", es: ["¡No te puedo creer!", "¡Noo, no te puedo creer!"] },
-        { id: "r_bajon", kind: "reaccion", when: "something went wrong or is sad", es: ["¡Uh, qué bajón!", "Uh, qué macana."] },
-        { id: "r_animo", kind: "reaccion", when: "something is hard for them", es: ["Bueno, ya se va a acomodar todo.", "Tranqui, de a poco."] },
-        { id: "r_total", kind: "reaccion", when: "an opinion he shares", es: ["Sí, totalmente.", "Tal cual."] },
-        { id: "r_jaja", kind: "reaccion", when: "a joke", es: ["¡Ja, ja! ¡Qué bueno!", "Ja, ja, ¡me encanta!"] },
+        // Reactions (2026-11-06, mason: "it used «a mira» a lot… pad the filler
+        // lines"): more of them, in groups; when Haiku or the keywords pick
+        // one already said, the app swaps in the least-used one of its group.
+        { id: "r_bueno", kind: "reaccion", grupo: "bien", when: "something good", es: ["¡Qué bueno!", "¡Buenísimo!", "¡Qué bueno, che!"] },
+        { id: "r_genial", kind: "reaccion", grupo: "bien", when: "something good", es: ["¡Genial!", "¡Bien ahí!", "¡Excelente!"] },
+        { id: "r_lindo", kind: "reaccion", grupo: "bien", when: "something nice or sweet", es: ["¡Qué lindo!", "¡Ay, qué lindo!", "¡Qué lindo eso!"] },
+        { id: "r_mira", kind: "reaccion", grupo: "interes", when: "something interesting or new", es: ["¡Ah, mirá vos!", "¡Ah, qué interesante!", "¡Ah, no sabía!"] },
+        { id: "r_copado", kind: "reaccion", grupo: "interes", when: "something interesting or cool", es: ["¡Qué copado!", "¡Re copado!", "¡Qué buena onda!"] },
+        { id: "r_ahsi", kind: "reaccion", grupo: "interes", when: "something new to him", es: ["Ah, ¿sí? ¡Qué bueno!", "Ah, ¿sí? No tenía idea.", "¡Ah, claro!"] },
+        { id: "r_serio", kind: "reaccion", grupo: "sorpresa", when: "something surprising", es: ["¿En serio?", "¿Posta?", "¿De verdad?"] },
+        { id: "r_nocreo", kind: "reaccion", grupo: "sorpresa", when: "something very surprising", es: ["¡No te puedo creer!", "¡No me digas!", "¡Noo, no te puedo creer!"] },
+        { id: "r_loco", kind: "reaccion", grupo: "sorpresa", when: "something unusual", es: ["¡Qué loco!", "¡Uy, qué loco!", "¡Uh, mirá vos!"] },
+        { id: "r_bajon", kind: "reaccion", grupo: "pena", when: "something went wrong or is sad", es: ["¡Uh, qué bajón!", "Uh, qué macana.", "¡Qué garrón!"] },
+        { id: "r_animo", kind: "reaccion", grupo: "pena", when: "something is hard for them", es: ["Bueno, ya se va a acomodar todo.", "Tranqui, de a poco.", "Ya vas a ver que mejora."] },
+        { id: "r_total", kind: "reaccion", grupo: "acuerdo", when: "an opinion he shares", es: ["Sí, totalmente.", "Tal cual.", "¡Obvio!"] },
+        { id: "r_entiendo", kind: "reaccion", grupo: "acuerdo", when: "something he can relate to", es: ["Te entiendo.", "Te re entiendo.", "Sí, es así."] },
+        { id: "r_jaja", kind: "reaccion", grupo: "risa", when: "a joke", es: ["¡Ja, ja! ¡Qué bueno!", "Ja, ja, ¡me encanta!", "¡Ja, ja! ¡Me mataste!"] },
         { id: "a_musica", kind: "aclarar", when: "what they said is cut off or makes no sense", es: ["Perdón, no te escuché con la música.", "Perdón, con esta música no escucho nada."] },
         { id: "a_como", kind: "aclarar", when: "he didn't understand", es: ["¿Cómo? Perdón.", "Perdón, ¿qué me dijiste?"] },
         { id: "s_mas", kind: "seguir", when: "a very short answer, to hear more", es: ["Contame más.", "¿Y cómo es eso? Contame."],
@@ -866,6 +874,7 @@ window.VOSEA_ESCENAS = [
         { m: "labur", es: "el laburo", en: "work, a job" },
         { m: "quilombo", es: "un quilombo", en: "a mess, chaos" },
         { m: "garron", es: "un garrón", en: "a drag, a pain" },
+        { m: "copad", es: "copado", en: "cool, great" },
         { m: "morcilla", es: "la morcilla", en: "blood sausage" },
         { m: "vacio", es: "el vacío", en: "flank steak" },
         { m: "provoleta", es: "la provoleta", en: "grilled provolone" },
