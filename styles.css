@@ -2646,6 +2646,27 @@
   .esc-end-btns { display: flex; gap: 8px; }
   .esc-end-btns > * { flex: 1; padding: 11px; border-radius: 12px; }
   .esc-end-close { display: block; width: 100%; margin-top: 8px; padding: 11px; border-radius: 12px; }
+  /* a charla (2026-11-06, "En el asado"): no right or wrong, the cue
+     behind «Ayuda», and the whole chat on the end screen */
+  .esc-me.is-said .esc-bub { background: var(--paper-raised); border-color: var(--line); }
+  .ch-cue { font-weight: 500; color: var(--ink-soft); }
+  .ch-cue.is-help { font-weight: 600; color: var(--ink); }
+  .ch-help { display: inline-block; margin: 0 0 10px; border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; color: var(--accent-deep); cursor: pointer; }
+  .esc-ahead-note.ch-note { margin: 14px 0 6px; }
+  .ch-log { text-align: left; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-raised); margin: 0 0 14px; }
+  .ch-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 13.5px; color: var(--ink); }
+  .ch-row:last-child { border-bottom: 0; }
+  .ch-row.is-you { flex-direction: column; gap: 2px; padding-left: 50px; background: var(--paper); }
+  .ch-row.is-playing { background: color-mix(in srgb, var(--accent) 12%, var(--paper-raised)); }
+  .ch-play { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 11px; flex: none; cursor: pointer; padding: 0; }
+  .ch-text { min-width: 0; line-height: 1.4; padding-top: 4px; }
+  .ch-row.is-you .ch-text { padding-top: 0; }
+  .ch-who { font-weight: 600; }
+  .ch-helped { color: var(--ink-soft); font-size: 12px; }
+  .ch-ways { display: block; color: var(--ink-soft); font-size: 12.5px; }
+  .ch-words-lbl { text-align: left; }
+  .ch-words { justify-content: flex-start; margin: 0 0 16px; }
+  .ch-word b { font-weight: 600; }
 
 /* verb form: the personal-use definition of a dative verb (2026-10-10) */
 .irr-auto { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; align-items: center; }

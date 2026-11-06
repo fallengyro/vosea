@@ -571,6 +571,314 @@ window.VOSEA_ESCENAS = [
       { r: "v", es: ["Listo. Acá tenés la bolsa y el ticket de cambio. ¡Que lo disfrutes!", "Ya está. Te dejo todo en la bolsa, con el ticket para el regalo. ¡Gracias por venir!", "Listo, acá tenés todo, con el ticket de cambio. ¡Que lo disfrutes!", "Todo listo: la bolsa y el ticket de cambio. ¡Gracias, que andes bien!", "Perfecto, aprobado. Te dejo la bolsa y el ticket de cambio. ¡Que lo disfrutes mucho!", "Joya. Acá va la bolsa, con el ticket de cambio adentro. ¡Gracias por tu compra!", "Salió bien. Tomá la bolsa y el ticket de cambio. ¡Que andes bien!", "Listo, ya pasó. La bolsa y el ticket de cambio, todo tuyo. ¡Gracias por venir!", "Bárbaro, acá tenés todo, y el ticket de cambio para el regalo. ¡Que lo disfrutes!", "Ya está. Te pongo el ticket de cambio en la bolsa. ¡Hasta la próxima!"], wait: 1300 },
       { you: "Thank {v:her|him} and say goodbye.", ok: ["gracias", "chau", "chao", "hasta luego", "nos vemos", "adios", "hasta la proxima", "hasta pronto", "buenas tardes", "buen dia", "buenas noches", "que andes bien"], best: "¡Muchas gracias! Chau.", alts: ["Gracias por todo. ¡Chau!", "Gracias, ¡hasta luego!", "Mil gracias. ¡Nos vemos!", "Gracias, ¡que tengas buen día!", "Bárbaro, gracias. Chau.", "¡Gracias! Hasta la próxima.", "Muchas gracias por la ayuda. ¡Chau!", "Gracias, ¡que andes bien!", "Bueno, gracias. ¡Hasta pronto!", "Gracias, re amable. ¡Nos vemos!"] }
     ]
+  },
+  {
+    // ---- En el asado (2026-11-06): a charla, not a script ----
+    // mason: "a little flexibility in the conversation… choose from a pool
+    // of responses for the next response". Map reviewed in the Claude Doc
+    // «Escena «En el asado»: mapa de la charla» (names kept, six topics,
+    // the English hint behind Ayuda, two voices per role, the smaller set
+    // of variations, Nico's lines replayable from the end screen, and you
+    // can end it by saying you have to go). How it plays: app.js
+    // "Charla"; the picks: supabase/functions/charla (Claude Haiku, which
+    // only chooses ids, never writes). No score.
+    //   charla.inicio  the opening lines; the last one is your first turn
+    //   charla.primero what Nico says back to that first turn
+    //   charla.temas   [{ id, name, q: [questions], resp: [branches], vos }]
+    //   question:  { id, es: [...], you: "English hint", best, alts }
+    //   branch:    { id, when: "for Haiku", kw: [keyword specs, like ok],
+    //                es: [...], (you/best/alts if it asks something, or
+    //                sigue: "<question id>" to ask that one), cubre: "<tema>" }
+    //   charla.pool    lines for any topic (reaccion, aclarar, seguir, puente)
+    //   charla.irse    you said you have to go; charla.fin  the usual ending
+    //   charla.palabras the words shown at the end, when a line used them
+    // Borrowed lines (2026-11-06, mason: "Let's use the A and B lines… for
+    // the lines that need a new reply or… tie back in write those"):
+    //   de: { escena, r }  the line is another scene's role's clip, played
+    //                      in this role's voice with THAT role's mood tag, so
+    //                      the premium clip already exists (texts must be
+    //                      exactly that role's; checked when the app loads)
+    //   otra: [{ de, es, primera? }]  another wording of a question, from
+    //                      another scene (primera: only as the first question)
+    //   antes: { id, es }  a new line said right before (the tie-in)
+    //   requiere / marca   a question only once a reply has set that flag
+    //   tras: "<question id>"  a reply only for that question
+    // Everything a role says is listed by escCastLines, so the Escenas
+    // warm-up and the premium voice units include these lines.
+    id: "asado", level: "A2",
+    name: { es: "En el asado", en: "At the asado" },
+    sub: { es: "Charlar con alguien que recién conocés", en: "Small talk with someone you just met" },
+    desc: { es: "Es sábado a la tarde y {m:Martina|Martín} cumple treinta. Hace un asado en la terraza de su casa, en Villa Crespo, y te presenta a {n:una amiga|un amigo} de la facu. No hay guion: la charla va para donde la lleves.", en: "It's Saturday afternoon and {m:Martina|Martín} turns thirty. {m:She's|He's} having an asado on the terraza of {m:her|his} house in Villa Crespo, and {m:she|he} introduces you to a friend from college. There's no script: the conversation goes wherever you take it." },
+    needs: ["presentarse", "presente", "preguntas", "gustar", "ir-a", "preterito"],
+    adelanta: ["imperfecto", "hay-que"],
+    roles: [
+      { key: "n", voice: "tomas", tag: "relaxed, friendly", f: { name: { es: "Lucía", en: "Lucía" }, sub: { es: "amiga de Martina", en: "Martina's friend" } }, m: { name: { es: "Nico", en: "Nico" }, sub: { es: "amigo de Martina", en: "Martina's friend" } } },
+      { key: "m", voice: "elena", tag: "excited, welcoming", f: { name: { es: "Martina", en: "Martina" }, sub: { es: "la cumpleañera", en: "the birthday girl" } }, m: { name: { es: "Martín", en: "Martín" }, sub: { es: "el cumpleañero", en: "the birthday boy" } } }
+    ],
+    prep: [
+      { id: "as01", es: "Soy [de Estados Unidos].", en: "I'm from the United States.", p: "ser de + lugar" },
+      { id: "as02", es: "[Hace dos años] que vivo acá.", en: "I've lived here for two years.", p: "hace + tiempo + que" },
+      { id: "as03", es: "[Trabajo] desde casa.", en: "I work from home.", p: "trabajar · laburar" },
+      { id: "as04", es: "[Me encanta] el vacío.", en: "I love the flank steak.", p: "me encanta + cosa" },
+      { id: "as05", es: "¿[Y vos]?", en: "And you?", p: "devolver la pregunta" },
+      { id: "as06", es: "No, [no sigo] el fútbol.", en: "No, I don't follow soccer.", p: "seguir (e → i)" },
+      { id: "as07", es: "[Me tengo que ir].", en: "I have to go.", p: "tener que + infinitivo" }
+    ],
+    steps: [],
+    charla: {
+      turns: 12, temas: 6, insta: 4,
+      inicio: [
+        { id: "in_m", r: "m", es: ["¡Viniste! Pasá, pasá. Mirá, te presento a {n:Lucía, una amiga|Nico, un amigo} de la facu.", "¡Hola! ¡Qué bueno que viniste! Vení, que te presento a {n:Lucía|Nico}.", "¡Llegaste! Pasá. {n:Ella es Lucía, una amiga|Él es Nico, un amigo} de la facu."] },
+        { id: "in_n", r: "n", es: ["¡Hola! ¿Todo bien? ¿Querés algo de tomar? Hay birra, vino y gaseosa.", "¡Buenas! Un gusto. ¿Te sirvo algo? Hay birra, vino, gaseosa…", "¡Hola, hola! ¿Qué tomás? Hay de todo: birra, vino, gaseosa."],
+          you: "Say hi to {n:Lucía|Nico}, and take a drink or say no thanks.", best: "¡Hola, un gusto! Una birra, por favor.", alts: ["Hola, ¿qué tal? Un vino, dale.", "¡Un gusto! Por ahora nada, gracias."],
+          // half the time: the portero's greeting, then the drink on its own
+          otro: [
+            { id: "in_hola", r: "n", de: { escena: "portero", r: "j" }, es: ["¡Hola! ¿Cómo andás?", "¡Buenas! ¿Qué tal, cómo va?"] },
+            { id: "in_n2", r: "n", es: ["Un gusto. ¿Querés algo de tomar? Hay birra, vino y gaseosa.", "Un gusto. ¿Te sirvo algo? Hay birra, vino, gaseosa…"],
+              you: "Say how you are, and take a drink or say no thanks.", best: "¡Bien! Un gusto. Una birra, por favor.", alts: ["Todo bien, ¿y vos? Un vino, dale.", "Bien, gracias. Por ahora nada."] }
+          ] }
+      ],
+      primero: [
+        { id: "pr_nada", when: "says no thanks, nothing for now", kw: ["nada", "por ahora no", "ahora no", ["no", "gracias"]], es: ["Dale, cuando quieras. Está todo en la heladera.", "Tranqui, cuando quieras te sirvo."] },
+        { id: "pr_tomar", when: "takes a drink (beer, wine, soda, water…)", kw: ["birra", "cerveza", "vino", "gaseosa", "agua", "coca", "fernet", "soda", "jugo"], es: ["¡Dale, ya te traigo!", "Buenísimo, ya te sirvo."] },
+        { id: "pr_bien", when: "says they're fine, or asks how he is", kw: ["bien", "y vos", "que tal"], es: ["¡Todo bien, por suerte! Y decime…", "¡Bien, bien! Acá, disfrutando. Y contame…"] },
+        { id: "pr_hola", when: "only says hello", kw: [], es: ["¡Un gusto! Y decime…", "¡Buenísimo! Y contame…"] }
+      ],
+      temas: [
+        { id: "conocer", name: { es: "Cómo conociste a {m:Martina|Martín}", en: "How you know {m:Martina|Martín}" },
+          q: [
+            { id: "con_q1", es: ["¿Y vos de dónde conocés a {m:Martina|Martín}?", "¿Y a {m:Martina|Martín} de dónde {m:la|lo} conocés?", "Contame, ¿cómo conociste a {m:Martina|Martín}?"],
+              you: "Say how you know {m:Martina|Martín}.", best: "Trabajamos en el mismo lugar.", alts: ["{m:La|Lo} conozco del laburo.", "Vivimos en el mismo edificio.", "Nos conocimos por un amigo en común."] }
+          ],
+          resp: [
+            { id: "con_lab", marca: "trabaja", when: "from work", kw: ["trabaj", "laburo", "oficina"], es: ["¡Ah, mirá! ¿Y en qué laburan?", "¿Del laburo? ¡Mirá vos! ¿Y qué hacen?"], sigue: "lab_q1", cubre: "laburo" },
+            { id: "con_vec", when: "neighbors, the same building", kw: ["vecin", "edificio", "mismo piso", "al lado", "enfrente"], es: ["¿En serio? Entonces vivís acá cerca. ¿Te gusta Villa Crespo?", "¡Ah, viven en el mismo edificio! ¿Y qué tal el barrio, te gusta?"],
+              you: "Say if you like Villa Crespo.", best: "Sí, me encanta. Es muy tranquilo.", alts: ["Sí, hay muchos bares lindos.", "Me gusta, pero es un poco ruidoso."], cubre: "barrio" },
+            { id: "con_clase", when: "a Spanish class or course", kw: ["castellano", "espanol", "profe", ["clase", "idioma"]], es: ["¡Qué bueno! Con razón hablás tan bien.", "¡Ah, mirá! Con razón hablás re bien."] },
+            { id: "con_amigo", when: "through a friend, a partner, someone in common", kw: ["amig", "novi", "pareja", "marido", "mujer", "espos", "en comun"], es: ["Ah, claro. {m:Martina|Martín} conoce a medio Buenos Aires.", "Ah, claro, {m:Martina|Martín} conoce a todo el mundo."] },
+            { id: "con_otro", when: "anything else (a hobby, the gym, an app, a trip…)", kw: [], es: ["Ah, mirá vos. {m:Martina|Martín} siempre junta gente de todos lados.", "¡Qué bueno! Acá hay gente de todos lados, eh."] }
+          ],
+          vos: { id: "con_vos", es: ["Nos conocimos en la facu. Estudiamos diseño, hace como diez años.", "De la facu. Cursamos diseño en el mismo grupo, ¡hace como diez años ya!"] } },
+        { id: "origen", name: { es: "De dónde sos", en: "Where you're from" },
+          q: [
+            { id: "ori_q1", es: ["Por la tonada no sos de acá, ¿no? ¿De dónde sos?", "¿Y vos de dónde sos?", "Che, ¿y de dónde sos vos?"],
+              you: "Say where you're from.", best: "Soy de Estados Unidos.", alts: ["Soy de Canadá, de Toronto.", "Vengo de Inglaterra."],
+              otra: [{ de: { escena: "juntada", r: "s" }, es: ["Hola, ¿de dónde sos?", "¡Hola! ¿Y vos de dónde sos?"], primera: true }] },
+            { id: "ori_q2", es: ["¿Y hace cuánto que estás en Buenos Aires?", "¿Y hace mucho que vivís acá?"],
+              you: "Say how long you've been in Buenos Aires.", best: "Hace dos años que vivo acá.", alts: ["Hace unos meses nomás.", "Llegué hace un año."],
+              otra: [{ de: { escena: "juntada", r: "s" }, es: ["¿Y cuánto hace que estás en Buenos Aires?", "¿Y desde cuándo vivís acá?"] }] },
+            { id: "ori_q3", es: ["¿Y qué te trajo para acá?", "¿Y por qué Buenos Aires?"],
+              you: "Say what brought you here.", best: "Vine por trabajo.", alts: ["Vinimos por mi pareja.", "Quería vivir en otro país."] }
+          ],
+          resp: [
+            { id: "ori_lab", marca: "trabaja", when: "work brought them", kw: ["trabaj", "laburo", "empresa"], es: ["Ah, por laburo. ¿Y a qué te dedicás?", "¿Por laburo? ¿Y de qué trabajás?"], sigue: "lab_q1", cubre: "laburo" },
+            { id: "ori_amor", when: "a partner or family brought them", kw: ["pareja", "novi", "marido", "mujer", "espos", "familia", "amor"], es: ["¡Qué lindo! Por amor, como en las películas.", "¡Ay, qué lindo! Eso es amor."] },
+            { id: "ori_probar", when: "to try it out, an adventure, to learn Spanish", kw: ["probar", "aventura", "cambiar", "conocer", "aprender"], es: ["¡Qué valiente! Me encanta.", "¡Qué bueno! Hay que animarse, eh."] },
+            { id: "ori_poco", when: "here a short time (days, weeks, months)", kw: ["semana", "mes", "dias", "recien", "poco"], es: ["Ah, recién llegaste. ¿Y qué tal, te estás acostumbrando?", "¡Recién llegaste! ¿Y qué tal todo, te vas acostumbrando?"],
+              you: "Say how it's going so far.", best: "Sí, de a poco. Me encanta.", alts: ["Más o menos, todavía me pierdo.", "Sí, ya me estoy acostumbrando."] },
+            { id: "ori_mucho", when: "here a long time (a year or more)", kw: ["ano", "anos"], es: ["¡Uh, ya sos casi de acá!", "¡Ah, entonces ya sos de acá!"] },
+            { id: "ori_lejos", when: "says a country or city", kw: ["estados unidos", "eeuu", "norteamerica", "canada", "inglaterra", "irlanda", "escocia", "alemania", "francia", "australia", "italia", "espana", "brasil", "mexico", "chile", "colombia", "soy de", "vengo de", "nueva york", "california", "texas", "londres"], es: ["¡Uh, re lejos! ¿Y hace cuánto que estás acá?", "¡Mirá vos, de tan lejos! ¿Y hace mucho que estás acá?"], sigue: "ori_q2" }
+          ],
+          vos: { id: "ori_vos", es: ["Yo soy de Rosario. Me vine para estudiar y me quedé, ya van ocho años.", "De Rosario. Vine a estudiar y me quedé… ¡ya van ocho años!"] } },
+        { id: "barrio", name: { es: "Buenos Aires y tu barrio", en: "Buenos Aires and your barrio" },
+          q: [
+            { id: "bar_q1", es: ["¿Y qué te parece Buenos Aires?", "¿Y qué tal Buenos Aires? ¿Te gusta?"],
+              you: "Say what you think of Buenos Aires.", best: "Me encanta. Es una ciudad hermosa.", alts: ["Me gusta mucho, pero es un quilombo.", "Es linda, pero está cara."] },
+            { id: "bar_q2", es: ["¿Y en qué barrio vivís?", "¿Y por dónde vivís?"],
+              you: "Say which barrio you live in.", best: "Vivo en Palermo.", alts: ["Vivo en Villa Crespo, cerca de acá.", "En Caballito."] }
+          ],
+          resp: [
+            { id: "bar_extra", when: "misses something from home", kw: ["extran", "echo de menos", "mi familia", "mi pais"], es: ["Te entiendo. A mí me pasa con Rosario, extraño el río.", "Te re entiendo. Yo extraño el río de Rosario."] },
+            { id: "bar_caos", when: "it's chaotic, loud, expensive", kw: ["quilombo", "caos", "ruid", "caro", "cara", "loco", "mucha gente"], es: ["Ja, sí, es un quilombo. Pero te acostumbrás.", "Sí, es un caos… pero después no te querés ir."] },
+            { id: "bar_barrio", when: "names a barrio", kw: ["palermo", "villa crespo", "almagro", "caballito", "recoleta", "belgrano", "san telmo", "colegiales", "chacarita", "nunez", "boedo", "villa urquiza", "barrio norte", "balvanera", "monserrat", "retiro", "flores", "saavedra", "coghlan", "devoto", "la boca", "puerto madero", "parque patricios", "once", "san nicolas", "villa ortuzar"], es: ["¡Ah, re lindo barrio! ¿Y te gusta vivir ahí?", "¡Qué bueno, me encanta ese barrio! ¿Y estás bien ahí?"],
+              you: "Say if you like living there.", best: "Sí, es muy tranquilo.", alts: ["Sí, tengo todo cerca.", "Más o menos, hay mucho ruido."] },
+            { id: "bar_lindo", when: "likes it, it's beautiful", kw: ["encanta", "me gusta", "lind", "hermos", "genial", "increible"], es: ["¡Viste? Tiene algo especial. ¿Qué es lo que más te gusta?", "¡Sí, viste! Tiene algo. ¿Y qué es lo que más te gusta?"],
+              you: "Say what you like most about the city.", best: "La comida y la gente.", alts: ["Los cafés y los parques.", "Que siempre hay algo para hacer."] },
+            { id: "bar_vida", when: "the food, the people, the nightlife", kw: ["comida", "gente", "noche", "salir", "bares", "restaurant", "cafe"], es: ["Sí, eso acá no falla.", "Tal cual, en eso Buenos Aires no tiene rival."] }
+          ],
+          vos: { id: "bar_vos", es: ["Yo vivo en Almagro. Es tranqui y estoy cerca de todo.", "En Almagro. Es tranqui, y en diez minutos estoy en todos lados."] } },
+        { id: "laburo", name: { es: "El laburo", en: "Work" },
+          q: [
+            { id: "lab_q1", es: ["¿Y a qué te dedicás?", "¿Y de qué laburás?", "¿Y vos qué hacés? ¿Trabajás, estudiás?"],
+              you: "Say what you do for work.", best: "Trabajo en una empresa de tecnología.", alts: ["Laburo desde casa, en marketing.", "Estoy estudiando castellano."] },
+            { id: "lab_q2", requiere: "trabaja", when: "only if they already said they work", es: ["¿Y el laburo, todo bien? ¿Mucho quilombo esta semana?", "¿Y qué tal el laburo, mucho lío?"],
+              you: "Say how work is going.", best: "Todo bien, tranqui.", alts: ["Un montón de laburo, la verdad.", "Bien, aunque esta semana fue larga."] }
+          ],
+          resp: [
+            { id: "lab_nada", when: "not working right now, retired, on a break", kw: ["no trabajo", "no estoy trabajando", "jubilad", "descans", "vacaciones", "nada"], es: ["¡Qué envidia! Disfrutalo.", "¡Qué lujo! Aprovechalo."] },
+            { id: "lab_casa", marca: "trabaja", when: "works from home", kw: ["desde casa", "desde mi casa", "remoto", "home office", "en casa", "freelance"], es: ["¡Uh, como yo! Lo mejor es laburar en pantuflas.", "¡Como yo! Laburar en pantuflas no tiene precio."] },
+            { id: "lab_estudio", marca: "trabaja", when: "studies", kw: ["estudi", "facu", "universidad", "curso", "maestria"], es: ["¡Qué bueno! ¿Y qué estudiás?", "¡Mirá vos! ¿Y qué estás estudiando?"],
+              you: "Say what you're studying.", best: "Estudio castellano.", alts: ["Estoy haciendo una maestría.", "Estudio cocina."] },
+            { id: "lab_ofi", marca: "trabaja", when: "works at an office or a place outside home", kw: ["oficina", "empresa", "banco", "escuela", "hospital", "negocio", "local"], es: ["¿Y la oficina queda lejos? Acá el viaje te mata.", "¿Y te queda cerca? Acá viajar en hora pico es un garrón."],
+              you: "Say how you get to work.", best: "Voy en subte, son veinte minutos.", alts: ["Queda cerca, voy caminando.", "Tomo el colectivo, tardo media hora."] },
+            { id: "lab_otro", marca: "trabaja", when: "names any other job", kw: ["soy", "trabajo", "laburo", "hago"], es: ["¡Qué interesante! ¿Y te gusta?", "¡Mirá vos! ¿Y te gusta lo que hacés?"],
+              you: "Say if you like your job.", best: "Sí, me encanta.", alts: ["Sí, aunque a veces es mucho.", "Más o menos, la verdad."] }
+          ],
+          vos: { id: "lab_vos", es: ["Soy {n:diseñadora gráfica|diseñador gráfico}. Laburo desde casa, así que a veces no salgo en todo el día.", "Hago diseño gráfico, desde casa. ¡Hay días que no salgo ni a la esquina!"] } },
+        { id: "comida", name: { es: "El asado y la comida", en: "The asado and the food" },
+          q: [
+            { id: "com_q1", es: ["¿Ya probaste la morcilla? Está buenísima.", "Che, ¿probaste la morcilla? Está buenísima."],
+              you: "Say if you've tried the morcilla.", best: "Sí, ¡está riquísima!", alts: ["No, todavía no. ¿Qué es?", "No como carne, pero gracias."] },
+            { id: "com_q2", es: ["¿Y vos sos más de choripán o de vacío?", "¿Qué te gusta más, el choripán o el vacío?"],
+              you: "Say what you like best at an asado.", best: "Yo soy más de choripán.", alts: ["Me encanta el vacío.", "La provoleta, sin duda."] },
+            { id: "com_q3", es: ["¿Y en tu país se hace asado?", "¿Y allá en tu país también hacen asado?"],
+              you: "Say if they have barbecues back home.", best: "Sí, pero es muy distinto.", alts: ["Sí, hacemos barbacoa, pero no es lo mismo.", "No mucho, la verdad."] }
+          ],
+          resp: [
+            { id: "com_veg", when: "doesn't eat meat, vegetarian", kw: ["no como carne", "vegetarian", "vegan", "no como"], es: ["Ah, tranqui, hay provoleta y verduras a la parrilla.", "No pasa nada, hay provoleta y verduritas a la parrilla."] },
+            { id: "com_no", when: "hasn't tried it, or asks what it is", kw: ["todavia no", "no probe", "no la probe", "que es", "nunca"], es: ["¡Tenés que probarla! Ya te traigo un pedacito.", "¡Ah, no! Tenés que probarla. Ya te traigo."] },
+            { id: "com_pais", when: "talks about barbecues back home", kw: ["barbacoa", "bbq", "barbecue", "parecido", "distinto", "diferente", "alla"], es: ["Acá es todo a las brasas, sin apuro. Es un ritual.", "Acá es otra cosa: todo a las brasas y sin apuro."] },
+            { id: "com_rico", when: "loves it, it's delicious", kw: ["rico", "rica", "buenis", "delicios", "encanta", "exquisit", "riquis"], es: ["¡Viste? El asador es un genio.", "¡Viste? Este asador la tiene clara."] },
+            { id: "com_corte", when: "names a cut: choripán, vacío, provoleta, entraña…", kw: ["chori", "vacio", "provoleta", "entrana", "asado de tira", "molleja", "chinchulin", "bife", "matambre", "morcilla"], es: ["Buena elección. Yo voy por el vacío siempre.", "¡Buenísimo! Yo siempre voy por el vacío."] }
+          ],
+          vos: { id: "com_vos", es: ["Yo soy de vacío y chimichurri. Y la provoleta, obvio.", "Vacío con chimichurri, siempre. Y una provoleta, obvio."] } },
+        { id: "futbol", name: { es: "El fútbol", en: "Soccer" },
+          q: [
+            { id: "fut_q1", es: ["¿Y sos de algún cuadro?", "¿Y vos sos de algún equipo?"],
+              you: "Say which team you support, if any.", best: "Soy de Boca.", alts: ["Me gusta River.", "No, no sigo el fútbol."] },
+            { id: "fut_q2", es: ["¿Te gusta el fútbol?", "¿Y a vos te gusta el fútbol?"],
+              you: "Say if you like soccer.", best: "Sí, me encanta.", alts: ["Más o menos.", "No mucho, la verdad."] },
+            { id: "fut_q3", es: ["¿Ya fuiste a la cancha?", "¿Y fuiste alguna vez a la cancha?"],
+              you: "Say if you've been to a game.", best: "Sí, fui a la Bombonera.", alts: ["Todavía no, pero quiero ir.", "Sí, fui a ver a River."] },
+            { id: "fut_q4", requiere: "futbolero", when: "only after they said they like soccer or named a team", de: { escena: "juntada", r: "m" },
+              antes: { id: "fut_q4_antes", es: ["Che, hoy a la noche juega la Selección. Lo vamos a ver acá, en la tele de {m:Martina|Martín}.", "¿Sabés que después del asado vamos a ver el partido de la Selección acá?"] },
+              es: ["¿Te querés quedar a verlo con nosotros?", "¿Por qué no te quedás a ver el partido?"],
+              you: "Say if you'll stay to watch the game.", best: "¡Dale, me quedo!", alts: ["Me encantaría, pero no puedo.", "Capaz. ¿A qué hora arranca?"] }
+          ],
+          resp: [
+            { id: "fut_noquedo", tras: "fut_q4", when: "can't or won't stay for the match", kw: ["no puedo", "no me puedo quedar", "tengo que", "otro dia", "la proxima"], es: ["Uh, qué lástima. Bueno, la próxima.", "Bueno, otra vez será. ¡Pero el próximo no te lo perdés!"] },
+            { id: "fut_quizas", tras: "fut_q4", when: "maybe, or asks what time the match is", kw: ["capaz", "quizas", "tal vez", "a lo mejor", "depende", "a que hora"], es: ["Dale, pensalo. Arranca a las nueve.", "Tranqui, avisame. Es a las nueve."] },
+            { id: "fut_quedo", tras: "fut_q4", when: "stays to watch the match", kw: ["me quedo", "obvio", "claro", "me encantaria", "de una"], es: ["¡Buenísimo! Arranca a las nueve. Traete algo para picar… ¡mentira, hay de todo!", "¡Genial! A las nueve arranca. Vamos a gritar como locos."] },
+            { id: "fut_nada", when: "doesn't follow soccer", kw: ["no me gusta", "no sigo", "no miro", "ninguno", "ningun", "no mucho", "nada"], es: ["Ah, tranqui. Acá igual te van a preguntar todo el tiempo.", "Bueno, tranqui. Pero preparate, que acá te lo preguntan siempre."] },
+            { id: "fut_cancha", marca: "futbolero", when: "went to a game, the stadium", kw: ["fui a la cancha", "fui a ver", "fui a la bombonera", "fui al monumental", "estadio"], es: ["¿Y qué tal la cancha? Es otra cosa, ¿no?", "¿Y? ¿Qué te pareció la cancha?"],
+              you: "Say what the game was like.", best: "¡Increíble! La gente canta todo el partido.", alts: ["Una locura, me encantó.", "Un poco de miedo, la verdad."] },
+            { id: "fut_central", marca: "futbolero", when: "Rosario Central (his team!)", kw: ["central"], es: ["¡No te puedo creer! ¡Yo también soy de Central!", "¿De Central? ¡Vení que te abrazo! Yo también."] },
+            { id: "fut_newells", marca: "futbolero", when: "Newell's (his team's rival)", kw: ["newell", "nuls", "lepros"], es: ["¡Uh, de Newell's! Me partiste el corazón. Yo soy de Central.", "¿De Newell's? ¡No! Yo soy de Central, somos rivales."] },
+            { id: "fut_boca", marca: "futbolero", when: "Boca", kw: ["boca", "xeneize"], es: ["¡Uh, de Boca! Bueno, nadie es perfecto.", "¿De Boca? Bueno… nadie es perfecto, eh."] },
+            { id: "fut_river", marca: "futbolero", when: "River", kw: ["river", "millonario"], es: ["¡Uh, gallina! No, mentira, todo bien.", "¿De River? ¡Uh! No, mentira, todo bien."] },
+            { id: "fut_otro", marca: "futbolero", when: "another club", kw: ["racing", "independiente", "san lorenzo", "velez", "huracan", "estudiantes", "talleres", "lanus", "banfield", "argentinos", "tigre", "chacarita", "atlanta", "ferro", "platense", "gimnasia", "belgrano"], es: ["¡Mirá vos! Tenés buen gusto.", "¡Ah, mirá! Eso habla bien de vos."] },
+            { id: "fut_si", marca: "futbolero", when: "likes soccer but names no team", kw: ["me encanta", "me gusta", "si"], es: ["¡Bien! ¿Y de qué cuadro sos?", "¡Bien ahí! ¿Y de qué equipo sos?"], sigue: "fut_q1" }
+          ],
+          vos: { id: "fut_vos", es: ["Yo soy de Central, de Rosario. Sufro mucho, pero lo amo.", "De Central, obvio. Sufro un montón, pero lo amo."] } },
+        { id: "mate", name: { es: "El mate", en: "Mate" },
+          q: [
+            { id: "mat_q1", es: ["¿Tomás mate?", "¿Y vos tomás mate?"],
+              you: "Say if you drink mate.", best: "Sí, todas las mañanas.", alts: ["A veces, con un poco de azúcar.", "No, no me gusta mucho."] },
+            { id: "mat_q2", es: ["¿Querés un mate? Está recién cebado.", "¿Te cebo un mate? Está recién hecho."],
+              you: "Take the mate, or say no thanks.", best: "¡Dale, gracias!", alts: ["No, gracias, ahora no.", "Bueno, uno solo."] }
+          ],
+          resp: [
+            { id: "mat_nunca", when: "has never tried it", kw: ["nunca", "no probe", "todavia no"], es: ["¡No te puedo creer! Tomá, probá este.", "¿Nunca? ¡No te puedo creer! Tomá, probá."] },
+            { id: "mat_nogusta", when: "doesn't like it, too bitter", kw: ["no me gusta", "muy amargo", "feo", "no tomo"], es: ["Al principio cuesta. Probalo con un poquito de azúcar.", "Es que al principio cuesta. Con un poco de azúcar entra mejor."] },
+            { id: "mat_no", when: "no thanks to a mate right now", kw: ["no gracias", "ahora no", ["no", "gracias"]], es: ["Dale, tranqui. Después te ofrezco.", "Tranqui, cuando quieras."] },
+            { id: "mat_dulce", when: "takes it with sugar, sweet", kw: ["azucar", "dulce", "edulcorante"], es: ["Bueno, no te voy a juzgar… bueno, un poquito sí.", "¿Dulce? Bueno, no te juzgo… bah, un poquito."] },
+            { id: "mat_amargo", when: "takes it bitter (amargo)", kw: ["amargo"], es: ["¡Amargo! Así me gusta.", "¡Eso! Amargo, como debe ser."] },
+            { id: "mat_si", when: "yes, drinks it, every day, takes the mate", kw: ["todos los dias", "todas las mananas", "siempre", "me encanta", "dale", "si", "gracias"], es: ["¡Ya sos de acá! ¿Amargo o dulce?", "¡Bien ahí! ¿Y lo tomás amargo o dulce?"],
+              you: "Say if you take it bitter or sweet.", best: "Amargo, siempre.", alts: ["Con un poquito de azúcar.", "Dulce, la verdad."] }
+          ],
+          vos: { id: "mat_vos", es: ["Amargo, siempre. Mi vieja me lo cebaba antes de ir al colegio.", "Yo, amargo. Desde {n:chica|chico}, mi vieja me lo cebaba todas las mañanas."] } },
+        { id: "planes", name: { es: "Los planes", en: "Plans" },
+          q: [
+            { id: "pla_q1", es: ["¿Y qué hacés el finde largo?", "¿Tenés algún plan para el finde largo?"],
+              you: "Say what you're doing on the long weekend.", best: "Me voy a la costa.", alts: ["Me quedo en casa, a descansar.", "Todavía no sé."] },
+            { id: "pla_q2", es: ["¿Ya conociste algo fuera de Buenos Aires?", "¿Y ya viajaste por el país?"],
+              you: "Say where you've traveled in Argentina.", best: "Sí, fui a Iguazú.", alts: ["Fuimos a Mendoza el año pasado.", "Todavía no, pero quiero ir al sur."] }
+          ],
+          resp: [
+            { id: "pla_fui", when: "has traveled (past): Iguazú, Bariloche, Salta…", kw: ["fui", "fuimos", "conoci", "conocimos", "estuve", "estuvimos"], es: ["¿Y qué te pareció? Yo hace años que quiero ir.", "¡Qué envidia! ¿Y qué tal estuvo?"],
+              you: "Say what you thought of it.", best: "¡Hermoso! Me encantó.", alts: ["Increíble, quiero volver.", "Lindo, pero hacía mucho frío."] },
+            { id: "pla_nose", when: "no plans yet, doesn't know, hasn't traveled", kw: ["no se", "todavia no", "ningun", "ni idea"], es: ["Tenés que ir a Rosario. Te paso un par de lugares.", "¡Andá a Rosario! Te paso un par de lugares."] },
+            { id: "pla_visita", when: "going back home, or visitors coming", kw: ["mi familia", "mis padres", "mis viejos", "visita", "vienen", "vuelvo", "volver"], es: ["¡Qué bueno! Seguro los extrañás.", "¡Qué lindo! Seguro los extrañás un montón."] },
+            { id: "pla_casa", when: "staying in the city, resting", kw: ["me quedo", "en casa", "descans", "nada", "tranqui"], es: ["Lo mejor. La ciudad queda tranquila cuando se van todos.", "Buen plan. Buenos Aires vacía es otra cosa."] },
+            { id: "pla_viaje", when: "a trip: the coast, Córdoba, Mendoza, the south, Uruguay", kw: ["me voy", "vamos a", "viaj", "costa", "mar del plata", "cordoba", "mendoza", "sur", "bariloche", "patagonia", "salta", "jujuy", "uruguay", "colonia", "montevideo"], es: ["¡Qué lindo! Andá, que vale la pena.", "¡Qué bueno! Te va a encantar."] }
+          ],
+          vos: { id: "pla_vos", es: ["Me voy a Rosario a ver a mi familia. Comer, dormir y ver a Central.", "Me voy a Rosario, a lo de mis viejos. Comer, dormir y ver a Central."] } },
+        { id: "castellano", name: { es: "El castellano", en: "Your Spanish" },
+          q: [
+            { id: "cas_q1", es: ["Che, hablás re bien. ¿Dónde aprendiste?", "¡Qué bien hablás! ¿Dónde aprendiste?"],
+              you: "Say how you're learning Spanish.", best: "Tomo clases dos veces por semana.", alts: ["Estudio con una app, y practico acá.", "¡Gracias! Todavía me cuesta un montón."],
+              otra: [
+                { de: { escena: "juntada", r: "m" }, es: ["¡Y ya hablás re bien! ¿Estás estudiando en algún lado?", "¡Qué bien que hablás! ¿Tomás clases en algún lado?"] },
+                { de: { escena: "cafe", r: "l" }, es: ["Che, ¿y cómo te va con el castellano?", "Contame, ¿cómo venís con el castellano?"] },
+                { de: { escena: "taxi", r: "t" }, es: ["Hablás bien el castellano, eh. ¿Estás estudiando?", "Che, hablás muy bien el castellano. ¿Estudiás?"] }
+              ] },
+            { id: "cas_q2", es: ["¿Y te cuesta mucho el voseo?", "¿Y el voseo? ¿Te cuesta?"],
+              you: "Say if voseo is hard for you.", best: "Un poco, pero ya me acostumbré.", alts: ["Sí, a veces mezclo vos y tú.", "No, me gusta mucho."] }
+          ],
+          resp: [
+            { id: "cas_perdon", when: "apologizes for their Spanish, says it's bad or hard", kw: ["perdon", "mi castellano", "mi espanol", "no hablo bien", "hablo mal", "me cuesta"], es: ["¡Pero no, te entiendo perfecto! Hablás re bien.", "¡Para nada! Se te entiende perfecto."] },
+            { id: "cas_clase", when: "classes, a teacher, a school", kw: ["clase", "profe", "escuela", "curso", "instituto"], es: ["Se nota. Y acá practicás todo el día.", "Se nota. Y viviendo acá, practicás todo el tiempo."] },
+            { id: "cas_app", when: "an app, on their own, series, videos", kw: ["app", "aplicacion", "solo", "sola", "series", "videos", "youtube", "podcast"], es: ["¡Mirá vos! Y encima hablás como alguien de acá.", "¡Qué bien! Y encima con voseo y todo."] },
+            { id: "cas_voseo", when: "the voseo or the accent is hard", kw: ["voseo", "tonada", "acento", "mezclo", "dificil"], es: ["Es que acá hablamos raro. Nadie dice «tú», tranqui.", "Tranqui, acá hablamos raro. Con el «vos» ya estás."] },
+            { id: "cas_bien", when: "it's going well, likes learning it", kw: ["bien", "me gusta", "me encanta", "facil", "acostumbre"], es: ["¡Se nota! Vas re bien.", "¡Bien ahí! Se nota que le ponés ganas."] }
+          ],
+          vos: { id: "cas_vos", es: ["¿Yo? Del inglés sé lo justo. Te envidio, eh.", "¿Yo? Inglés, lo justo y necesario. Te admiro, eh."] } }
+      ],
+      pool: [
+        { id: "r_bueno", kind: "reaccion", when: "something good", es: ["¡Qué bueno!", "¡Buenísimo!"] },
+        { id: "r_mira", kind: "reaccion", when: "something interesting or new", es: ["¡Ah, mirá vos!", "¡Mirá vos!"] },
+        { id: "r_lindo", kind: "reaccion", when: "something nice or sweet", es: ["¡Qué lindo!", "¡Ay, qué lindo!"] },
+        { id: "r_serio", kind: "reaccion", when: "something surprising", es: ["¿En serio?", "¿Posta?"] },
+        { id: "r_nocreo", kind: "reaccion", when: "something very surprising", es: ["¡No te puedo creer!", "¡Noo, no te puedo creer!"] },
+        { id: "r_bajon", kind: "reaccion", when: "something went wrong or is sad", es: ["¡Uh, qué bajón!", "Uh, qué macana."] },
+        { id: "r_animo", kind: "reaccion", when: "something is hard for them", es: ["Bueno, ya se va a acomodar todo.", "Tranqui, de a poco."] },
+        { id: "r_total", kind: "reaccion", when: "an opinion he shares", es: ["Sí, totalmente.", "Tal cual."] },
+        { id: "r_jaja", kind: "reaccion", when: "a joke", es: ["¡Ja, ja! ¡Qué bueno!", "Ja, ja, ¡me encanta!"] },
+        { id: "a_musica", kind: "aclarar", when: "what they said is cut off or makes no sense", es: ["Perdón, no te escuché con la música.", "Perdón, con esta música no escucho nada."] },
+        { id: "a_como", kind: "aclarar", when: "he didn't understand", es: ["¿Cómo? Perdón.", "Perdón, ¿qué me dijiste?"] },
+        { id: "s_mas", kind: "seguir", when: "a very short answer, to hear more", es: ["Contame más.", "¿Y cómo es eso? Contame."],
+          you: "Tell {n:her|him} a little more.", best: "Y nada, me encanta. Es muy lindo.", alts: ["Bueno, es una historia larga…", "Es que me gusta mucho."] },
+        { id: "s_mucho", kind: "seguir", when: "to ask how long", es: ["¿Y hace mucho?", "¿Hace mucho de eso?"],
+          you: "Say how long it's been.", best: "Sí, hace como dos años.", alts: ["No, hace poquito.", "Unos meses nomás."] },
+        { id: "s_gusta", kind: "seguir", when: "to ask if they like it", es: ["¿Y te gusta?", "¿Y qué tal, te gusta?"],
+          you: "Say if you like it.", best: "Sí, me encanta.", alts: ["Más o menos.", "Sí, aunque a veces cuesta."] },
+        { id: "s_desde", kind: "seguir", when: "after they mention something they started (living here, studying, a job, being sick)", de: { escena: "medico", r: "d" }, es: ["¿Desde cuándo?", "¿Hace cuánto?"],
+          you: "Say since when.", best: "Hace como un año.", alts: ["Desde marzo.", "Hace poquito, unos días."] },
+        { id: "r_mejores", kind: "reaccion", when: "they say they're sick, have a cold or feel unwell", kw: ["enferm", "resfri", "tos", "fiebre", "me duele", "engripad", "gripe", "descompuest"], de: { escena: "farmacia", r: "f" },
+          antes: { id: "r_mejores_antes", es: ["¡Uh, pobre!", "¡Ay, pobre!"] }, es: ["¡Que te mejores!", "¡Que te mejores pronto!"] },
+        { id: "p_che", kind: "puente", when: "before a new topic, when the jump isn't natural", es: ["Che, cambiando de tema…", "Che, otra cosa…"] },
+        { id: "p_hablando", kind: "puente", when: "before a new topic related to what they said", es: ["Hablando de eso…", "Ah, y hablando de eso…"] },
+        { id: "p_sabes", kind: "puente", when: "before a new topic, casually", es: ["Ah, ¿sabés qué te iba a preguntar?", "Ah, te quería preguntar algo."] },
+        { id: "v_vos", kind: "puente", when: "after two detours, back to an uncovered topic", es: ["Bueno, pero contame de vos.", "Pero bueno, contame de vos."] }
+      ],
+      irse: {
+        kw: ["me tengo que ir", "me voy a ir", "ya me voy", "me voy yendo", "me tengo que rajar", "me rajo", "me tengo que retirar", "me retiro"],
+        n: { id: "ir_n", r: "n", es: ["¿Ya te vas? ¡Qué lástima! Bueno, me encantó charlar con vos.", "¿Ya? ¡Qué pena! Bueno, re lindo conocerte."] },
+        m: { id: "ir_m", r: "m", es: ["¿Ya te vas? ¡Gracias por venir! Llevate un pedazo de torta.", "¿Te vas? ¡Gracias por venir! Esperá que te doy un poco de torta."],
+          you: "Say goodbye, thank {m:Martina|Martín} and wish {m:her|him} a happy birthday.", best: "¡Gracias por todo! Feliz cumple. ¡Chau!", alts: ["Me encantó, gracias. ¡Nos vemos!", "Un gusto. ¡Chau, chicos!"] },
+        // you wished her a happy birthday: she thanks you first
+        cumple: { id: "ir_cumple", r: "m", kw: ["feliz cumple", "feliz cumpleanos", "felicidades", "felicitaciones", "que los cumplas", "feliz"], de: { escena: "taxi", r: "t" }, es: ["¡Muchas gracias! Que te vaya bien."] },
+        ultimo: { id: "ir_fin", r: "n", es: ["¡Chau, cuidate! Un gusto.", "¡Chau! Nos vemos en el próximo asado."] }
+      },
+      fin: {
+        llama: { id: "fi_m", r: "m", es: ["¡Chicos, la carne! ¡Vengan que se enfría!", "¡Ey, a comer! ¡Ya salió el vacío!"] },
+        cierre: { id: "fi_n", r: "n", es: ["Bueno, ¡me encantó charlar con vos!", "Che, re buena onda. Después seguimos."],
+          you: "Say it was nice to meet {n:her|him}.", best: "¡Igualmente! Un gusto.", alts: ["A mí también. ¡Vamos a comer!", "¡Un placer! Dale, vamos."] },
+        insta: { id: "fi_insta", r: "n", es: ["¿Me pasás tu Insta? Así te aviso si hay otro asado.", "Che, ¿tenés Insta? Así te aviso cuando hay otro asado."],
+          you: "Give {n:her|him} your Instagram, or say goodbye.", best: "¡Dale! Te lo paso ahora.", alts: ["Sí, obvio. ¿Me pasás el tuyo?", "No uso mucho Insta, pero pasame tu número."] },
+        ultimo: { id: "fi_ult", r: "n", es: ["¡Dale! Vamos a comer.", "¡Joya! Vamos, que se enfría."] }
+      },
+      palabras: [
+        { m: "birra", es: "la birra", en: "beer" },
+        { m: "facu", es: "la facu", en: "college (la facultad)" },
+        { m: "heladera", es: "la heladera", en: "the fridge" },
+        { m: "tonada", es: "la tonada", en: "accent, the way you sound" },
+        { m: "labur", es: "el laburo", en: "work, a job" },
+        { m: "quilombo", es: "un quilombo", en: "a mess, chaos" },
+        { m: "garron", es: "un garrón", en: "a drag, a pain" },
+        { m: "morcilla", es: "la morcilla", en: "blood sausage" },
+        { m: "vacio", es: "el vacío", en: "flank steak" },
+        { m: "provoleta", es: "la provoleta", en: "grilled provolone" },
+        { m: "cuadro", es: "el cuadro", en: "a (soccer) team" },
+        { m: "cancha", es: "la cancha", en: "the stadium, the field" },
+        { m: "ceb", es: "cebar (un mate)", en: "to make and serve mate" },
+        { m: "vieja", es: "mi vieja", en: "my mom" },
+        { m: "finde largo", es: "el finde largo", en: "the long weekend" },
+        { m: "posta", es: "posta", en: "really? for real" },
+        { m: "bajon", es: "qué bajón", en: "what a bummer" },
+        { m: "macana", es: "qué macana", en: "what a shame" }
+      ]
+    }
   }
 ];
 

@@ -748,6 +748,20 @@
       esc_skipped: "Sin contestar",
       esc_review_n: "Repasar ({n})",
       esc_again: "Otra vez",
+      ch_tag: "charla",
+      ch_turns: "unos {n} turnos",
+      ch_no_score: "No hay guion ni puntaje: respondé como quieras y la charla sigue para ese lado. Si te trabás, tocá «Ayuda».",
+      ch_plays_one: "Ya charlaste una vez.",
+      ch_plays: "Ya charlaste {n} veces.",
+      ch_cue: "Respondé como quieras.",
+      ch_help: "Ayuda",
+      ch_done_title: "¡Qué buena charla!",
+      ch_done_sub: "{n} turnos · {t} temas",
+      ch_you: "Vos",
+      ch_helped: "con ayuda",
+      ch_ways: "Otras formas: {list}",
+      ch_words: "Palabras de la charla",
+      ch_again: "Charlar de nuevo",
       esc_near: "Lo más parecido: «{x}»",
       esc_close_n: "{n} para revisar",
       esc_close_one: "1 para revisar",
@@ -2159,6 +2173,20 @@
       esc_skipped: "Not answered",
       esc_review_n: "Review ({n})",
       esc_again: "Play again",
+      ch_tag: "small talk",
+      ch_turns: "about {n} turns",
+      ch_no_score: "No script and no score: answer however you like and the conversation goes that way. If you get stuck, tap Help.",
+      ch_plays_one: "You've chatted once.",
+      ch_plays: "You've chatted {n} times.",
+      ch_cue: "Answer however you like.",
+      ch_help: "Help",
+      ch_done_title: "Nice chat!",
+      ch_done_sub: "{n} turns · {t} topics",
+      ch_you: "You",
+      ch_helped: "with help",
+      ch_ways: "Other ways: {list}",
+      ch_words: "Words from the chat",
+      ch_again: "Chat again",
       esc_near: "Closest: “{x}”",
       esc_close_n: "{n} to review",
       esc_close_one: "1 to review",
@@ -3882,6 +3910,7 @@
   // its {placeholders}, and the replies to wrong answers — cb(text, role).
   // The audio warm-up and the ElevenLabs units both use it.
   function escCastLines(sc, cb) {
+    if (sc.charla) { charlaCastLines(sc, cb); return; } // a charla: every line of every topic
     function lists(v) { return Array.isArray(v) ? [v] : (v && typeof v === "object" ? Object.keys(v).map(function (k) { return v[k]; }).filter(Array.isArray) : []); }
     function fill(line) {
       var names = (String(line).match(/\{(\w+)\}/g) || []).map(function (m) { return m.slice(1, -1); });
@@ -6072,7 +6101,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "203";
+  var VOSEA_BUILD = "205";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -13990,10 +14019,10 @@
           txtBox.appendChild(progEl("span", "camino-scene-name", topicText(cs.name)));
           var miss = open ? [] : escMissing(sc);
           txtBox.appendChild(progEl("span", "camino-scene-sub", open
-            ? (best.plays ? t("camino_scene_best") : t("camino_scene_open"))
+            ? (best.plays ? (sc.charla ? t(best.plays === 1 ? "ch_plays_one" : "ch_plays", { n: best.plays }) : t("camino_scene_best")) : t("camino_scene_open"))
             : t(miss.length === 1 ? "camino_scene_locked_one" : "camino_scene_locked", { n: miss.length })));
           m.appendChild(txtBox);
-          if (open && best.plays) m.appendChild(escStarsNode(best.stars));
+          if (open && best.plays && !sc.charla) m.appendChild(escStarsNode(best.stars));
           m.addEventListener("click", function () { setMainTab("play"); openEscenas(true, sc.id); });
           rail.appendChild(m);
         });
@@ -15808,7 +15837,7 @@
 
   function escById(id) { return ESCENAS.find(function (s) { return s.id === id; }) || null; }
   function escTopic(sc) { return topicById("esc-" + sc.id); }
-  function escSceneTurns(sc) { return sc.steps.filter(function (s) { return s.you || s.check; }).length; }
+  function escSceneTurns(sc) { if (sc.charla) return sc.charla.turns || 12; return sc.steps.filter(function (s) { return s.you || s.check; }).length; }
   function escRole(sc, key) { return sc.roles.find(function (r) { return r.key === key; }) || sc.roles[0]; }
   function escRoleIndex(sc, key) { var i = sc.roles.indexOf(escRole(sc, key)); return i < 0 ? 0 : i; }
   // "El mozo" → M, "La señora" → S: the article isn't the person.
@@ -15904,7 +15933,11 @@
     var r = b && b.roles ? b.roles.find(function (x) { return x.key === roleKey; }) : null;
     return (r && r.tag) || "";
   }
-  function escTtsOpts(p, roleKey, vk) { return vk && ELEVEN_VOICES[vk] && p && p.sc ? { tag: escRoleTag(p.sc, roleKey) } : null; }
+  function escTtsOpts(p, roleKey, vk, text) {
+    if (!(vk && ELEVEN_VOICES[vk] && p && p.sc)) return null;
+    var bt = p.charla && text !== undefined ? p.charla.tags[String(text).trim()] : undefined; // a line borrowed from another scene keeps its tag
+    return { tag: bt !== undefined ? bt : escRoleTag(p.sc, roleKey) };
+  }
   // what ElevenLabs reads and bills (same as the tts function's elevenSpoken)
   function elevenSpoken(text, tag) {
     var t2 = String(text).trim().split(/\s*\/\s*/).join("... ");
@@ -16080,7 +16113,7 @@
   }
   function escRowStat() {
     var done = 0, stars = 0;
-    ESCENAS.forEach(function (sc) { var b = escBest(sc.id); if (b.plays) done++; stars += b.stars; });
+    ESCENAS.forEach(function (sc) { var b = escBest(sc.id); if (b.plays) done++; if (!sc.charla) stars += b.stars; });
     return done ? t("esc_row_stat", { n: done, total: ESCENAS.length, stars: stars }) : "";
   }
   function escStarsNode(n, cls) {
@@ -16108,12 +16141,13 @@
       var top = progEl("div", "esc-row-top");
       var cs = escCast(sc);
       var name = progEl("span", "esc-row-name", (open ? "" : "🔒 ") + topicText(cs.name));
-      if (sc.roles.length > 1) name.appendChild(progEl("span", "esc-two", t("esc_two_voices")));
+      if (sc.roles.length > 1 && !sc.charla) name.appendChild(progEl("span", "esc-two", t("esc_two_voices")));
+      if (sc.charla) name.appendChild(progEl("span", "esc-two ch-tag", t("ch_tag")));
       top.appendChild(name);
-      top.appendChild(escStarsNode(b.stars));
+      if (!sc.charla) top.appendChild(escStarsNode(b.stars)); // a charla has no score
       row.appendChild(top);
       var miss = open ? [] : escMissing(sc);
-      row.appendChild(progEl("div", "esc-row-sub", open ? topicText(cs.sub) + " · " + t("esc_turns", { n: escSceneTurns(sc) }) : t("esc_missing_n", { n: miss.length })));
+      row.appendChild(progEl("div", "esc-row-sub", open ? topicText(cs.sub) + " · " + t(sc.charla ? "ch_turns" : "esc_turns", { n: escSceneTurns(sc) }) : t("esc_missing_n", { n: miss.length })));
       if (!open) {
         var lb = progEl("div", "esc-lock");
         lb.appendChild(progEl("p", null, t("esc_missing_intro", { n: miss.length })));
@@ -16270,7 +16304,10 @@
       box.appendChild(chips);
     }
     var b = escBest(sc.id);
-    if (b.plays) {
+    if (sc.charla) {
+      box.appendChild(progEl("p", "esc-ahead-note ch-note", t("ch_no_score")));
+      if (b.plays) box.appendChild(progEl("p", "esc-best", t(b.plays === 1 ? "ch_plays_one" : "ch_plays", { n: b.plays })));
+    } else if (b.plays) {
       var best = progEl("p", "esc-best", t("esc_best") + " ");
       best.appendChild(escStarsNode(b.stars));
       best.appendChild(document.createTextNode(" · " + t("esc_first_try", { ok: b.ok, total: b.total })));
@@ -16356,6 +16393,8 @@
       phone: escRuidoLevel() !== "off" && sc.ruido && sc.ruido.phone ? sc.ruido.phone.slice() : null,
       picks: sc._picks || {}
     };
+    el.escEnd.classList.remove("is-charla");
+    if (sc.charla) charlaStart(escPlay);
     if (currentUser && (!rewardsState.loaded || rewardsState.userId !== currentUser.id)) loadRewards();
     el.escOverlay.hidden = false;
     document.body.classList.add("esc-open");
@@ -16386,7 +16425,7 @@
   function escSay(text, vk, bubble, roleKey) {
     escStopAudio();
     escAudioWake();
-    return ttsLoadAudio(text, vk, escTtsOpts(escPlay, roleKey, vk)).then(function (r) {
+    return ttsLoadAudio(text, vk, escTtsOpts(escPlay, roleKey, vk, text)).then(function (r) {
       escAudioWake();
       return new Promise(function (resolve) {
         if (!escAudio) escAudio = new Audio();
@@ -16442,7 +16481,7 @@
   function escMine(kind, text, sub) {
     var wrap = progEl("div", "esc-msg esc-me is-" + kind);
     var bub = progEl("div", "esc-bub");
-    bub.appendChild(progEl("span", "esc-mark", { ok: "✓", close: "✓", unsure: "?", repeat: "↻" }[kind] || "≠"));
+    if (kind !== "said") bub.appendChild(progEl("span", "esc-mark", { ok: "✓", close: "✓", unsure: "?", repeat: "↻" }[kind] || "≠")); // a charla: no right or wrong
     bub.appendChild(document.createTextNode(" " + (text || "—")));
     if (sub) bub.appendChild(progEl("span", "esc-sub", sub));
     wrap.appendChild(bub);
@@ -16487,7 +16526,7 @@
     (idxs || []).forEach(function (i) {
       var st = p.sc.steps[i];
       if (!st || !st.r) return;
-      try { ttsLoadAudio(escLine(p, i), p.voices[st.r], escTtsOpts(p, st.r, p.voices[st.r])).catch(function () {}); } catch (e) {}
+      try { var tx = escLine(p, i); ttsLoadAudio(tx, p.voices[st.r], escTtsOpts(p, st.r, p.voices[st.r], tx)).catch(function () {}); } catch (e) {}
     });
   }
   function escNext() {
@@ -16572,7 +16611,18 @@
       // one now, while you read the cue, not when you tap
       if (!p.rec && !p.busy) hablarPrepareMic();
       box.appendChild(progEl("div", "esc-turn-lbl", t("esc_your_turn")));
-      box.appendChild(progEl("p", "esc-cue", s.you));
+      if (p.charla) {
+        // a charla: answer however you like; the English cue only on «Ayuda»
+        // (mason, 2026-11-06: hints "after tapping")
+        var cue = progEl("p", "esc-cue ch-cue" + (p.cur.helped ? " is-help" : ""), p.cur.helped ? s.you : t("ch_cue"));
+        box.appendChild(cue);
+        if (!p.cur.helped && s.you) {
+          var hb = progEl("button", "ch-help", t("ch_help"));
+          hb.type = "button"; hb.id = "ch-help";
+          hb.addEventListener("click", function () { p.cur.helped = true; s._helped = true; cue.textContent = s.you; cue.classList.add("is-help"); hb.remove(); });
+          box.appendChild(hb);
+        }
+      } else box.appendChild(progEl("p", "esc-cue", s.you));
       var hint = progEl("p", "esc-hint", (extra && extra.hint) || t("esc_tap_mic"));
       hint.id = "esc-hint";
       box.appendChild(hint);
@@ -16585,7 +16635,7 @@
       mic.addEventListener("click", escToggleMic);
       box.appendChild(mic);
       if (extra && extra.skip) {
-        var sk = progButton(t("esc_skip"), false, function () { escResolve("otra", null, { skipped: true }); });
+        var sk = progButton(t("esc_skip"), false, function () { if (p.charla) charlaResolve(p, null, { skipped: true }); else escResolve("otra", null, { skipped: true }); });
         sk.classList.add("esc-skip");
         box.appendChild(sk);
       }
@@ -16837,7 +16887,7 @@
       return Promise.race([call, new Promise(function (_, reject) { setTimeout(function () { reject(new Error("timeout")); }, HABLAR_TIMEOUT_MS); })]);
     }
     speechToWav16k(blob).then(function (wav) {
-      payload = { text: step.best, answers: answers.length ? answers : undefined, audio: speechBytesToBase64(wav), assess: ["es-AR"] };
+      payload = { text: step.best, answers: answers.length ? answers : undefined, audio: speechBytesToBase64(wav), assess: p.charla ? [] : ["es-AR"] }; // a charla only needs the words
       return send(false);
     }, function (err) { err = err || new Error("decode"); err.local = true; throw err; }).then(function (res) {
       if (!escAlive(p)) return;
@@ -16849,6 +16899,7 @@
       speechDiagLog(escDiagBase(p, Object.assign(speechDiagFromResult(r), { rec_ms: recMs, detail: recInfo && recInfo.detail, extra: Object.assign(speechDiagResultExtra(r), { mime: recInfo && recInfo.mime, tail_dropped: r.tail_dropped || undefined, wrong: r.wrong ? true : undefined, repeat_ask: r.repeat_ask || undefined, close: r.auto_grade === "bien" && !r.exact ? true : undefined }) })));
       if (r.rule === "nothing") { hablarDropStream(); escTurnPanel("speak", { hint: t("esc_heard_nothing") }); return; }
       if (r.repeat_ask && escRepeatLine(p, String(r.heard_display || r.heard || "").trim())) return; // shown as heard: "¿Cómo?"
+      if (p.charla) { charlaResolve(p, r, {}); return; }
       if (r.auto_grade === "bien") { escResolve("bien", r, {}); return; }
       if (r.auto_grade === "otra") { escResolve("otra", r, {}); return; }
       // not sure: you decide
@@ -16971,6 +17022,7 @@
     escStopAudio();
     escRuidoStop();
     hablarRelease();
+    if (p.charla) { charlaFinish(p); return; }
     var ok = p.results.filter(function (r) { return r.ok; }).length, total = p.results.length || p.total;
     var before = escBest(p.sc.id);
     var stars = escStars(ok, total);
@@ -17048,6 +17100,426 @@
     document.body.classList.remove("esc-open");
     if (currentUser) practiceFlush();
     renderPlay();
+  }
+
+  // ================= Charla (2026-11-06) =================
+  // A scene with `charla` (escenas.js, "En el asado") has no fixed script:
+  // its steps are written as it goes. mason: "a little flexibility in the
+  // conversation… choose from a pool of responses for the next response",
+  // then "should we allow any of the escena phrases to be part of the
+  // conversation pool, but obviously trying to steer back toward the
+  // script?". Map: the Claude Doc «Escena «En el asado»: mapa de la charla».
+  //   · After each of your turns, what speech-to-text heard and the line
+  //     ids it may use go to the charla Edge Function (Claude Haiku), which
+  //     answers with ids only. Every line is written and voiced ahead of
+  //     time; ids the app doesn't know are dropped.
+  //   · If the function can't answer (no network, no key, the daily cap),
+  //     the keywords on each reply pick instead (charlaFallback).
+  //   · No score: every turn counts as practice (logged like the other
+  //     scenes, so it keeps the racha). The cue is hidden behind «Ayuda».
+  //   · It ends after about `turns` turns or `temas` topics, or as soon as
+  //     you say you have to go.
+  //   · The end screen is the whole chat: his lines with ▶ to hear them
+  //     again, yours with other ways to say them, and the new words.
+  var CHARLA_TIMEOUT_MS = 9000;
+  var CHARLA_HELP_KEYS = ["y vos", "y a vos", "vos de donde", "vos que", "y tu", "y usted", "vos sos", "vos tomas", "vos vivis", "vos trabajas"];
+  function charlaItems(c) {
+    var out = [];
+    function add(x, kind, topic) { if (x && x.id) out.push({ item: x, kind: kind, topic: topic || null }); }
+    (c.inicio || []).forEach(function (x) { add(x, "inicio"); (x.otro || []).forEach(function (y) { add(y, "inicio"); }); });
+    (c.primero || []).forEach(function (x) { add(x, "resp", "inicio"); });
+    (c.temas || []).forEach(function (tm) {
+      (tm.q || []).forEach(function (x) { add(x, "q", tm.id); });
+      (tm.resp || []).forEach(function (x) { add(x, "resp", tm.id); });
+      add(tm.vos, "vos", tm.id);
+    });
+    (c.pool || []).forEach(function (x) { add(x, x.kind || "reaccion"); });
+    if (c.irse) { add(c.irse.n, "irse"); add(c.irse.m, "fin"); add(c.irse.cumple, "fin"); add(c.irse.ultimo, "fin"); }
+    if (c.fin) ["llama", "cierre", "insta", "ultimo"].forEach(function (k) { add(c.fin[k], "fin"); });
+    return out;
+  }
+  // every line a role can say (for escCastLines: the warm-up and the
+  // premium voice units)
+  // Borrowed lines (`de`, `otra`) are another scene's clips: they're made
+  // with that scene's role, so they're not listed here (listing them would
+  // make them again with this scene's mood tag). The tie-ins (`antes`) are.
+  function charlaCastLines(sc, cb) {
+    charlaItems(sc.charla).forEach(function (e) {
+      var r = e.item.r || "n";
+      if (e.item.antes) (e.item.antes.es || []).forEach(function (tx) { cb(String(tx || "").trim(), r); });
+      if (e.item.de) return;
+      (e.item.es || []).forEach(function (tx) { cb(String(tx || "").trim(), r); });
+    });
+  }
+  // ---- borrowed lines (2026-11-06) ----
+  // A line with `de: { escena, r }` is that role's clip: it plays in this
+  // role's voice with the SOURCE role's mood tag, so with a premium voice
+  // the clip is already made (mason: "Nico or Lucia are just male/female
+  // and would be covered by Agustin or Valeria"). Only wordings that are
+  // really in the source role's lines are used; with a premium voice, only
+  // when that voice's unit for the source role is finished.
+  var charlaSrcMemo = {};
+  function charlaSrcTexts(de) {
+    var k = de.escena + "|" + de.r;
+    if (charlaSrcMemo[k]) return charlaSrcMemo[k];
+    var sc = escById(de.escena), set = {};
+    if (sc && !sc.charla) ["f", "m"].forEach(function (g) { escRoleTexts(sc, de.r, g).forEach(function (tx) { set[tx] = true; }); });
+    return (charlaSrcMemo[k] = set);
+  }
+  function charlaBorrowTexts(p, de, es, speaker) {
+    var src = escById(de.escena);
+    if (!src) return [];
+    var vk = p.voices[speaker || "n"];
+    if (ELEVEN_VOICES[vk] && !escElevenReady(src, de.r, vk)) return [];
+    var have = charlaSrcTexts(de);
+    return (es || []).filter(function (tx) { return have[String(tx).trim()]; });
+  }
+  function charlaBorrowOk(p, item) { return !item.de || charlaBorrowTexts(p, item.de, item.es, item.r || "n").length > 0; }
+  window.voseaCharlaBorrow = function (escena, r, texts) { var set = charlaSrcTexts({ escena: escena, r: r }); return (texts || []).filter(function (x) { return !set[x]; }); }; // tests: the wordings NOT found
+  // a line that asks you something: its own cue, or the question it borrows
+  function charlaAsk(p, item) {
+    if (!item) return null;
+    if (item.you) return item;
+    if (item.sigue) { var e = p.charla.byId[item.sigue]; return e ? e.item : null; }
+    return null;
+  }
+  function charlaStart(p) {
+    var c = p.sc.charla, st = { turn: 0, covered: [], current: null, detours: 0, inTema: 0, remember: {}, played: {}, byId: {}, ended: false, picks: [], flags: {}, tags: {} };
+    charlaItems(c).forEach(function (e) { st.byId[e.item.id] = e; });
+    // the topics in a different order each time; one of the first two
+    // ("how do you know her", "where are you from") opens
+    var rest = (c.temas || []).map(function (tm) { return tm.id; });
+    var openers = rest.filter(function (id) { return id === "conocer" || id === "origen"; });
+    var first = openers.length ? escPick(openers) : rest[0];
+    rest = shuffleArray(rest.filter(function (id) { return id !== first; }));
+    st.order = [first].concat(rest);
+    p.charla = st;
+    (c.inicio || []).forEach(function (x) {
+      // half the time the other version (the portero's greeting, then the drink)
+      if (x.otro && x.otro.every(function (y) { return charlaBorrowOk(p, y); }) && Math.random() < 0.5) x.otro.forEach(function (y) { charlaPush(p, y, "inicio"); });
+      else charlaPush(p, x, "inicio");
+    });
+  }
+  // add one line (and, if it asks something, your turn after it)
+  function charlaPush(p, item, kind, topic) {
+    var st = p.charla, steps = p.sc.steps, r = item.r || "n";
+    st.played[item.id] = (st.played[item.id] || 0) + 1;
+    if (item.antes) {
+      st.played[item.antes.id] = 1;
+      steps.push({ r: r, es: item.antes.es, chId: item.antes.id, chKind: "antes" });
+    }
+    var es = item.es, de = item.de;
+    if (de) es = charlaBorrowTexts(p, de, item.es, r);
+    else if (item.otra && Math.random() < 0.5) {
+      // another wording of this question, from another scene
+      var alts = item.otra.filter(function (o) { return (!o.primera || !st.covered.length) && charlaBorrowTexts(p, o.de, o.es, r).length; });
+      if (alts.length) { var o = escPick(alts); de = o.de; es = charlaBorrowTexts(p, o.de, o.es, r); }
+    }
+    if (de) { var tag = escRoleTag(escById(de.escena), de.r); es.forEach(function (tx) { st.tags[String(tx).trim()] = tag; }); }
+    steps.push({ r: r, es: es && es.length ? es : item.es, chId: item.id, chKind: kind, chFrom: de ? de.escena : undefined });
+    var ask = charlaAsk(p, item);
+    if (ask && kind !== "fin-last") {
+      if (item.sigue) st.played[item.sigue] = (st.played[item.sigue] || 0) + 1;
+      if (topic && topic !== "inicio") charlaCover(p, topic);
+      steps.push({ you: ask.you, best: ask.best, alts: ask.alts || [], chId: item.id, chTopic: topic || st.current, chEnd: kind === "fin" });
+      return true;
+    }
+    return false;
+  }
+  function charlaCover(p, topic) {
+    var st = p.charla;
+    if (st.current === topic) st.inTema++; else st.inTema = 1;
+    st.current = topic;
+    if (st.covered.indexOf(topic) === -1) st.covered.push(topic);
+  }
+  function charlaTema(p, id) { return (p.sc.charla.temas || []).find(function (tm) { return tm.id === id; }) || null; }
+  function charlaUnplayedQ(p, tm) {
+    var st = p.charla;
+    return (tm.q || []).filter(function (q) {
+      if (st.played[q.id]) return false;
+      if (q.requiere && !st.flags[q.requiere] && !(q.requiere === "trabaja" && st.remember.works)) return false; // e.g. "only if they already said they work"
+      return charlaBorrowOk(p, q);
+    });
+  }
+  // the chat so far, for the picker: his lines as played, your words
+  function charlaHistory(p) {
+    var out = [];
+    p.sc.steps.forEach(function (s, i) {
+      if (s.r && p.lines[i] !== undefined) out.push({ who: "them", text: p.lines[i] });
+      else if (s.you && s._said !== undefined) out.push({ who: "you", text: s._said || "…" });
+    });
+    return out.slice(-8);
+  }
+  function charlaOptions(p) {
+    var st = p.charla, out = [];
+    charlaItems(p.sc.charla).forEach(function (e) {
+      var x = e.item, k = e.kind;
+      if (k === "inicio" || k === "fin") return;
+      if (e.topic === "inicio" && st.turn !== 1) return; // the drink replies: only after your first turn
+      if (k === "q" && st.played[x.id]) return; // (one that needs a flag is offered with its `when`; the pick is checked below)
+      if (k === "vos" && st.played[x.id]) return;
+      if (x.tras && !(p.cur && p.cur.step && p.cur.step.chId === x.tras)) return; // a reply for one question only
+      if (!charlaBorrowOk(p, x)) return;
+      var o = { id: x.id, kind: k, text: (x.antes ? String(x.antes.es[0]) + " " : "") + String((x.es || [""])[0]) };
+      if (e.topic) o.topic = e.topic;
+      if (x.when) o.when = x.when;
+      if (charlaAsk(p, x) || k === "q" || k === "seguir") o.asks = true;
+      out.push(o);
+    });
+    return out;
+  }
+  // a keyword is the start of a word ("trabaj" → trabajo, trabajás); a
+  // list means every piece (escPieceIn: one- and two-letter ones are whole words)
+  function charlaKw(spec, said) { return !!said && (spec || []).some(function (k) { return escSpec(Array.isArray(k) ? k : [k], said); }); }
+  // No Haiku: the same choice by keywords.
+  function charlaFallback(p, said, skipped) {
+    var c = p.sc.charla, st = p.charla, say = [];
+    if (!skipped && c.irse && charlaKw(c.irse.kw, said)) return { say: [c.irse.n.id], leaving: true, how: "keywords" };
+    var cur = charlaTema(p, st.current);
+    var reply = null;
+    var lastQ = p.cur && p.cur.step ? p.cur.step.chId : null;
+    function firstMatch(list, allowEmpty) {
+      return (list || []).find(function (x) {
+        if (st.played[x.id] || (x.tras && x.tras !== lastQ) || !charlaBorrowOk(p, x)) return false;
+        return (x.kw && x.kw.length && charlaKw(x.kw, said)) || (allowEmpty && (!x.kw || !x.kw.length));
+      }) || null;
+    }
+    if (!skipped && said) {
+      if (st.turn === 1) reply = firstMatch(c.primero, false) || firstMatch(c.primero, true);
+      var askedBack = CHARLA_HELP_KEYS.some(function (k) { return escSpec([k], said); });
+      if (!reply && askedBack && cur && cur.vos && !st.played[cur.vos.id]) reply = cur.vos;
+      if (!reply) reply = firstMatch((c.pool || []).filter(function (x) { return x.kw; }), false); // «¡Que te mejores!»
+      if (!reply && cur) reply = firstMatch(cur.resp, false);
+      if (!reply) (c.temas || []).some(function (tm) { if (tm === cur) return false; reply = firstMatch(tm.resp, false); return !!reply; });
+      if (!reply && cur) reply = firstMatch(cur.resp, true);
+      if (!reply) reply = st.byId[escPick(["r_mira", "r_bueno"])].item;
+    }
+    if (reply) say.push(reply.id);
+    return { say: say, how: "keywords" };
+  }
+  function charlaAskHaiku(p, said) {
+    var st = p.charla;
+    var body = {
+      scene: p.sc.id, said: said,
+      history: charlaHistory(p),
+      state: { turn: st.turn, maxTurns: p.sc.charla.turns || 12, covered: st.covered.slice(), current: st.current, detours: st.detours, played: Object.keys(st.played), remember: st.remember },
+      options: charlaOptions(p)
+    };
+    var call = supabaseClient.functions.invoke("charla", { body: body }).then(function (res) {
+      if (res.error) { var s = res.error.context && res.error.context.status; throw new Error(s ? "HTTP " + s : (res.error.message || "error")); }
+      if (!res.data || !Array.isArray(res.data.say)) throw new Error("bad_reply");
+      return res.data;
+    });
+    return Promise.race([call, new Promise(function (_, reject) { setTimeout(function () { reject(new Error("timeout")); }, CHARLA_TIMEOUT_MS); })]);
+  }
+  // Your turn is over: show what you said, then work out what comes next.
+  function charlaResolve(p, r, how) {
+    if (!escAlive(p) || !p.cur) return;
+    how = how || {};
+    var step = p.cur.step, st = p.charla;
+    var said = r ? speechCleanShown(r.heard_display || r.heard) : "";
+    p.cur.tries++;
+    step._said = said;
+    if (!how.skipped) escMine("said", said || "—");
+    escRevealPending(p);
+    p.cur.result = { kind: "speak", step: step, ok: true, chat: true, said: said, skipped: !!how.skipped, helped: !!p.cur.helped, prompt: escPromptBefore(p, p.cur.i), repeats: p.cur.repeats || 0 };
+    p.results.push(p.cur.result);
+    escLog(p, "bien", "hablar", Object.assign(r ? Object.assign({}, r) : { rule: how.skipped ? "skipped" : "none" }, { charla: true, helped: !!p.cur.helped || undefined, repeats: p.cur.repeats || undefined }), !how.skipped);
+    st.turn = p.turnN + 1;
+    st.lastSaid = said;
+    if (step.chEnd) {
+      // the goodbye: one last line, then the end screen
+      var ir = p.sc.charla.irse, last = st.leaving ? ir.ultimo : p.sc.charla.fin.ultimo;
+      if (st.leaving && ir.cumple && charlaKw(ir.cumple.kw, said) && charlaBorrowOk(p, ir.cumple)) charlaPush(p, ir.cumple, "fin-say");
+      charlaPush(p, last, "fin-last");
+      st.ended = true;
+      escTurnPanel("listen");
+      setTimeout(escAdvance, 500);
+      return;
+    }
+    escTurnPanel("listen");
+    var p0 = p;
+    var asked = (!said || how.skipped) ? Promise.resolve(charlaFallback(p, said, how.skipped)) : charlaAskHaiku(p, said).then(function (d) { d.how = "haiku"; return d; }, function (err) {
+      console.warn("[charla] picker unavailable, using keywords:", err && err.message);
+      return charlaFallback(p, said, false);
+    });
+    asked.then(function (pick) {
+      if (!escAlive(p0) || p0.charla !== st) return;
+      charlaApply(p0, pick);
+      escAdvance();
+    });
+  }
+  window.voseaCharlaPicks = function () { return escPlay && escPlay.charla ? escPlay.charla.picks.slice() : null; }; // tests
+  window.voseaCharlaState = function () { var c = escPlay && escPlay.charla; return c ? { tags: c.tags, flags: c.flags, played: c.played, steps: escPlay.sc.steps.map(function (x) { return x.chId + (x.you ? "?" : "") + (x.chFrom ? "@" + x.chFrom : ""); }) } : null; }; // tests
+  window.voseaOpenEscena = function (id) { setMainTab("play"); openEscenas(true, id); }; // tests
+  // Turn the picked ids into lines: check them, answer, then ask (or end).
+  function charlaApply(p, pick) {
+    var c = p.sc.charla, st = p.charla, ids = [];
+    var seen = {};
+    (pick.say || []).forEach(function (id) {
+      var e = st.byId[id];
+      if (!e || seen[id] || e.kind === "inicio" || e.kind === "fin") return;
+      if (e.topic === "inicio" && st.turn !== 1) return;
+      var reusable = (e.kind === "reaccion" && !e.item.de) || e.kind === "aclarar" || e.kind === "puente";
+      if (st.played[id] && !reusable) return;
+      if (!charlaBorrowOk(p, e.item)) return;
+      if (e.item.tras && !(p.cur && p.cur.step && p.cur.step.chId === e.item.tras)) return;
+      if (e.kind === "q" && !charlaUnplayedQ(p, { q: [e.item] }).length) return; // e.g. the match before you said you like soccer
+      seen[id] = true; ids.push(id);
+      if (e.item.marca) st.flags[e.item.marca] = true; // so a question later in the same pick can use it
+    });
+    // he asks you to say it again at most once in a row
+    if (st.clarRun) ids = ids.filter(function (id) { return st.byId[id].kind !== "aclarar"; });
+    if (!ids.length && pick.how !== "keywords") {
+      var fb = charlaFallback(p, st.lastSaid || "", !st.lastSaid);
+      if (fb.leaving) pick.leaving = true;
+      ids = fb.say.slice();
+      pick.how = (pick.how || "haiku") + "+keywords";
+    }
+    st.picks.push({ turn: st.turn, how: pick.how || "haiku", said: (pick.say || []).slice(), used: ids.slice() });
+    ids.forEach(function (id) { var m = st.byId[id].item.marca; if (m) st.flags[m] = true; }); // «trabaja», «futbolero»
+    if (st.flags.trabaja) st.remember = Object.assign({}, st.remember, { works: "yes" });
+    if (pick.remember && typeof pick.remember === "object") st.remember = Object.assign({}, pick.remember, st.remember.works ? { works: st.remember.works } : {});
+    // you have to go
+    if (pick.leaving || ids.some(function (id) { return st.byId[id].kind === "irse"; })) {
+      st.leaving = true;
+      charlaPush(p, c.irse.n, "irse");
+      charlaPush(p, c.irse.m, "fin");
+      return;
+    }
+    // he didn't catch it: say so, then his last question again
+    var clar = ids.find(function (id) { return st.byId[id].kind === "aclarar"; });
+    st.clarRun = clar ? 1 : 0;
+    if (clar) {
+      var cur = p.cur, j = escPromptIndex(p, cur.i);
+      charlaPush(p, st.byId[clar].item, "aclarar");
+      if (j >= 0 && p.lines[j] !== undefined) {
+        var prev = p.sc.steps[j];
+        p.sc.steps.push({ r: prev.r, es: [p.lines[j]], chId: prev.chId, chKind: "repite" });
+      }
+      p.sc.steps.push(Object.assign({}, cur.step, { _said: undefined }));
+      return;
+    }
+    var endNow = pick.end || st.turn >= (c.turns || 12) - 1 || st.covered.length >= (c.temas || 6);
+    // the answer to what you said, then (unless it already asks) a question
+    var asked = false, replyTopic = null, said = 0;
+    ids.forEach(function (id) {
+      if (asked) return;
+      var e = st.byId[id], k = e.kind;
+      if (endNow && (k === "q" || k === "seguir" || k === "puente" || charlaAsk(p, e.item))) return; // ending: no new question
+      if (k === "resp" || k === "vos") replyTopic = e.topic;
+      var topic = k === "q" ? e.topic : (e.item.cubre || (k === "resp" || k === "vos" ? e.topic : st.current));
+      asked = charlaPush(p, e.item, k, topic) || asked;
+      said++;
+    });
+    if (endNow && !said) charlaPush(p, st.byId[escPick(["r_mira", "r_bueno"])].item, "reaccion");
+    // a detour: you answered (or asked about) another topic
+    if (replyTopic && replyTopic !== "inicio" && st.current && replyTopic !== st.current) st.detours++; else if (replyTopic) st.detours = 0;
+    if (endNow) { charlaEnding(p); return; }
+    if (!asked) charlaNextQuestion(p, ids);
+  }
+  function charlaNextQuestion(p, usedIds) {
+    var st = p.charla, cur = charlaTema(p, st.current);
+    var stay = cur && st.inTema < 2 && st.detours < 2 ? charlaUnplayedQ(p, cur) : [];
+    if (stay.length) { charlaPush(p, stay[0], "q", cur.id); return; }
+    var next = null;
+    st.order.some(function (id) { if (st.covered.indexOf(id) !== -1) return false; var tm = charlaTema(p, id); if (tm && charlaUnplayedQ(p, tm).length) { next = tm; return true; } return false; });
+    if (!next) { charlaEnding(p); return; }
+    var hadBridge = (usedIds || []).some(function (id) { return st.byId[id] && st.byId[id].kind === "puente"; });
+    if (!hadBridge && st.covered.length && Math.random() < 0.6) {
+      var b = st.detours >= 2 ? "v_vos" : escPick(["p_che", "p_hablando", "p_sabes"]);
+      if (st.byId[b]) charlaPush(p, st.byId[b].item, "puente");
+    }
+    st.detours = 0;
+    charlaPush(p, charlaUnplayedQ(p, next)[0], "q", next.id);
+  }
+  function charlaEnding(p) {
+    var c = p.sc.charla, st = p.charla;
+    if (st.ending) return;
+    st.ending = true;
+    charlaPush(p, c.fin.llama, "fin-say");
+    if (st.covered.length >= (c.insta || 4) && c.fin.insta) {
+      p.sc.steps.push({ r: c.fin.cierre.r || "n", es: c.fin.cierre.es, chId: c.fin.cierre.id, chKind: "fin" });
+      st.played[c.fin.cierre.id] = 1;
+      charlaPush(p, c.fin.insta, "fin");
+    } else charlaPush(p, c.fin.cierre, "fin");
+  }
+
+  // ---- the end: the whole chat ----
+  function charlaFinish(p) {
+    var sc = p.sc, st = p.charla, box = el.escEnd;
+    var turns = p.results.length;
+    if (currentUser) {
+      var all = ptRecords().filter(function (r) { return r.id !== p.id; });
+      all.push({ id: p.id, user: currentUser.id, game: "escena", scope: (sc._base || sc).id, at: new Date(p.started).toISOString(),
+        cards: turns, best: turns, ms: Date.now() - p.started, bien: turns, otra: 0, sent: false });
+      ptSaveLocal(all);
+      ptFlushRecords();
+      practiceFlush();
+    }
+    escUpdateTop();
+    el.escOverlay.classList.add("is-end");
+    box.textContent = "";
+    box.classList.add("is-charla");
+    box.appendChild(progEl("h2", null, t("ch_done_title")));
+    box.appendChild(progEl("p", "esc-end-sub", t("ch_done_sub", { n: turns, t: st.covered.length })));
+    var log = progEl("div", "ch-log");
+    var played = [];
+    sc.steps.forEach(function (s, i) {
+      if (s.r && p.lines[i] !== undefined) {
+        var text = p.lines[i], role = escRole(sc, s.r);
+        played.push(text);
+        var row = progEl("div", "ch-row is-them");
+        var play = progEl("button", "ch-play", "▶");
+        play.type = "button";
+        play.setAttribute("aria-label", t("esc_play_aria"));
+        play.addEventListener("click", function () {
+          var was = log.querySelector(".ch-row.is-playing");
+          if (was) was.classList.remove("is-playing");
+          row.classList.add("is-playing");
+          escSay(text, p.voices[s.r], null, s.r).then(function () { row.classList.remove("is-playing"); });
+        });
+        row.appendChild(play);
+        var tx = progEl("span", "ch-text");
+        tx.appendChild(progEl("span", "ch-who", topicText(role.name) + ": "));
+        tx.appendChild(document.createTextNode(text));
+        row.appendChild(tx);
+        log.appendChild(row);
+      } else if (s.you && s._said !== undefined) {
+        var mine = progEl("div", "ch-row is-you");
+        var mt = progEl("span", "ch-text");
+        mt.appendChild(progEl("span", "ch-who", t("ch_you") + ": "));
+        mt.appendChild(document.createTextNode(s._said || "—"));
+        if (s._helped) mt.appendChild(progEl("span", "ch-helped", " · " + t("ch_helped")));
+        mine.appendChild(mt);
+        var saidN = speechNorm(s._said || "");
+        var ways = [s.best].concat(s.alts || []).filter(function (x, k, a) { var n = speechNorm(x); return x && n !== saidN && a.map(speechNorm).indexOf(n) === k; });
+        if (ways.length) mine.appendChild(progEl("span", "ch-ways", t("ch_ways", { list: escSample(ways, 2).map(function (x) { return "«" + x + "»"; }).join(" · ") })));
+        log.appendChild(mine);
+      }
+    });
+    box.appendChild(log);
+    // the words of the chat that came up this time
+    var heardN = speechNorm(played.join(" "));
+    var words = (sc.charla.palabras || []).filter(function (w) { return w.m && (" " + heardN).indexOf(" " + speechNorm(w.m)) !== -1; });
+    if (words.length) {
+      box.appendChild(progEl("div", "esc-label ch-words-lbl", t("ch_words")));
+      var chips = progEl("div", "esc-chips ch-words");
+      words.forEach(function (w) {
+        var chip = progEl("span", "esc-chip ch-word");
+        chip.appendChild(progEl("b", null, w.es));
+        chip.appendChild(document.createTextNode(" · " + w.en));
+        chips.appendChild(chip);
+      });
+      box.appendChild(chips);
+    }
+    var btns = progEl("div", "esc-end-btns");
+    btns.appendChild(progButton(t("ch_again"), true, function () { escStart(sc._base || sc); }));
+    box.appendChild(btns);
+    var close = progButton(t("close"), false, escClose);
+    close.classList.add("esc-end-close");
+    box.appendChild(close);
+    rewardEarn("escena:" + (sc._base || sc).id);
   }
 
   // ================= Contrarreloj (2026-10-06) =================
