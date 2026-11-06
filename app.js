@@ -749,6 +749,9 @@
       esc_review_n: "Repasar ({n})",
       esc_again: "Otra vez",
       ch_tag: "charla",
+      ch_title: "Charlas",
+      ch_desc: "Charlas sueltas con alguien que recién conocés. No hay guion ni puntaje: respondé como quieras y la charla sigue para ese lado.",
+      ch_row_def: "Charlas sueltas, sin guion ni puntaje. Respondé como quieras.",
       ch_turns: "unos {n} turnos",
       ch_no_score: "No hay guion ni puntaje: respondé como quieras y la charla sigue para ese lado. Si te trabás, tocá «Ayuda».",
       ch_plays_one: "Ya charlaste una vez.",
@@ -1152,6 +1155,14 @@
       el_progress: "Generando {unit}: {done} de {total} · {spent} créditos",
       el_done: "Listo: {n} personajes terminados en esta tanda.",
       el_low: "Paré antes de {unit}: hacen falta {need} créditos y quedan {left}. Seguí cuando se renueven ({date}).",
+      el_over_cap: "Paré antes de {unit}: seguir pasaría el tope del {pct} %.",
+      el_over_real: "Paré antes de {unit}: no alcanzan los créditos que quedan.",
+      el_over_left: "Créditos que quedan de verdad: {real} (se renuevan el {date}).",
+      el_over_need: "Este personaje usaría unos {need}; los {n} que faltan en la lista, unos {all}.",
+      el_over_need_one: "Este personaje usaría unos {need}.",
+      el_over_short: "No alcanzan para este personaje: si seguís, para cuando se terminen. Lo que se haga queda guardado.",
+      el_over_go: "Generar igual",
+      el_over_go_short: "Generar hasta que se terminen",
       el_fail: "Se cortó en {unit}: {msg}",
       el_stopped: "Parado. Lo que ya se hizo queda guardado: seguí cuando quieras.",
       el_sql: "Falta correr pending_2026-10-17_voces.sql en Supabase.",
@@ -2174,6 +2185,9 @@
       esc_review_n: "Review ({n})",
       esc_again: "Play again",
       ch_tag: "small talk",
+      ch_title: "Charlas",
+      ch_desc: "Free-form chats with someone you just met. No script and no score: answer however you like and the conversation follows you.",
+      ch_row_def: "Free-form chats, no script and no score. Answer however you like.",
       ch_turns: "about {n} turns",
       ch_no_score: "No script and no score: answer however you like and the conversation goes that way. If you get stuck, tap Help.",
       ch_plays_one: "You've chatted once.",
@@ -2577,6 +2591,14 @@
       el_progress: "Generating {unit}: {done} of {total} · {spent} credits",
       el_done: "Done: {n} characters finished this run.",
       el_low: "Stopped before {unit}: it needs {need} credits and {left} are left. Carry on when they renew ({date}).",
+      el_over_cap: "Stopped before {unit}: going on would pass the {pct}% cutoff.",
+      el_over_real: "Stopped before {unit}: there aren't enough credits left.",
+      el_over_left: "Credits actually left: {real} (they renew on {date}).",
+      el_over_need: "This character would use about {need}; the {n} left on the list, about {all}.",
+      el_over_need_one: "This character would use about {need}.",
+      el_over_short: "Not enough for this character: if you go on, it stops when they run out. Whatever gets made is kept.",
+      el_over_go: "Generate anyway",
+      el_over_go_short: "Generate until they run out",
       el_fail: "It broke off at {unit}: {msg}",
       el_stopped: "Stopped. What's made is kept: carry on any time.",
       el_sql: "pending_2026-10-17_voces.sql still needs to be run in Supabase.",
@@ -4477,6 +4499,26 @@
     actions.appendChild(go);
     sec.appendChild(actions);
     if (run && run.msg) sec.appendChild(uNode("p", run.bad ? "usage-problem" : "warm-progress", run.msg));
+    if (run && run.low && !run.running) sec.appendChild(elOverBox(run.low));
+  }
+  // Stopped at the cutoff: what's really left, what it would use, and
+  // «Generar igual» (on past the 90 %; if even the real credits don't cover
+  // this character, it goes until they run out and keeps what it made).
+  function elOverBox(low) {
+    var box = uNode("div", "el-over");
+    box.id = "el-over";
+    box.appendChild(uNode("p", "el-over-h", t(low.cap ? "el_over_cap" : "el_over_real", { unit: low.unit, pct: EL_CAP_PCT })));
+    box.appendChild(uNode("p", "el-over-n", t("el_over_left", { real: progNum(low.real), date: low.date })));
+    box.appendChild(uNode("p", "el-over-n", t(low.units > 1 ? "el_over_need" : "el_over_need_one", { need: progNum(low.need), all: progNum(low.all), n: progNum(low.units) })));
+    var short = low.need > low.real;
+    if (short) box.appendChild(uNode("p", "usage-problem", t("el_over_short")));
+    var acts = uNode("div", "form-actions");
+    var go = uNode("button", "btn-secondary el-over-go", t(short ? "el_over_go_short" : "el_over_go"));
+    go.type = "button"; go.id = "el-over-go";
+    go.addEventListener("click", function () { elevenRun(low.rest, { reserve: true, forceFirst: short }); });
+    acts.appendChild(go);
+    box.appendChild(acts);
+    return box;
   }
   // queue: the units to make (default: the chosen voice's scene roles);
   // opts.reserve: may use the last 10 % (the narrated welcome, asked for
@@ -4484,7 +4526,7 @@
   function elevenRun(queueIn, opts) {
     if (elState.run && elState.run.running) return;
     opts = opts || {};
-    var run = elState.run = { running: true, stop: false, msg: "", bad: false, cur: "", finished: 0, sent: 0, baseUsed: null };
+    var run = elState.run = { running: true, stop: false, msg: "", bad: false, cur: "", finished: 0, sent: 0, baseUsed: null, low: null, unitN: 0 };
     var queue = (queueIn || elevenUnits(elState.vk)).filter(function (u) { return elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] !== u.sig; });
     function say(key, vars, bad) { run.msg = t(key, vars); run.bad = !!bad; renderEleven(); }
     function wait(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
@@ -4529,7 +4571,21 @@
           // (if the rate is a little off and the credits run out mid-role,
           // the lines made so far are kept and not paid for again)
           need = elCredits(needChars);
-          if (need > left) { run.stop = true; run.end = "low"; say("el_low", { unit: name, need: progNum(need), left: progNum(left), date: elDate(stt && stt.reset_unix) }); return false; }
+          run.unitN = (run.unitN || 0) + 1;
+          // Past the 90 % cutoff (or past what's really left): stop and say
+          // so, with the real credits left and what the rest would use, and
+          // let mason go on anyway (2026-11-06: "stop and then indicate that
+          // i am over the limit, indicate the actual number of remaining
+          // credits… the estimated number to be used and allow an override").
+          var forced = opts.forceFirst && run.unitN === 1;
+          if (need > left && !forced) {
+            var real = Math.max(0, (Number(stt.limit) || 0) - (Number(stt.used) || 0)), restChars = 0;
+            queue.slice(i).forEach(function (q) { restChars += q.chars; });
+            run.stop = true; run.end = "low"; run.msg = ""; run.bad = false;
+            run.low = { unit: name, need: need, all: need + elCredits(restChars), units: queue.length - i + 1, real: real, cap: !opts.reserve, date: elDate(stt && stt.reset_unix), rest: queue.slice(i - 1) };
+            renderEleven();
+            return false;
+          }
           var done = items.length - missing.length, spent = 0, k = 0, failed = null;
           function worker() {
             if (failed || run.stop || k >= missing.length) return Promise.resolve();
@@ -6101,7 +6157,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "207";
+  var VOSEA_BUILD = "208";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7490,7 +7546,7 @@
   }
   function hoyScenePick() {
     if (!ESCENAS.length) return null;
-    var path = escPathOrder();
+    var path = escScenesOrder();
     var open = path.filter(function (sc) { return escUnlocked(sc) && escBest(sc.id).stars < 3; });
     if (open.length) {
       // one you've played but not finished first, then a new one
@@ -13948,6 +14004,15 @@
     return best || { key: 0, li: 0, gi: 0 };
   }
   // the scenes in path order (ties keep escenas.js order)
+  // Charlas (escenas.js scenes with `charla`) have their own row on Jugar
+  // (2026-11-06, mason: "since charla is more freeform than the scenes, and
+  // not scored… it should have a different access point… it was awkward
+  // to find it buried late in the scenes"). They stay in ESCENAS for the
+  // voices, the warm-up and records, but the Escenas list, the Camino and
+  // Hoy's scene card show only the scenes.
+  function escIsScene(sc) { return !sc.charla; }
+  function escCharlas() { return ESCENAS.filter(function (sc) { return !!sc.charla; }); }
+  function escScenesOrder() { return escPathOrder().filter(escIsScene); }
   function escPathOrder() {
     return ESCENAS.map(function (sc, i) { return { sc: sc, i: i, pos: escPathPos(sc) }; })
       .sort(function (a, b) { return (a.pos.li * 100 + a.pos.gi) - (b.pos.li * 100 + b.pos.gi) || a.i - b.i; })
@@ -13981,7 +14046,7 @@
     var ready = topicHistoryReady() || practiceQueue.length;
     box.appendChild(progEl("p", "camino-intro", t("camino_intro")));
     var placed = {};
-    ESCENAS.forEach(function (sc) { var p = escPathPos(sc); (placed[p.li + ":" + p.gi] || (placed[p.li + ":" + p.gi] = [])).push(sc); });
+    ESCENAS.filter(escIsScene).forEach(function (sc) { var p = escPathPos(sc); (placed[p.li + ":" + p.gi] || (placed[p.li + ":" + p.gi] = [])).push(sc); });
     CAMINO.forEach(function (L, li) {
       var head = progEl("div", "camino-level");
       head.appendChild(progEl("b", null, L.lvl));
@@ -15617,6 +15682,7 @@
     }
     // Escenas first: the "use it" part of the loop (flow plan, 2026-10-11)
     if (ESCENAS.length) row(t("esc_title"), escRowStat(), t("esc_row_def"), function () { openEscenas(true); }).id = "play-escenas-row";
+    if (escCharlas().length) row(t("ch_title"), chRowStat(), t("ch_row_def"), function () { openCharlas(true); }).id = "play-charlas-row";
     var stat = b.n ? t(b.best ? "pt_row_stat" : "pt_row_stat_cards", { cards: b.cards, best: b.best }) : "";
     var p = row(t("pt_name"), stat, t(quietMode ? "pt_row_def_quiet" : "pt_row_def"), ptStart);
     p.id = "play-partida";
@@ -16089,7 +16155,7 @@
     return tp.items.filter(function (it) { var u = byId[it.id]; return !(u && u.last && u.last.grade === "bien"); });
   }
   function escUnlocked(sc) {
-    if (sc.open || escBest(sc.id).plays) return true;
+    if (sc.open || sc.charla || escBest(sc.id).plays) return true; // a charla is open from the start (mason, 2026-11-06)
     var tp = escTopic(sc);
     if (!tp || !tp.items.length) return true;
     return 1 - escMissing(sc).length / tp.items.length >= ESC_READY_SHARE;
@@ -16104,17 +16170,30 @@
   function escCanPlay() { return !quietMode && hablarSupported(); }
 
   // ---- the Jugar page: list + start screen ----
+  var escKind = "escena"; // the page shows the scenes or the charlas
   function openEscenas(open, id) {
+    var sc0 = id ? escById(id) : null;
+    escKind = sc0 && sc0.charla ? "charla" : "escena";
     escOpen = !!open;
     escSel = open ? (id || null) : null;
     if (open) { albumOpen = false; cronoOpen = false; amigosOpen = false; if (currentUser) { loadPracticeHistory(false); loadGameRecords(); } }
     renderPlay();
     try { window.scrollTo({ top: 0 }); } catch (e) {}
   }
+  function openCharlas(open, id) {
+    openEscenas(open, id);
+    escKind = "charla";
+    renderPlay();
+  }
   function escRowStat() {
-    var done = 0, stars = 0;
-    ESCENAS.forEach(function (sc) { var b = escBest(sc.id); if (b.plays) done++; if (!sc.charla) stars += b.stars; });
-    return done ? t("esc_row_stat", { n: done, total: ESCENAS.length, stars: stars }) : "";
+    var done = 0, stars = 0, scenes = ESCENAS.filter(escIsScene);
+    scenes.forEach(function (sc) { var b = escBest(sc.id); if (b.plays) done++; stars += b.stars; });
+    return done ? t("esc_row_stat", { n: done, total: scenes.length, stars: stars }) : "";
+  }
+  function chRowStat() {
+    var n = 0;
+    escCharlas().forEach(function (sc) { n += escBest(sc.id).plays; });
+    return n ? t(n === 1 ? "ch_plays_one" : "ch_plays", { n: n }) : "";
   }
   function escStarsNode(n, cls) {
     var sp = progEl("span", cls || "esc-stars");
@@ -16126,12 +16205,13 @@
     var box = el.escBody;
     box.textContent = "";
     if (escSel && escById(escSel)) { drawEscStart(escById(escSel)); return; }
-    el.escHeadTitle.textContent = t("esc_title");
-    el.escHeadDesc.textContent = t("esc_desc");
+    var charlas = escKind === "charla";
+    el.escHeadTitle.textContent = t(charlas ? "ch_title" : "esc_title");
+    el.escHeadDesc.textContent = t(charlas ? "ch_desc" : "esc_desc");
     el.escBack.textContent = t("play_album_back");
     var list = progEl("div", "esc-list");
     // the ones you can play first, then the rest, each in path order (2026-10-11)
-    var ordered = escPathOrder();
+    var ordered = charlas ? escCharlas() : escScenesOrder();
     ordered = ordered.filter(escUnlocked).concat(ordered.filter(function (sc) { return !escUnlocked(sc); }));
     ordered.forEach(function (sc) {
       var open = escUnlocked(sc), b = escBest(sc.id);
@@ -16142,7 +16222,6 @@
       var cs = escCast(sc);
       var name = progEl("span", "esc-row-name", (open ? "" : "🔒 ") + topicText(cs.name));
       if (sc.roles.length > 1 && !sc.charla) name.appendChild(progEl("span", "esc-two", t("esc_two_voices")));
-      if (sc.charla) name.appendChild(progEl("span", "esc-two ch-tag", t("ch_tag")));
       top.appendChild(name);
       if (!sc.charla) top.appendChild(escStarsNode(b.stars)); // a charla has no score
       row.appendChild(top);
@@ -16161,7 +16240,7 @@
       list.appendChild(row);
     });
     box.appendChild(list);
-    box.appendChild(progEl("p", "play-fine", t("esc_fine")));
+    if (!charlas) box.appendChild(progEl("p", "play-fine", t("esc_fine")));
   }
   function escOpenTema(id) {
     if (!topicById(id)) return;
@@ -16227,7 +16306,7 @@
     var voices = escVoices(sc), cast = escCast(sc, voices);
     el.escHeadTitle.textContent = topicText(cast.name);
     el.escHeadDesc.textContent = topicText(cast.desc);
-    el.escBack.textContent = "‹ " + t("esc_title");
+    el.escBack.textContent = "‹ " + t(sc.charla ? "ch_title" : "esc_title");
     box.appendChild(progEl("div", "esc-label", t("esc_who")));
     cast.roles.forEach(function (r, i) {
       var row = progEl("div", "esc-role");
@@ -24734,7 +24813,7 @@
   el.crModeHablar.addEventListener("click", function () { setCrMode("hablar"); });
   el.crOtra.addEventListener("click", function (e) { e.stopPropagation(); crGrade("otra"); });
   el.crBien.addEventListener("click", function (e) { e.stopPropagation(); crGrade("bien"); });
-  el.escBack.addEventListener("click", function () { if (escSel) openEscenas(true); else openEscenas(false); });
+  el.escBack.addEventListener("click", function () { var k = escKind; if (escSel) { openEscenas(true); escKind = k; renderPlay(); } else openEscenas(false); });
   el.escClose.addEventListener("click", escClose);
   el.rewardGo.addEventListener("click", function () { closeReward(true); });
   el.rewardClose.addEventListener("click", function () { closeReward(false); });
