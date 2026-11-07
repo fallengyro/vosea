@@ -6157,7 +6157,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "208";
+  var VOSEA_BUILD = "210";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -10012,6 +10012,53 @@
   // playing (ttsAudioEl's "ended", below) — not just once the network
   // request resolves — since "while the audio is playing" was the other
   // half of what mason asked for.
+  // ---- premium clips on cards (2026-11-07) ----
+  // mason, making a list for each scene: "we also would have premium voices
+  // for all of the phrases too". A card whose Spanish is word for word a
+  // line a scene character says, or a scene's best answer (Al oído), plays
+  // that line's finished Valeria or Agustín clip: Valeria when your voice is
+  // Elena, Agustín with Tomás, the other one if only it has the line.
+  // Anything else, or a clip that can't be fetched, plays in Elena / Tomás
+  // as before. Built from the finished premium units (voice_units), so it
+  // only points at clips that exist; nothing is ever made from a card.
+  var premiumIdx = null, premiumIdxFor = null;
+  function premiumIndex() {
+    var sig = Object.keys(elevenUnitsReady).length + "|" + Object.keys(elevenUnitsReady).map(function (k) { return elevenUnitsReady[k]; }).join("").length;
+    if (premiumIdx && premiumIdxFor === sig) return premiumIdx;
+    var idx = {};
+    function add(u) {
+      if (!u || elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] !== u.sig) return;
+      u.texts.forEach(function (tx) { var k = String(tx).trim(); (idx[k] || (idx[k] = [])).push({ vk: u.vk, tag: u.tag || "" }); });
+    }
+    ["valeria", "agustin"].forEach(function (vk) {
+      if (!ELEVEN_VOICES[vk]) return;
+      try { elevenUnits(vk).forEach(add); } catch (e) {}
+    });
+    try { oidoUnits().forEach(function (u) { if (u.lang !== "en" && u.role !== "en") add(u); }); } catch (e) {}
+    premiumIdx = idx; premiumIdxFor = sig;
+    return idx;
+  }
+  function premiumClipFor(text) {
+    if (!text || !Object.keys(elevenUnitsReady).length) return null;
+    var list = premiumIndex()[String(text).trim()];
+    if (!list || !list.length) return null;
+    var want = ttsVoiceKey === "tomas" ? "agustin" : "valeria";
+    return list.filter(function (x) { return x.vk === want; })[0] || list[0];
+  }
+  window.voseaPremiumClipFor = function (text) { return premiumClipFor(text); }; // tests
+  // a card's audio: the premium clip when there is one, else Elena / Tomás
+  function cardTtsOpts(text) { var pv = premiumClipFor(text); return pv ? { vk: pv.vk, opts: { tag: pv.tag } } : null; }
+  function cardTtsKey(text) {
+    var c = cardTtsOpts(text);
+    if (!c) return ttsKey(text);
+    return ttsKey(text, c.vk, { tag: c.opts.tag, take: elevenTakeOf(c.vk, c.opts.tag, text), lang: "es" });
+  }
+  function ttsCardLoad(text) {
+    var c = cardTtsOpts(text);
+    if (!c) return ttsLoadAudio(text);
+    return ttsLoadAudio(text, c.vk, c.opts).catch(function () { return ttsLoadAudio(text); });
+  }
+  window.voseaTtsCardLoad = function (text) { return ttsCardLoad(text); }; // tests
   function playTts(text, btn, msgEl, opts) {
     if (!msgEl) msgEl = el.flashTtsMsg;
     var silentErrors = !!(opts && opts.silent);
@@ -10075,7 +10122,7 @@
     // comes from ttsLoadAudio() — already-downloaded bytes when the clip was
     // prefetched (instant), else the remembered URL, else the Edge Function
     // — see "TTS audio loading" just below playTts().
-    ttsLoadAudio(text)
+    ttsCardLoad(text)
       .then(function (r) {
         var edgeMs = msSince(ttsStartedAt);
         console.log("%c[tts] " + r.how + "%c — ready in " + edgeMs + "ms — \"" + text + "\"",
@@ -10141,7 +10188,7 @@
   // Flashcards also prefetch the next two cards, not just the current one.
   var TTS_URL_LOCAL_KEY = "vosea-tts-urls";
   var TTS_URL_MAX = 3000;
-  var TTS_BLOB_MAX = 80;
+  var TTS_BLOB_MAX = 200; // (was 80; a charla keeps the lines it may need next, 2026-11-06)
   var ttsUrlMemo = (function () {
     try { var m = JSON.parse(localStorage.getItem(TTS_URL_LOCAL_KEY) || "{}"); return (m && typeof m === "object") ? m : {}; } catch (e) { return {}; }
   })();
@@ -10515,7 +10562,7 @@
     // 2026-10-03: downloads the clip's bytes through the same loader that
     // playTts() uses, so a later play is instant and never re-asks the Edge
     // Function — see "TTS audio loading" below playTts().
-    ttsLoadAudio(text).catch(function () {});
+    ttsCardLoad(text).catch(function () {});
   }
 
   // The merged usted/ustedes imperativo cell ("— / — / <real>", td.imp-col)
@@ -11096,7 +11143,7 @@
     };
   }
   function waveLoad(text) {
-    var key = ttsKey(text);
+    var key = cardTtsKey(text);
     if (wavePeaks[key]) return Promise.resolve(wavePeaks[key]);
     if (waveLoading[key]) return waveLoading[key];
     // Never asks for audio itself (that would double the Edge Function
@@ -11141,7 +11188,7 @@
     el.flashWave.textContent = "";
     if (!listen) return;
     el.flashListenTag.textContent = card.listenTag || "";
-    var key = ttsKey(card.audio);
+    var key = cardTtsKey(card.audio);
     if (wavePeaks[key]) { waveDraw(wavePeaks[key], false); return; }
     waveShow(card);
   }
@@ -11157,7 +11204,7 @@
     cancelAnimationFrame(waveRaf);
     if (!el.flashWave.children.length) waveShow(card); // the clip has just arrived
     var bars = el.flashWave.children;
-    var key = ttsKey(text);
+    var key = cardTtsKey(text);
     var step = function () {
       var a = ttsAudioEl;
       var playing = a && !a.paused && !a.ended && flashDeck[flashIndex] === card && ttsActiveEl === el.flashListenBtn;
@@ -11173,7 +11220,7 @@
   }
 
   window.voseWaveState = function () {
-    var card = flashDeck[flashIndex], w = card && card.listen ? wavePeaks[ttsKey(card.audio)] : null;
+    var card = flashDeck[flashIndex], w = card && card.listen ? wavePeaks[cardTtsKey(card.audio)] : null;
     return { t: ttsAudioEl ? ttsAudioEl.currentTime : null, playing: !!(ttsAudioEl && !ttsAudioEl.paused), t0: w ? w.t0 : null, t1: w ? w.t1 : null, bars: el.flashWave.children.length, on: el.flashWave.querySelectorAll("i.on").length };
   };
 
@@ -15722,8 +15769,11 @@
   // going on pauses briefly, someone else answering takes a little longer,
   // and each time it's a bit different. Lines where time passes add their
   // own `wait` (escenas.js).
-  function escGap(prev, cur) {
+  function escGap(prev, cur, p) {
     function between(a, b) { return Math.round(a + Math.random() * (b - a)); }
+    // a charla: the same person goes straight on, the other one answers a
+    // little sooner (2026-11-06, mason: "a little slow between speakers")
+    if (p && p.charla) return !prev || prev.r === cur.r ? between(30, 120) : between(250, 500);
     if (!prev || prev.r === cur.r) return between(ESC_PAUSE_MS - 60, ESC_PAUSE_MS + 160);
     return between(380, 850);
   }
@@ -15731,6 +15781,11 @@
   var escSel = null;    // the scene on the start screen (null = the list)
   var escPlay = null;   // the scene being played
   var escAudio = null;
+  // A second voice element (2026-11-06, mason: "when a speaker has a back
+  // to back line… there is about a 1 second gap between sentences of the
+  // same person"): while one line plays, the next one is already loaded
+  // in the other element, so it starts the moment the first ends.
+  var escAudioAlt = null;
 
   // ---- background noise (2026-10-11) ----
   // mason: "keeping a conversation going with all of the other things going
@@ -15888,6 +15943,8 @@
     function silent(a) { try { a.src = SILENT_WAV; var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
     if (!escAudio) { try { escAudio = new Audio(); } catch (e) {} }
     if (escAudio) silent(escAudio);
+    if (!escAudioAlt) { try { escAudioAlt = new Audio(); } catch (e) {} }
+    if (escAudioAlt) silent(escAudioAlt); // iOS: each element has to be started from a tap once
     if (sc && sc.ruido && sc.ruido.phone && escRuidoLevel() !== "off") {
       var ph = escPhoneAudioFor({ phone: sc.ruido.phone }, sc.ruido.phone[0]);
       if (ph) silent(ph);
@@ -16498,7 +16555,16 @@
   function escAlive(p) { return p && escPlay === p && !el.escOverlay.hidden; }
   function escScroll() { try { el.escChat.scrollTop = el.escChat.scrollHeight; } catch (e) {} }
 
-  function escStopAudio() { if (escAudio) { try { escAudio.pause(); } catch (e) {} } if (escPhoneAudio) { try { escPhoneAudio.pause(); } catch (e) {} } if (ttsAudioEl) { try { ttsAudioEl.pause(); } catch (e) {} } }
+  function escPreload(p, i) {
+    var st = p.sc.steps[i];
+    if (!st || !st.r || !escAudioAlt || escPhoneAudioFor(p, st.r)) return;
+    var tx = escLine(p, i), vk = p.voices[st.r];
+    ttsLoadAudio(tx, vk, escTtsOpts(p, st.r, vk, tx)).then(function (r) {
+      if (!escAlive(p) || !escAudioAlt || escAudioAlt._src === r.src || (escAudio && escAudio._src === r.src)) return;
+      try { escAudioAlt.preload = "auto"; escAudioAlt.src = r.src; escAudioAlt._src = r.src; escAudioAlt.load(); } catch (e) {}
+    }, function () {});
+  }
+  function escStopAudio() { if (escAudio) { try { escAudio.pause(); } catch (e) {} } if (escAudioAlt) { try { escAudioAlt.pause(); } catch (e) {} } if (escPhoneAudio) { try { escPhoneAudio.pause(); } catch (e) {} } if (ttsAudioEl) { try { ttsAudioEl.pause(); } catch (e) {} } }
   // Plays one line in one voice; resolves when it has finished (or failed:
   // then the text shows, so the scene can go on).
   function escSay(text, vk, bubble, roleKey) {
@@ -16508,7 +16574,12 @@
       escAudioWake();
       return new Promise(function (resolve) {
         if (!escAudio) escAudio = new Audio();
-        var a = escPhoneAudioFor(escPlay, roleKey) || escAudio, done = false;
+        var a = escPhoneAudioFor(escPlay, roleKey), done = false;
+        if (!a) {
+          // the line already loaded in the other element: swap them
+          if (escAudioAlt && escAudioAlt._src === r.src && escAudio._src !== r.src) { var tmp = escAudio; escAudio = escAudioAlt; escAudioAlt = tmp; }
+          a = escAudio;
+        }
         function fin() {
           if (done) return; done = true; clearTimeout(guard); a.onended = a.onerror = null; if (bubble) bubble.classList.remove("is-playing");
           if (escPlay && escPlay.cur && escPlay.cur.step.you && !escPlay.rec && !escPlay.busy && hablarSupported()) hablarGetStream().then(escAudioWake, escAudioWake); // a replay during your turn
@@ -16516,7 +16587,8 @@
         }
         var guard = setTimeout(fin, 15000);
         a.onended = fin; a.onerror = fin;
-        a.src = r.src;
+        if (a._src === r.src && a.src) { try { a.currentTime = 0; } catch (e) {} } // loaded already (or a replay)
+        else { a.src = r.src; a._src = r.src; }
         if (bubble) bubble.classList.add("is-playing");
         var pr = a.play();
         if (pr && pr.catch) pr.catch(function (err) { escAudioFails++; console.warn("[escenas] the browser didn't play a line:", err && err.name); if (bubble) bubble.reveal(); fin(); });
@@ -16627,12 +16699,13 @@
           // the pause before this line: a varied gap after the line before
           // it (none for the first of a run: the turn before already
           // paused), plus the scene's own wait where time passes
-          var ms = (k ? escGap(steps[run[k - 1]], st) : 0) + (st.wait || 0);
+          var ms = (k ? escGap(steps[run[k - 1]], st, p) : 0) + (st.wait || 0);
           return (ms ? new Promise(function (r) { setTimeout(r, ms); }) : Promise.resolve()).then(function () {
             if (!escAlive(p)) return;
             var text = escLine(p, i);
             var b = escBubble(p, st.r, text, st.to);
             p.pending.push(b);
+            if (k + 1 < run.length) escPreload(p, run[k + 1]); // the next line waits, loaded, in the other element
             return escSay(text, p.voices[st.r], b, st.r);
           });
         });
@@ -16641,6 +16714,7 @@
       return;
     }
     p.cur = { i: p.i, step: s, tries: 0, shownAt: new Date().toISOString(), t0: Date.now(), logged: false };
+    if (p.charla) charlaPrefetchTurn(p, s); // while you answer, what Nico may say next
     // while you answer, the lines that come next are already on their way
     var nextRun = [];
     for (var k = p.i + 1; k < steps.length && steps[k].r; k++) nextRun.push(k);
@@ -16965,6 +17039,7 @@
       });
       return Promise.race([call, new Promise(function (_, reject) { setTimeout(function () { reject(new Error("timeout")); }, HABLAR_TIMEOUT_MS); })]);
     }
+    p.sttT0 = Date.now();
     speechToWav16k(blob).then(function (wav) {
       payload = { text: step.best, answers: answers.length ? answers : undefined, audio: speechBytesToBase64(wav), assess: p.charla ? [] : ["es-AR"] }; // a charla only needs the words
       return send(false);
@@ -16978,7 +17053,7 @@
       speechDiagLog(escDiagBase(p, Object.assign(speechDiagFromResult(r), { rec_ms: recMs, detail: recInfo && recInfo.detail, extra: Object.assign(speechDiagResultExtra(r), { mime: recInfo && recInfo.mime, tail_dropped: r.tail_dropped || undefined, wrong: r.wrong ? true : undefined, repeat_ask: r.repeat_ask || undefined, close: r.auto_grade === "bien" && !r.exact ? true : undefined }) })));
       if (r.rule === "nothing") { hablarDropStream(); escTurnPanel("speak", { hint: t("esc_heard_nothing") }); return; }
       if (r.repeat_ask && escRepeatLine(p, String(r.heard_display || r.heard || "").trim())) return; // shown as heard: "¿Cómo?"
-      if (p.charla) { charlaResolve(p, r, {}); return; }
+      if (p.charla) { r.stt_ms = Date.now() - p.sttT0; charlaResolve(p, r, {}); return; }
       if (r.auto_grade === "bien") { escResolve("bien", r, {}); return; }
       if (r.auto_grade === "otra") { escResolve("otra", r, {}); return; }
       // not sure: you decide
@@ -17418,7 +17493,8 @@
     }
     escTurnPanel("listen");
     var p0 = p;
-    var asked = (!said || how.skipped) ? Promise.resolve(charlaFallback(p, said, how.skipped)) : charlaAskHaiku(p, said).then(function (d) { d.how = "haiku"; return d; }, function (err) {
+    var pickT0 = Date.now();
+    var asked = (!said || how.skipped) ? Promise.resolve(charlaFallback(p, said, how.skipped)) : charlaAskHaiku(p, said).then(function (d) { d.how = "haiku"; d.ms = Date.now() - pickT0; return d; }, function (err) {
       console.warn("[charla] picker unavailable, using keywords:", err && err.message);
       return charlaFallback(p, said, false);
     });
@@ -17468,6 +17544,75 @@
     });
     return best.length ? escPick(best) : null;
   }
+  // ---- getting ahead (2026-11-06, mason: "on my phone the charlas are a
+  // little slow between speakers") ----
+  // While you answer, the lines Nico may say next are downloaded: the
+  // current topic's replies and his own answer, its next question, the
+  // first question of the next two topics, his leaving lines, and (on the
+  // first turn) the short reactions and bridges. Only clips that are
+  // already made are fetched (the tts function's clip_urls gives their
+  // addresses without making anything, so this never uses the daily
+  // allowance); a clip that isn't made yet is made when it's needed, as
+  // before.
+  var CHARLA_PREFETCH_MAX = 60;
+  function charlaPrefetchTurn(p, step) {
+    var c = p.sc.charla, st = p.charla, items = [];
+    if (!st.prefetchedPool) {
+      st.prefetchedPool = true;
+      (c.pool || []).forEach(function (x) { if (x.kind === "reaccion" || x.kind === "puente" || x.kind === "aclarar") items.push(x); });
+    }
+    if (st.turn === 0) (c.primero || []).forEach(function (x) { items.push(x); });
+    var tm = charlaTema(p, step.chTopic || st.current);
+    if (tm) {
+      (tm.resp || []).forEach(function (x) { if (!st.played[x.id] && (!x.tras || x.tras === step.chId)) items.push(x); });
+      if (tm.vos && !st.played[tm.vos.id]) items.push(tm.vos);
+      charlaUnplayedQ(p, tm).slice(0, 1).forEach(function (x) { items.push(x); });
+    }
+    var more = 0;
+    (st.order || []).forEach(function (id) {
+      if (more >= 2 || st.covered.indexOf(id) !== -1) return;
+      var t2 = charlaTema(p, id), q = t2 ? charlaUnplayedQ(p, t2)[0] : null;
+      if (q) { items.push(q); more++; }
+    });
+    if (c.irse) items.push(c.irse.n, c.irse.m);
+    charlaPrefetch(p, items);
+  }
+  function charlaPrefetch(p, items) {
+    var st = p.charla, list = [];
+    st.warm = st.warm || {};
+    items.forEach(function (x) {
+      if (!x || !x.es) return;
+      var r = x.r || "n", vk = p.voices[r];
+      if (!vk || escPhoneAudioFor(p, r)) return;
+      var own = escRoleTag(p.sc, r), tag = x.de ? escRoleTag(escById(x.de.escena), x.de.r) : own;
+      var lines = (x.antes ? x.antes.es.map(function (t) { return [t, own]; }) : [])
+        .concat((x.de ? charlaBorrowTexts(p, x.de, x.es, r) : x.es).map(function (t) { return [t, tag]; }));
+      lines.forEach(function (l) {
+        if (list.length >= CHARLA_PREFETCH_MAX) return;
+        var tx = String(l[0]).trim(), eleven = !!ELEVEN_VOICES[vk];
+        var opts = eleven ? { tag: l[1], take: elevenTakeOf(vk, l[1], tx), lang: "es" } : null;
+        var key = ttsKey(tx, vk, opts);
+        if (!tx || ttsBlobUrls[key] || st.warm[key]) return;
+        st.warm[key] = true;
+        list.push({ key: key, req: eleven ? { text: tx, voice: "eleven:" + vk, tag: l[1], take: opts.take } : { text: tx, voice: TTS_VOICES[vk] } });
+      });
+    });
+    if (!list.length) return Promise.resolve(0);
+    st.prefetchAsked = (st.prefetchAsked || 0) + list.length;
+    return supabaseClient.functions.invoke("tts", { body: { action: "clip_urls", items: list.map(function (x) { return x.req; }) } }).then(function (res) {
+      var urls = res && !res.error && res.data && res.data.urls;
+      if (!Array.isArray(urls)) return 0;
+      var k = 0, got = 0;
+      function worker() {
+        if (k >= list.length || !escAlive(p)) return Promise.resolve();
+        var x = list[k], u = urls[k]; k++;
+        if (typeof u !== "string" || ttsBlobUrls[x.key]) return worker();
+        return ttsFetchBlob(u).then(function (src) { if (!ttsBlobUrls[x.key]) { rememberTtsBlob(x.key, src); got++; } }, function () {}).then(worker); // not made yet: made when needed
+      }
+      return Promise.all([worker(), worker(), worker()]).then(function () { st.prefetchGot = (st.prefetchGot || 0) + got; return got; });
+    }, function () { return 0; });
+  }
+  window.voseaCharlaPrefetch = function () { var c = escPlay && escPlay.charla; return c ? { asked: c.prefetchAsked || 0, got: c.prefetchGot || 0 } : null; }; // tests
   window.voseaCharlaPicks = function () { return escPlay && escPlay.charla ? escPlay.charla.picks.slice() : null; }; // tests
   window.voseaCharlaState = function () { var c = escPlay && escPlay.charla; return c ? { tags: c.tags, flags: c.flags, played: c.played, steps: escPlay.sc.steps.map(function (x) { return x.chId + (x.you ? "?" : "") + (x.chFrom ? "@" + x.chFrom : ""); }) } : null; }; // tests
   window.voseaOpenEscena = function (id) { setMainTab("play"); openEscenas(true, id); }; // tests
@@ -17496,7 +17641,7 @@
       ids = fb.say.slice();
       pick.how = (pick.how || "haiku") + "+keywords";
     }
-    st.picks.push({ turn: st.turn, how: pick.how || "haiku", said: (pick.say || []).slice(), used: ids.slice() });
+    st.picks.push({ turn: st.turn, how: pick.how || "haiku", said: (pick.say || []).slice(), used: ids.slice(), ms: pick.ms });
     ids.forEach(function (id) { var m = st.byId[id].item.marca; if (m) st.flags[m] = true; }); // «trabaja», «futbolero»
     if (st.flags.trabaja) st.remember = Object.assign({}, st.remember, { works: "yes" });
     if (pick.remember && typeof pick.remember === "object") st.remember = Object.assign({}, pick.remember, st.remember.works ? { works: st.remember.works } : {});
