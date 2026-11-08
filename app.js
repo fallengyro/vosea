@@ -825,7 +825,9 @@
       topic_firm_of: "{b} de {n} tramos firmes",
       topic_learned_of: "{b} de {n}",
       prog_topics_title: "Temas",
-      flash_done_text_practice: "¡Listo! Todas salieron bien.",
+      flash_done_text_practice: "Todas salieron bien.",
+      flash_more: "Otras {n}",
+      flash_more_1: "Una más",
       msg_nada_para_practicar: "No hay nada para practicar ahí.",
       prog_loading: "Cargando tu historial…",
       prog_error: "No se pudo cargar tu historial del servidor; por ahora se ve solo lo de este dispositivo.",
@@ -2262,7 +2264,9 @@
       topic_firm_of: "{b} of {n} ranges solid",
       topic_learned_of: "{b} of {n}",
       prog_topics_title: "Topics",
-      flash_done_text_practice: "Done! You got every card.",
+      flash_done_text_practice: "You got every card.",
+      flash_more: "{n} more",
+      flash_more_1: "1 more",
       msg_nada_para_practicar: "Nothing to practice there.",
       prog_loading: "Loading your history…",
       prog_error: "Couldn't load your history from the server; for now this only shows what's on this device.",
@@ -5875,6 +5879,7 @@
     flashProgress: document.getElementById("flash-progress"),
     flashDoneClose: document.getElementById("flash-done-close"),
     flashDoneText: document.getElementById("flash-done-text"),
+    flashDoneMore: document.getElementById("flash-done-more"),
     flashCard: document.getElementById("flash-card"),
     flashFrontMain: document.getElementById("flash-front-main"),
     flashFrontSub: document.getElementById("flash-front-sub"),
@@ -6201,7 +6206,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "211";
+  var VOSEA_BUILD = "213";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -9737,30 +9742,71 @@
   // schema.sql not run yet, offline) — so a problem can't turn into a loop
   // of paid calls. Progress is logged to the console with a [verb-gloss]
   // prefix.
+  //
+  // 2026-11-08 (mason, after importing «Las 1000 más usadas»: its verb cards
+  // showed "(to want; to love)" instead of "(I want)"): three verbs at a
+  // time instead of one; the verbs in the deck you just opened go first
+  // (verbGlossFirst); and when the app comes back to the front after a pause
+  // of 5+ minutes (a phone suspends the page mid-call, which counts as a
+  // failure), the queue starts again and retries the verbs that failed.
+  var VERB_GLOSS_WORKERS = 3;
   var verbGlossAttempted = new Set();
-  var verbGlossRunning = false;
+  var verbGlossFailed = new Set();
+  var verbGlossActive = 0;
   var verbGlossDisabled = false;
+  var verbGlossDisabledAt = 0;
   var verbGlossFailures = 0;
   var verbGlossPriorityId = null; // a verb just saved in the form jumps the queue
+  var verbGlossFirst = new Set(); // the verbs in the open deck
 
-  function queueVerbGlosses() {
-    if (verbGlossRunning || verbGlossDisabled || !currentUser) return;
-    verbGlossRunning = true;
-    (function step() {
-      if (verbGlossDisabled) { verbGlossRunning = false; return; }
-      var pending = function (v) { return verbNeedsGloss(v.data) && !verbGlossAttempted.has(v.id + ":" + verbGlossSig(v.data)); };
-      var next = allVerbs.find(function (v) { return v.id === verbGlossPriorityId && pending(v); }) || allVerbs.find(pending);
-      if (!next) { verbGlossRunning = false; return; }
-      verbGlossAttempted.add(next.id + ":" + verbGlossSig(next.data));
-      generateVerbGloss(next).then(function () { setTimeout(step, 250); });
-    })();
+  function verbGlossNext() {
+    var pending = function (v) { return verbNeedsGloss(v.data) && !verbGlossAttempted.has(v.id + ":" + verbGlossSig(v.data)); };
+    return allVerbs.find(function (v) { return v.id === verbGlossPriorityId && pending(v); }) ||
+      (verbGlossFirst.size ? allVerbs.find(function (v) { return verbGlossFirst.has(v.id) && pending(v); }) : null) ||
+      allVerbs.find(pending);
   }
+  function queueVerbGlosses() {
+    if (verbGlossDisabled || !currentUser) return;
+    while (verbGlossActive < VERB_GLOSS_WORKERS && verbGlossNext()) {
+      verbGlossActive++;
+      (function step() {
+        var next = verbGlossDisabled ? null : verbGlossNext();
+        if (!next) { verbGlossActive--; return; }
+        var tag = next.id + ":" + verbGlossSig(next.data);
+        verbGlossAttempted.add(tag);
+        generateVerbGloss(next).then(function (ok) {
+          if (ok === false) verbGlossFailed.add(tag);
+          setTimeout(step, 250);
+        });
+      })();
+    }
+  }
+  // the verbs of a deck being opened jump the queue
+  function verbGlossPrioritize(cards) {
+    verbGlossFirst = new Set();
+    (cards || []).forEach(function (c) {
+      if (c.kind !== "verb" || !verbNeedsGloss(c.data)) return;
+      var v = allVerbs.find(function (x) { return x.data === c.data; });
+      if (v) verbGlossFirst.add(v.id);
+    });
+    if (verbGlossFirst.size) queueVerbGlosses();
+  }
+  function verbGlossResume() {
+    if (!verbGlossDisabled || Date.now() - verbGlossDisabledAt < 5 * 60000) return;
+    verbGlossDisabled = false;
+    verbGlossFailures = 0;
+    verbGlossFailed.forEach(function (tag) { verbGlossAttempted.delete(tag); });
+    verbGlossFailed.clear();
+    queueVerbGlosses();
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) verbGlossResume(); });
 
   function noteVerbGlossFailure(infinitive, why) {
     verbGlossFailures++;
     console.warn("[verb-gloss] " + infinitive + ": " + why);
-    if (verbGlossFailures >= 2) {
+    if (verbGlossFailures >= 2 && !verbGlossDisabled) {
       verbGlossDisabled = true;
+      verbGlossDisabledAt = Date.now();
       console.warn("[verb-gloss] paused for this session after repeated failures — is the verb-gloss function deployed and schema.sql run?");
     }
   }
@@ -9804,7 +9850,7 @@
       // A verb you have through a list keeps its English in memory only.
       var save = isBorrowedId(id) ? Promise.resolve({ error: null }) : supabaseClient.from("verbs").update({ forms_en: glosses, forms_en_sig: sig }).eq("id", id);
       return Promise.resolve(save).then(function (up) {
-        if (up.error) { noteVerbGlossFailure(data.infinitive, "couldn't save (" + up.error.message + ")"); return; }
+        if (up.error) { noteVerbGlossFailure(data.infinitive, "couldn't save (" + up.error.message + ")"); return false; }
         verbGlossFailures = 0;
         // The list may have been reloaded meanwhile (new data objects) —
         // update whichever copies still describe the same forms.
@@ -9819,6 +9865,7 @@
       });
     }).catch(function (err) {
       noteVerbGlossFailure(data.infinitive, (err && err.message) || String(err));
+      return false;
     });
   }
 
@@ -11302,7 +11349,45 @@
       return;
     }
     el.flashSetupMsg.textContent = "";
-    openFlashDeck(deckSmartPick(cards, deckSizeN()), "setup");
+    flashChain = { seen: {} };
+    dealSetupDeck(cards);
+  }
+
+  // ---- a deck from Armar el mazo ends; «Otras 20» deals the next one (2026-11-08) ----
+  // mason: "you reach the end of however many cards you picked and after
+  // getting them all that's the end… like the hoy review decks", plus "a
+  // second button for 'more' that pulls new content from the active content
+  // and makes the next deck set up the same way". So a pass drops the cards
+  // marked Bien (and, as before, the ones the Sabido chip lets go), and the
+  // deck is done when none are left. The done screen then offers the next
+  // deck: the same mode, filters and size, picked the same smart way, from
+  // the cards not dealt yet since you tapped Empezar (flashChain.seen).
+  var flashChain = null;
+  function setupDeckCards() {
+    var mode = effectiveFlashMode();
+    return mode === "escuchar" ? buildListenDeck() : (mode === "hablar" ? buildSpeakDeck() : buildFlashDeck());
+  }
+  function setupDeckLeft() {
+    var seen = flashChain ? flashChain.seen : {};
+    return setupDeckCards().filter(function (c) { return !seen[practiceCardKey(c)]; });
+  }
+  function dealSetupDeck(cards) {
+    if (!flashChain) flashChain = { seen: {} };
+    var pick = deckSmartPick(cards, deckSizeN());
+    pick.forEach(function (c) { flashChain.seen[practiceCardKey(c)] = true; });
+    openFlashDeck(pick, "setup");
+  }
+  function flashMoreDeck() {
+    readFlashSetupInputs();
+    var left = setupDeckLeft();
+    if (!left.length) { renderFlashMore(); return; }
+    dealSetupDeck(left);
+  }
+  function renderFlashMore() {
+    if (!el.flashDoneMore) return;
+    var n = flashDeckSource === "setup" && flashChain ? Math.min(setupDeckLeft().length, deckSizeN()) : 0;
+    el.flashDoneMore.hidden = !n;
+    if (n) el.flashDoneMore.textContent = t(n === 1 ? "flash_more_1" : "flash_more", { n: n });
   }
 
   // "setup": the deck built from the Tarjetas setup (passes follow the tabs'
@@ -11323,6 +11408,7 @@
     el.flashCard.setAttribute("data-theme", ambientIsDark() ? "light" : "dark");
     el.flashOverlay.hidden = false;
     practiceStartSession();
+    verbGlossPrioritize(flashDeck);
     playDeckStart();
     renderFlashCard();
     practiceOpenView(flashDeck[flashIndex]);
@@ -11342,11 +11428,14 @@
       // End of a pass. Cards marked (or un-marked) Sabido during it stay put
       // until here — so going back within a pass still works — and only now
       // does the tab's Sabido chip get re-applied: see cardStaysForNextPass().
+      // Both kinds now drop the cards marked Bien; a setup deck also lets go
+      // of the ones its tab's Sabido chip no longer takes.
       var practiceDeck = flashDeckSource === "practice";
-      var nextPass = flashDeck.filter(practiceDeck ? function (c) { return c._grade !== "bien"; } : cardStaysForNextPass);
+      var nextPass = flashDeck.filter(function (c) { return c._grade !== "bien" && (practiceDeck || cardStaysForNextPass(c)); });
       var reviewMode = !practiceDeck && flashDeck.some(cardInReviewMode);
+      var allBien = flashDeck.every(function (c) { return c._grade === "bien"; });
       practiceEndPass();
-      if (!nextPass.length) { showFlashDone(reviewMode, practiceDeck ? "flash_done_text_practice" : null); practiceFlush(); return; }
+      if (!nextPass.length) { showFlashDone(reviewMode, practiceDeck || allBien ? "flash_done_text_practice" : null); practiceFlush(); return; }
       flashDeck = shuffleArray(nextPass);
       flashIndex = 0;
       practiceFlush();
@@ -20456,6 +20545,7 @@
     flashIndex = -1;
     el.flashProgress.textContent = "";
     el.flashDoneText.textContent = t(textKey || (reviewMode ? "flash_done_text_review" : "flash_done_text"));
+    renderFlashMore();
     el.flashOverlay.classList.add("is-done");
   }
 
@@ -24964,6 +25054,7 @@
   el.flashGradeOtra.addEventListener("click", function () { setFlashGrade("otra"); });
   el.flashGradeBien.addEventListener("click", function () { setFlashGrade("bien"); });
   el.flashDoneClose.addEventListener("click", closeFlashcards);
+  if (el.flashDoneMore) el.flashDoneMore.addEventListener("click", flashMoreDeck);
   el.flashCard.addEventListener("click", toggleFlashFlip);
   el.flashCard.addEventListener("touchstart", handleFlashTouchStart, { passive: true });
   el.flashCard.addEventListener("touchmove", handleFlashTouchMove, { passive: false });

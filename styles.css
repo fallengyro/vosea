@@ -1688,6 +1688,8 @@
   .flash-overlay.is-done .flash-tts-msg { display: none; }
   .flash-done-title { font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 600; font-size: 30px; margin: 0; color: var(--ink); }
   .flash-done-text { color: var(--ink-soft); font-size: 15px; margin: 0 0 12px; max-width: 320px; line-height: 1.45; }
+  .flash-done-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .flash-done-btns [hidden] { display: none; }
 
   /* Small filled check after a known item's name in the verb/word/phrase
      lists, so progress is visible while browsing. Lives inside .inf so it

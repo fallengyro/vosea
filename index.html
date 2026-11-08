@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="211">
+<meta name="vosea-build" content="213">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -1686,7 +1686,10 @@
   <div class="flash-done" id="flash-done">
     <p class="flash-done-title" data-i18n="flash_done_title">¡Listo!</p>
     <p class="flash-done-text" id="flash-done-text">Marcaste todas las tarjetas como sabidas.</p>
-    <button type="button" class="btn-primary" id="flash-done-close" data-i18n="close">Cerrar</button>
+    <div class="flash-done-btns">
+      <button type="button" class="btn-primary" id="flash-done-more" hidden>Otras 20</button>
+      <button type="button" class="btn-secondary" id="flash-done-close" data-i18n="close">Cerrar</button>
+    </div>
   </div>
   <!-- "Sabido" toggle — deliberately OUTSIDE .flash-card: same spot on every
        card and both faces, never flips the card, never advances. See
