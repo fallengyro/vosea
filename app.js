@@ -855,7 +855,9 @@
       prog_struggle_saved: "Creaste la lista «{name}» con {n} ítems.",
       prog_x_of_y: "{b} de {n}",
       prog_grid_title: "Verbos por tiempo y persona",
-      prog_grid_sub: "% bien en todos tus verbos (últimos 60 días) · tocá una celda para practicarla",
+      prog_grid_sub: "% bien al primer intento, en todos tus verbos (últimos 60 días) · tocá una celda para practicarla",
+      prog_grid_modes_aria: "Qué respuestas contar",
+      prog_grid_all: "Todos",
       prog_grid_none: "sin practicar",
       prog_grid_cell_aria: "{tense}, {person}: {pct}% bien en {n} respuestas",
       prog_grid_cell_none: "{tense}, {person}: sin practicar",
@@ -2294,7 +2296,9 @@
       prog_struggle_saved: "Created the list \"{name}\" with {n} items.",
       prog_x_of_y: "{b} of {n}",
       prog_grid_title: "Verbs by tense and person",
-      prog_grid_sub: "% got it across all your verbs (last 60 days) · tap a cell to practice it",
+      prog_grid_sub: "% got it on the first try, across all your verbs (last 60 days) · tap a cell to practice it",
+      prog_grid_modes_aria: "Which answers to count",
+      prog_grid_all: "All",
       prog_grid_none: "not practiced",
       prog_grid_cell_aria: "{tense}, {person}: {pct}% got it over {n} answers",
       prog_grid_cell_none: "{tense}, {person}: not practiced",
@@ -6206,7 +6210,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "213";
+  var VOSEA_BUILD = "214";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -19954,19 +19958,88 @@
     return c;
   }
 
-  function drawVerbGrid(P) {
-    var since = P.today - PROG_GRID_DAYS + 1;
+  // ---- the verb grid: first tries, by mode (2026-11-08) ----
+  // mason: "are we tracking the progress (bien/otra vez) by each card type
+  // leer/escuchar/hablar? … the performance on the first pass through the
+  // deck (because eventually to complete everything has to be marked
+  // 'bien')?" and "a toggle to show the verb progress table by card type …
+  // a more honest view … since people may subjectively score for leer or
+  // escuchar moreso than hablar". He picked: count first tries only, and
+  // Todos · Leer · Escuchar · Hablar above the grid (remembered).
+  // A first try = the grade a form got the first time it came up in a deck
+  // in that mode: the earliest pass it was graded in, and within that pass
+  // the last grade (changing your mind on the same card isn't a retry).
+  // Retries in later passes (only the misses come back) don't count.
+  var PROG_GRID_MODES = ["all", "leer", "escuchar", "hablar"];
+  var PROG_GRID_MODE_KEY = "vosea-prog-grid-mode";
+  var progGridMode = "all";
+  try { var savedGridMode = localStorage.getItem(PROG_GRID_MODE_KEY); if (PROG_GRID_MODES.indexOf(savedGridMode) !== -1) progGridMode = savedGridMode; } catch (e) {}
+  function verbFirstTries(P, since) {
+    var first = {}; // session|unit|mode -> row
+    P.rows.forEach(function (r) {
+      if (r.item_kind !== "verb" || !r.form_key || (r.grade !== "bien" && r.grade !== "otra")) return;
+      if (progDayNum(r.shown_at) < since) return;
+      var k = r.session_id + "|" + unitKey(r.item_kind, r.item_key, r.form_key) + "|" + (r.mode || "leer");
+      var cur = first[k], pass = Number(r.pass) || 1;
+      if (!cur || pass < (Number(cur.pass) || 1) || (pass === (Number(cur.pass) || 1) && progTime(r) >= progTime(cur))) first[k] = r;
+    });
+    return Object.keys(first).map(function (k) { return first[k]; });
+  }
+  function verbGridCells(tries, mode) {
     var cells = {};
-    var any = false;
-    P.events.forEach(function (r) {
-      if (r.item_kind !== "verb" || !r.form_key || progDayNum(r.shown_at) < since) return;
+    tries.forEach(function (r) {
+      if (mode !== "all" && (r.mode || "leer") !== mode) return;
       var ck = baseFormKey(r.form_key); // both uses of a dative verb count for the cell
       var c = cells[ck] || (cells[ck] = { b: 0, n: 0 });
       c.n++; if (r.grade === "bien") c.b++;
-      any = true;
     });
-    if (!any) return null;
+    return cells;
+  }
+  function gridModeLabel(m) {
+    return m === "all" ? t("prog_grid_all") : t(m === "leer" ? "flash_mode_read" : (m === "escuchar" ? "flash_mode_listen" : "flash_mode_speak"));
+  }
+
+  function drawVerbGrid(P) {
+    var since = P.today - PROG_GRID_DAYS + 1;
+    var tries = verbFirstTries(P, since);
+    if (!tries.length) return null;
+    var has = { all: true };
+    tries.forEach(function (r) { has[r.mode || "leer"] = true; });
+    var mode = has[progGridMode] ? progGridMode : "all";
     var card = progCard(t("prog_grid_title"), t("prog_grid_sub"));
+    var seg = progEl("div", "lang-toggle prog-grid-modes");
+    seg.setAttribute("role", "group");
+    seg.setAttribute("aria-label", t("prog_grid_modes_aria"));
+    PROG_GRID_MODES.forEach(function (m) {
+      var bt = progEl("button", "lang-option", gridModeLabel(m));
+      bt.type = "button";
+      bt.setAttribute("data-mode", m);
+      bt.disabled = !has[m];
+      bt.addEventListener("click", function () {
+        if (!has[m]) return;
+        progGridMode = m;
+        try { localStorage.setItem(PROG_GRID_MODE_KEY, m); } catch (e) {}
+        mode = m;
+        paint();
+      });
+      seg.appendChild(bt);
+    });
+    card.appendChild(seg);
+    var body = progEl("div", "prog-grid-body");
+    card.appendChild(body);
+    function paint() {
+      Array.prototype.forEach.call(seg.children, function (bt) {
+        var on = bt.getAttribute("data-mode") === mode;
+        bt.classList.toggle("active", on);
+        bt.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      body.innerHTML = "";
+      drawVerbGridBody(body, verbGridCells(tries, mode), mode);
+    }
+    paint();
+    return card;
+  }
+  function drawVerbGridBody(card, cells, mode) {
     var grid = progEl("div", "prog-grid");
     grid.appendChild(progEl("div"));
     PROG_GRID_PERSONS.forEach(function (p) { grid.appendChild(progEl("div", "h", t("prog_person_" + p))); });
@@ -19992,7 +20065,8 @@
         btn.addEventListener("click", function () {
           var cards = [];
           allVerbs.forEach(function (v) { Array.prototype.push.apply(cards, verbCards(v.data, function (k) { return baseFormKey(k) === fk; })); });
-          startPracticeDeck(progModeCards(cards));
+          // a mode picked above practices in that mode
+          startPracticeDeck(mode === "all" ? progModeCards(cards) : mode === "escuchar" ? cards.map(listenCard) : mode === "hablar" ? cards.map(speakCard) : cards);
         });
         grid.appendChild(btn);
       });
@@ -20007,7 +20081,6 @@
     legend.appendChild(ramp);
     legend.appendChild(progEl("span", null, "100%"));
     card.appendChild(legend);
-    return card;
   }
 
   function drawLearned(P, unitList) {

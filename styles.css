@@ -2066,6 +2066,9 @@
   .s4 { background: color-mix(in srgb, var(--accent) 80%, var(--paper-raised)); }
   .s5 { background: var(--accent); }
   .prog-grid .c.s3, .prog-grid .c.s4, .prog-grid .c.s5 { color: var(--paper); }
+  .prog-grid-modes { display: flex; width: 100%; margin: 6px 0 10px; }
+  .prog-grid-modes .lang-option { flex: 1; }
+  .prog-grid-modes .lang-option:disabled { opacity: 0.4; cursor: default; }
   .prog-legend { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-soft); flex-wrap: wrap; }
   .prog-legend .none-swatch { width: 18px; height: 10px; border: 1px dashed var(--line); border-radius: 3px; display: block; }
   .prog-legend .gap { margin-left: 8px; }
