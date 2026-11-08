@@ -437,6 +437,7 @@
       speak_mic_denied: "No hay permiso para el micrófono. Habilitalo en la configuración del navegador.",
       speak_mic_error: "No se pudo usar el micrófono.",
       speak_said: "Dijiste:",
+      speak_weak_note: "Subrayado: sonidos a mejorar",
       speak_play_aria: "Escuchar tu grabación",
       speak_nothing: "No se escuchó nada",
       speak_error: "No se pudo analizar",
@@ -1882,6 +1883,7 @@
       speak_mic_denied: "No microphone permission. Allow it in your browser settings.",
       speak_mic_error: "Couldn't use the microphone.",
       speak_said: "You said:",
+      speak_weak_note: "Underlined: sounds to work on",
       speak_play_aria: "Play your recording",
       speak_nothing: "Nothing heard",
       speak_error: "Couldn't check it",
@@ -5909,6 +5911,7 @@
     flashAutoplayLabel: document.getElementById("flash-autoplay-label"),
     flashAutoplayNote: document.getElementById("flash-autoplay-note"),
     flashBackMain: document.getElementById("flash-back-main"),
+    flashWeakNote: document.getElementById("flash-weak-note"),
     flashBackSub: document.getElementById("flash-back-sub"),
     flashBackSpeak: document.getElementById("flash-back-speak"),
     flashBackBadges: document.getElementById("flash-back-badges"),
@@ -6218,7 +6221,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "215";
+  var VOSEA_BUILD = "217";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -12049,8 +12052,13 @@
       el.settingsDiagMsg.textContent = t("msg_error_guardar", { msg: (e && e.message) || "" });
     });
   }
-  var HABLAR_MIN_ACCURACY = 90;
-  var HABLAR_MIN_PHONEME = 60;
+  // Retuned 2026-11-08 from 663 logged answers (mason: "i think i have
+  // enough responses to recalibrate the scoring"; option B): 90 / 60 left
+  // 40% of the answers that didn't match with no suggestion. 85 / 30 cuts
+  // that to about a quarter, at 3% wrong Bien suggestions. The unsure band
+  // stays 75–84. Export: C:\Dev\vosea data\hablar-scoring-2026-11-08.csv.
+  var HABLAR_MIN_ACCURACY = 85;
+  var HABLAR_MIN_PHONEME = 30;
   var HABLAR_UNSURE_FLOOR = 75;
   var HABLAR_TIMEOUT_MS = 20000;
   var hablarStream = null;
@@ -12218,8 +12226,32 @@
 
   function speechNorm(s) {
     return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
-      .replace(/[¿?¡!.,;:«»"()]/g, " ").replace(/\s+/g, " ").trim();
+      .replace(/[¿?¡!.,;:«»"()]/g, " ").replace(/\s+/g, " ").trim()
+      // the recognizer writes the noun: "y voz" for «y vos» (2026-11-08)
+      .replace(/(^| )voz(?= |$)/g, "$1vos");
   }
+  // How it sounds in Buenos Aires, for "sounds the same" (2026-11-08):
+  // b = v, s = z = c(e/i), y = ll, no h, k = c(a/o/u) = qu, j = g(e/i), and
+  // the spaces the recognizer puts in the middle of a word ("peli rojo",
+  // "su urgencia", "vivas" for vivaz). rr stays apart from r (pero ≠ perro);
+  // an r that starts a word or follows l / n / s counts as rr (it's trilled).
+  function speechSoundKey(s) {
+    var x = speechNorm(s).replace(/[^a-zñ ]/g, "");
+    // an r that starts a word, or follows l / n / s, is the strong one: "peli rojo" = pelirrojo
+    x = x.replace(/(^| )r/g, "$1rr").replace(/([lns])r(?!r)/g, "$1rr");
+    x = x.replace(/ll/g, "y").replace(/ch/g, "ç").replace(/\s+/g, "").replace(/rrr+/g, "rr");
+    x = x.replace(/qu/g, "k").replace(/c(?=[ei])/g, "s").replace(/c/g, "k").replace(/z/g, "s")
+      .replace(/gu(?=[ei])/g, "g").replace(/g(?=[ei])/g, "j").replace(/v/g, "b").replace(/h/g, "").replace(/x/g, "ks")
+      .replace(/y(?=[^aeiou]|$)/g, "i").replace(/([^r])\1+/g, "$1");
+    return x;
+  }
+  function speechSoundsSame(expected, heard) {
+    var e = speechSoundKey(expected), h = speechSoundKey(heard);
+    return !!e && e.length >= 3 && e === h;
+  }
+  window.voseaSoundKey = function (s) { return speechSoundKey(s); }; // tests
+  window.voseaHablarJudge = function (card, data) { return hablarJudge(card, data); }; // tests
+  window.voseaShowSpeech = function (data) { var c = flashDeck[flashIndex]; if (!c) return null; c._speech = hablarJudge(c, data); renderHeard(c); if (!el.flashCard.classList.contains("flipped")) toggleFlashFlip(); return c._speech; }; // tests
   window.voseaSpellMatches = function (t, h) { return spellMatches(t, h); }; // tests
   window.voseaSpeakAnswers = function (c) { return speakAnswers(c); }; // tests
   function speechMatches(expected, heard) {
@@ -12254,8 +12286,32 @@
     // A number can come back written in digits ("4372"): compare digits.
     var heardDigits = card.digits ? String(h.display || "").replace(/\D/g, "") : "";
     var spelled = card.spell && [heard, h.display || ""].some(function (x) { return x && spellMatches(card.spell, x); });
-    if ((heard && speakAnswers(card).some(function (ans) { return speechMatches(ans, heard); })) || (heardDigits && heardDigits === card.digits) || spelled) {
+    // What's kept for the next calibration (2026-11-08): the answer, the
+    // recognizer's other guesses and the scores we didn't use yet.
+    var answers = speakAnswers(card);
+    var alts = (h.alternatives || []).filter(Boolean).slice(0, 4);
+    res.expected = answers[0] || null;
+    if (alts.length) res.alternatives = alts;
+    if (typeof h.confidence === "number") res.confidence = h.confidence;
+    if (scored) { res.fluency = a.scores.fluency != null ? a.scores.fluency : null; res.completeness = a.scores.completeness != null ? a.scores.completeness : null; }
+    // what the scoring pass itself heard (it listens with the answer in
+    // mind): the "second hearing" that already rescues scene answers
+    if (a.ok && (a.lexical || a.display)) res.heard_scored = a.lexical || a.display;
+    // each word of the answer as Azure scored it (2026-11-08): shown on the
+    // back as the sounds to work on, and kept in the log
+    if (scored && (a.words || []).length) {
+      res.words = a.words.slice(0, 16).map(function (w) {
+        return { w: w.word || "", acc: w.accuracy, err: w.error || "None", ph: (w.phonemes || []).map(function (ph) { return [ph.p || "", ph.accuracy]; }) };
+      });
+    }
+    if ((heard && answers.some(function (ans) { return speechMatches(ans, heard); })) || (heardDigits && heardDigits === card.digits) || spelled) {
       res.auto_grade = "bien"; res.rule = "transcript";
+    } else if (!card.spell && !card.digits && alts.some(function (x) { return answers.some(function (ans) { return speechMatches(ans, x); }); })) {
+      // one of the recognizer's other guesses is the answer
+      res.auto_grade = "bien"; res.rule = "alternative";
+    } else if (!card.spell && !card.digits && [heard].concat(alts).some(function (x) { return x && answers.some(function (ans) { return speechSoundsSame(ans, x); }); })) {
+      // written differently, sounds the same here ("vivas" for vivaz)
+      res.auto_grade = "bien"; res.rule = "sounds";
     } else if (scored && res.accuracy >= HABLAR_MIN_ACCURACY && (minPh === null || minPh >= HABLAR_MIN_PHONEME) && !wordErr) {
       res.auto_grade = "bien"; res.rule = "score";
     } else if (!heard && (!scored || res.accuracy < 30)) {
@@ -12575,6 +12631,102 @@
     return { pre: preText, core: core, post: post.join(" ") };
   }
 
+  // ---- the sounds to work on (2026-11-08) ----
+  // mason picked idea 1 of the scoring follow-ups: Azure scores every word
+  // and every sound of the answer, so the back underlines the letters whose
+  // sound scored low (a sound under WEAK_SOUND), or the whole word when the
+  // sounds can't be lined up with its letters, and a word you left out. Only
+  // when the answer was scored (a transcript that matched skips scoring).
+  var WEAK_SOUND = 60;
+  // A word's letters as sounds: ch, ll, rr, qu(e/i), gu(e/i) are one sound,
+  // x is two, an h is silent (it rides along with the next letter).
+  function soundUnits(word) {
+    var t = word.toLowerCase(), out = [], i = 0, start = null;
+    while (i < t.length) {
+      var c = t[i], n = t[i + 1] || "", n2 = t[i + 2] || "";
+      if (c === "h" && t[i - 1] !== "c") { if (start === null) start = i; i++; continue; }
+      var len = 1, k = 1;
+      if ((c === "c" && n === "h") || (c === "l" && n === "l") || (c === "r" && n === "r")) len = 2;
+      else if (c === "q" && n === "u") len = 2;
+      else if (c === "g" && n === "u" && /[eéií]/.test(n2)) len = 2;
+      else if (c === "x") k = 2;
+      out.push({ start: start === null ? i : start, end: i + len, n: k });
+      start = null; i += len;
+    }
+    return out;
+  }
+  // [start, end, kind] ranges in `text` ("weak" letters, a "missed" word)
+  function weakRanges(text, words) {
+    var toks = [], re = /[\p{L}]+/gu, m;
+    while ((m = re.exec(text))) toks.push({ s: m.index, w: m[0] });
+    var out = [], ti = 0;
+    (words || []).forEach(function (w) {
+      if (w.err === "Insertion") return;
+      var want = speechNorm(w.w);
+      if (!want) return;
+      var j = ti;
+      while (j < toks.length && j < ti + 3 && speechNorm(toks[j].w) !== want) j++;
+      if (j >= toks.length || speechNorm(toks[j].w) !== want) return;
+      var tok = toks[j]; ti = j + 1;
+      if (w.err === "Omission") { out.push([tok.s, tok.s + tok.w.length, "missed"]); return; }
+      var ph = (w.ph || []).map(function (x) { return x[1]; });
+      var units = soundUnits(tok.w), need = units.reduce(function (s2, u) { return s2 + u.n; }, 0);
+      if (ph.length && need === ph.length) {
+        var k = 0;
+        units.forEach(function (u) {
+          var low = ph.slice(k, k + u.n).some(function (v) { return v != null && v < WEAK_SOUND; });
+          k += u.n;
+          if (low) {
+            var last = out[out.length - 1];
+            if (last && last[2] === "weak" && last[1] === tok.s + u.start) last[1] = tok.s + u.end; // neighbors join
+            else out.push([tok.s + u.start, tok.s + u.end, "weak"]);
+          }
+        });
+      } else if ((w.acc != null && w.acc < WEAK_SOUND) || ph.some(function (v) { return v != null && v < WEAK_SOUND - 15; })) {
+        out.push([tok.s, tok.s + tok.w.length, "weak"]);
+      }
+    });
+    return out;
+  }
+  window.voseaWeakRanges = function (text, words) { return weakRanges(text, words); }; // tests
+  window.voseaSoundUnits = function (w) { return soundUnits(w); }; // tests
+  function unmarkWeak(elm) {
+    Array.prototype.slice.call(elm.querySelectorAll(".weak-sound, .missed-word")).forEach(function (sp) {
+      sp.replaceWith(document.createTextNode(sp.textContent));
+    });
+    elm.normalize();
+  }
+  // Wraps the ranges inside whatever is there (a Tema's highlighted gap
+  // stays as it is): text nodes are split, nothing else is touched.
+  function markWeak(elm, ranges) {
+    if (!ranges.length) return;
+    var walker = document.createTreeWalker(elm, NodeFilter.SHOW_TEXT), nodes = [], node, pos = 0;
+    while ((node = walker.nextNode())) { nodes.push({ n: node, s: pos }); pos += node.nodeValue.length; }
+    nodes.forEach(function (x) {
+      var txt = x.n.nodeValue, a = x.s, b = x.s + txt.length;
+      var hits = ranges.filter(function (r) { return r[0] < b && r[1] > a; });
+      if (!hits.length) return;
+      var frag = document.createDocumentFragment(), at = 0;
+      hits.forEach(function (r) {
+        var s0 = Math.max(r[0], a) - a, e0 = Math.min(r[1], b) - a;
+        if (s0 > at) frag.appendChild(document.createTextNode(txt.slice(at, s0)));
+        var sp = document.createElement("span");
+        sp.className = r[2] === "missed" ? "missed-word" : "weak-sound";
+        sp.textContent = txt.slice(s0, e0);
+        frag.appendChild(sp);
+        at = e0;
+      });
+      if (at < txt.length) frag.appendChild(document.createTextNode(txt.slice(at)));
+      x.n.parentNode.replaceChild(frag, x.n);
+    });
+  }
+  function renderWeakSounds(card, sp) {
+    unmarkWeak(el.flashBackMain);
+    var ranges = sp && sp.words && sp.rule !== "error" && sp.rule !== "nothing" ? weakRanges(el.flashBackMain.textContent, sp.words) : [];
+    markWeak(el.flashBackMain, ranges);
+    if (el.flashWeakNote) el.flashWeakNote.hidden = !ranges.length;
+  }
+
   function renderHeard(card) {
     if (!el.flashBackHeard) return;
     var sp = card && card.speak ? card._speech : null;
@@ -12587,6 +12739,7 @@
     el.flashBackHeard.hidden = !sp;
     el.flashBackSaidLabel.hidden = !sp;
     el.flashBackPlay.hidden = !(sp && card._recUrl);
+    renderWeakSounds(card, sp);
     if (!sp) { fitFlashBack(); return; }
     grid.classList.add("is-said");
     var len = String(card.backMain || "").length;
