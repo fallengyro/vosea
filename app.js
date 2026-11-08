@@ -1047,6 +1047,7 @@
       warm_start: "Generar",
       warm_stop: "Parar",
       warm_progress: "Generando: {done} de {total} · {miss} nuevos · {hit} ya estaban · {err} errores",
+      warm_checking: "Buscando cuáles de los {total} audios faltan…",
       warm_done: "Listo: {miss} nuevos · {hit} ya estaban · {err} errores",
       warm_stopped: "Parado en {done} de {total} ({miss} nuevos, {err} errores). Podés seguir: lo hecho no se repite.",
       warm_error: "Último error: «{text}» — {msg}",
@@ -2483,6 +2484,7 @@
       warm_start: "Start",
       warm_stop: "Stop",
       warm_progress: "Working: {done} of {total} · {miss} new · {hit} already saved · {err} errors",
+      warm_checking: "Finding which of the {total} clips are missing…",
       warm_done: "Done: {miss} new · {hit} already saved · {err} errors",
       warm_stopped: "Stopped at {done} of {total} ({miss} new, {err} errors). You can start again: what's done isn't repeated.",
       warm_error: "Last error: “{text}” — {msg}",
@@ -4215,7 +4217,8 @@
     sec.appendChild(actions);
     if (warmRun) {
       var r = warmRun;
-      sec.appendChild(uNode("p", "warm-progress", t(r.running ? "warm_progress" : (r.stopped ? "warm_stopped" : "warm_done"), {
+      if (r.checking) sec.appendChild(uNode("p", "warm-progress", t("warm_checking", { total: progNum(r.total) })));
+      else sec.appendChild(uNode("p", "warm-progress", t(r.running ? "warm_progress" : (r.stopped ? "warm_stopped" : "warm_done"), {
         done: progNum(r.done), total: progNum(r.total), miss: progNum(r.miss), hit: progNum(r.hit), err: progNum(r.error) })));
       if (r.paid) sec.appendChild(uNode("p", "warm-progress", t("warm_paid_progress", { used: progNum(r.paidChars) })));
       else sec.appendChild(uNode("p", "warm-progress warm-budget", t("warm_budget_progress", { used: progNum(r.freeChars), budget: progNum(r.budget) })));
@@ -4685,9 +4688,30 @@
     var fr = warmFreeRoom();
     if (!fr || !fr.budget) return;
     var run = warmRun = { total: jobs.length, done: 0, hit: 0, miss: 0, error: 0, fails: 0, stop: false, running: true, stopped: false, lastError: "",
-      budget: fr.budget, freeChars: 0, pending: 0, paid: false, paidChars: 0, budgetHit: false };
+      budget: fr.budget, freeChars: 0, pending: 0, paid: false, paidChars: 0, budgetHit: false, checking: true, skipped: 0 };
     warmTtsCacheRunning = true;
     var next = 0, paint = 0;
+    // First, which clips are missing (2026-11-07, mason: "is there a more
+    // efficient way to look for which clips need their audio warmed up
+    // instead of going through the full list of content again?"): one
+    // r2_keys call lists every clip name in Cloudflare, and each job's name
+    // is worked out here (azureClipKey, as «Contar los audios» does), so
+    // only the missing ones go to the tts function, one by one, as before.
+    // Clips already there count as «ya estaban» straight away. If the list
+    // can't be had (no R2, an older function), every clip is asked for, as
+    // before.
+    renderWarm();
+    warmMissing(jobs).then(function (missing) {
+      run.checking = false;
+      run.skipped = jobs.length - missing.length;
+      run.hit = run.skipped; run.done = run.skipped;
+      jobs = missing;
+      if (run.stop) { finishRun(); return; }
+      var ws = [];
+      for (var i = 0; i < WARM_CONCURRENCY; i++) ws.push(worker());
+      renderWarm();
+      Promise.all(ws).then(finishRun);
+    });
     function repaint(force) { var now = Date.now(); if (force || now - paint > 400) { paint = now; renderWarm(); } }
     function worker() {
       if (run.stop || next >= jobs.length) return Promise.resolve();
@@ -4739,17 +4763,37 @@
         return worker();
       });
     }
-    var ws = [];
-    for (var i = 0; i < WARM_CONCURRENCY; i++) ws.push(worker());
-    renderWarm();
-    Promise.all(ws).then(function () {
+    function finishRun() {
       run.running = false;
+      run.checking = false;
       run.stopped = run.stop && run.done < run.total;
       warmTtsCacheRunning = false;
       saveTtsUrlMemo();
-      console.log("[warm] " + run.done + "/" + run.total + " — " + run.miss + " made, " + run.hit + " already there, " + run.error + " errors, " + run.freeChars + " free chars");
+      console.log("[warm] " + run.done + "/" + run.total + " — " + run.miss + " made, " + run.hit + " already there (" + run.skipped + " known from the clip list), " + run.error + " errors, " + run.freeChars + " free chars");
       repaint(true);
       if (run.miss) refreshUsage(); // the month's meter, with what was just made
+    }
+  }
+  // the jobs whose clip isn't in Cloudflare yet (all of them if the clip
+  // list can't be had)
+  function warmMissing(jobs) {
+    return elCall({ action: "r2_keys" }).then(function (d) {
+      var ks = d.keys || "", have = {};
+      if (!ks.length) return jobs;
+      for (var i = 0; i + 12 <= ks.length; i += 12) have[ks.substr(i, 12)] = true;
+      var out = [];
+      function step(i) {
+        if (i >= jobs.length) return Promise.resolve(out);
+        var part = jobs.slice(i, i + 400);
+        return Promise.all(part.map(function (j) { return azureClipKey(j.voice, j.text); })).then(function (keys) {
+          part.forEach(function (j, k) { if (!have[keys[k]]) out.push(j); });
+          return step(i + 400);
+        });
+      }
+      return step(0);
+    }).catch(function (e) {
+      console.warn("[warm] no clip list, asking for every clip:", e && e.message);
+      return jobs;
     });
   }
 
@@ -6157,7 +6201,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "210";
+  var VOSEA_BUILD = "211";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
