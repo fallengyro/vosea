@@ -858,6 +858,10 @@
       prog_grid_sub: "% bien al primer intento, en todos tus verbos (últimos 60 días) · tocá una celda para practicarla",
       prog_grid_modes_aria: "Qué respuestas contar",
       prog_grid_all: "Todos",
+      prog_grid_title_mode: "Verbos ·",
+      prog_grid_low: "te cuesta",
+      prog_grid_high: "firme",
+      prog_grid_few: "pocas respuestas (1–2)",
       prog_grid_none: "sin practicar",
       prog_grid_cell_aria: "{tense}, {person}: {pct}% bien en {n} respuestas",
       prog_grid_cell_none: "{tense}, {person}: sin practicar",
@@ -2299,6 +2303,10 @@
       prog_grid_sub: "% got it on the first try, across all your verbs (last 60 days) · tap a cell to practice it",
       prog_grid_modes_aria: "Which answers to count",
       prog_grid_all: "All",
+      prog_grid_title_mode: "Verbs ·",
+      prog_grid_low: "struggling",
+      prog_grid_high: "solid",
+      prog_grid_few: "few answers (1–2)",
       prog_grid_none: "not practiced",
       prog_grid_cell_aria: "{tense}, {person}: {pct}% got it over {n} answers",
       prog_grid_cell_none: "{tense}, {person}: not practiced",
@@ -6210,7 +6218,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "214";
+  var VOSEA_BUILD = "215";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -19995,6 +20003,22 @@
     });
     return cells;
   }
+  // Option C from the color board (mason, 2026-11-08: "C is very nice"):
+  // the cells use one two-sided scale in every mode (brick = te cuesta,
+  // gray = halfway, the Bien green = firme; v1–v5 at 40 / 55 / 70 / 85), the
+  // mode is named in the title with its icon and the toggle carries the
+  // icons, and a cell with only 1–2 answers is faded with a dashed edge.
+  var GRID_MODE_ICON = {
+    leer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 5.5c3-1.2 6-1.2 9 .9 3-2.1 6-2.1 9-.9v13c-3-1.2-6-1.2-9 .9-3-2.1-6-2.1-9-.9z"/><path d="M12 6.4v13"/></svg>',
+    escuchar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h3.5L12 5v14l-4.5-4H4z" fill="currentColor"/><path d="M16 8.5c1.4 2 1.4 5 0 7M18.8 6c2.6 3.4 2.6 8.6 0 12"/></svg>',
+    hablar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="8.5" y="3" width="7" height="11" rx="3.5" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>'
+  };
+  function gridModeIcon(m) {
+    var i = document.createElement("span");
+    i.className = "grid-mode-icon";
+    i.innerHTML = GRID_MODE_ICON[m] || "";
+    return i;
+  }
   function gridModeLabel(m) {
     return m === "all" ? t("prog_grid_all") : t(m === "leer" ? "flash_mode_read" : (m === "escuchar" ? "flash_mode_listen" : "flash_mode_speak"));
   }
@@ -20011,8 +20035,10 @@
     seg.setAttribute("role", "group");
     seg.setAttribute("aria-label", t("prog_grid_modes_aria"));
     PROG_GRID_MODES.forEach(function (m) {
-      var bt = progEl("button", "lang-option", gridModeLabel(m));
+      var bt = progEl("button", "lang-option");
       bt.type = "button";
+      if (GRID_MODE_ICON[m]) bt.appendChild(gridModeIcon(m));
+      bt.appendChild(document.createTextNode(gridModeLabel(m)));
       bt.setAttribute("data-mode", m);
       bt.disabled = !has[m];
       bt.addEventListener("click", function () {
@@ -20027,7 +20053,20 @@
     card.appendChild(seg);
     var body = progEl("div", "prog-grid-body");
     card.appendChild(body);
+    var h3 = card.querySelector("h3");
     function paint() {
+      if (h3) {
+        h3.innerHTML = "";
+        h3.classList.toggle("grid-title", mode !== "all");
+        if (mode === "all") h3.textContent = t("prog_grid_title");
+        else {
+          h3.appendChild(document.createTextNode(t("prog_grid_title_mode") + " "));
+          var nm = progEl("span", "grid-mode-name");
+          nm.appendChild(gridModeIcon(mode));
+          nm.appendChild(document.createTextNode(gridModeLabel(mode)));
+          h3.appendChild(nm);
+        }
+      }
       Array.prototype.forEach.call(seg.children, function (bt) {
         var on = bt.getAttribute("data-mode") === mode;
         bt.classList.toggle("active", on);
@@ -20057,7 +20096,8 @@
         } else {
           var pct = Math.round(100 * c.b / c.n);
           var step = pct >= 85 ? 5 : pct >= 70 ? 4 : pct >= 55 ? 3 : pct >= 40 ? 2 : 1;
-          btn.classList.add("s" + step);
+          btn.classList.add("v" + step);
+          if (c.n < 3) btn.classList.add("few");
           btn.textContent = String(pct);
           btn.setAttribute("aria-label", t("prog_grid_cell_aria", { tense: t("prog_tense_" + tk), person: t("prog_person_" + pk), pct: pct, n: c.n }));
           btn.title = t("prog_grid_cell_aria", { tense: t("prog_tense_" + tk), person: t("prog_person_" + pk), pct: pct, n: c.n });
@@ -20072,15 +20112,25 @@
       });
     });
     card.appendChild(grid);
-    var legend = progEl("div", "prog-legend");
-    legend.appendChild(progEl("span", null, t("prog_grid_none")));
-    legend.appendChild(progEl("i", "none-swatch"));
-    legend.appendChild(progEl("span", "gap", "0%"));
+    var legend = progEl("div", "prog-legend grid-legend");
+    legend.appendChild(progEl("span", null, t("prog_grid_low")));
     var ramp = progEl("span", "ramp");
-    for (var s = 1; s <= 5; s++) ramp.appendChild(progEl("i", "s" + s));
+    ["0–39", "40–54", "55–69", "70–84", "85+"].forEach(function (lab, i) {
+      var sw = progEl("span", "ramp-step");
+      sw.appendChild(progEl("i", "v" + (i + 1)));
+      sw.appendChild(progEl("small", null, lab));
+      ramp.appendChild(sw);
+    });
     legend.appendChild(ramp);
-    legend.appendChild(progEl("span", null, "100%"));
+    legend.appendChild(progEl("span", null, t("prog_grid_high")));
     card.appendChild(legend);
+    var legend2 = progEl("div", "prog-legend grid-legend2");
+    var few = progEl("i", "few-swatch v4", "60");
+    legend2.appendChild(few);
+    legend2.appendChild(progEl("span", null, t("prog_grid_few")));
+    legend2.appendChild(progEl("i", "none-swatch gap"));
+    legend2.appendChild(progEl("span", null, t("prog_grid_none")));
+    card.appendChild(legend2);
   }
 
   function drawLearned(P, unitList) {
