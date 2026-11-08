@@ -3048,10 +3048,22 @@
   .ld-check { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 6px 0; cursor: pointer; }
   .ld-check input { width: 18px; height: 18px; accent-color: var(--accent); }
 
-  /* Biblioteca */
-  .library-list { max-height: 55vh; overflow-y: auto; }
-  .library-row { flex-wrap: wrap; }
-  .library-row .icon-btn { margin-left: auto; }
+  /* Biblioteca (2026-11-08, mason: "on desktop the library window is
+     sized awkwardly relative to the content"): one scroll, not two — the
+     card is a column whose list takes the room left between the intro and
+     Cerrar; wider on desktop; every row the same shape: name over its
+     counts on the left, the button and Quitar on the right. */
+  .modal-card.library-card { max-width: 680px; display: flex; flex-direction: column; overflow: hidden; }
+  .library-card > h3, .library-card > p, .library-card > .form-actions { flex: none; }
+  .library-card .library-list { flex: 1 1 auto; min-height: 0; max-height: none; height: auto; overflow-y: auto; margin-bottom: 0; }
+  .library-card .form-actions { margin-top: 14px; }
+  .library-card #library-msg:empty { display: none; }
+  .library-card > .flash-setup-note { margin-bottom: 0; }
+  .library-list .lists-section-head { position: sticky; top: 0; z-index: 1; background: var(--paper-raised); }
+  .card-row.library-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; row-gap: 3px; align-items: center; }
+  .library-row .inf { grid-column: 1; grid-row: 1; min-width: 0; }
+  .library-row .def { grid-column: 1; grid-row: 2; min-width: 0; }
+  .library-row .library-acts { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-width: 7.5em; }
 
   /* Quedármela under a flashcard (same pill as Sabido, no check) */
   .keep-toggle {
