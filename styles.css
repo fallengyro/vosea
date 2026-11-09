@@ -3424,3 +3424,11 @@ body.has-col-fab #verbs-panel, body.has-col-fab #words-panel, body.has-col-fab #
 /* Audio por adelantado: how much of the free month a run may use (2026-10-26) */
 .warm-slice { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 10px 0 4px; font-size: 13.5px; color: var(--ink-soft); }
 .warm-slices { display: inline-flex; }
+
+/* Escenas: the preparation bar instead of the lock (2026-11-09, option C) */
+.esc-prep-bar { height: 8px; border-radius: 5px; background: var(--vg3); overflow: hidden; margin: 4px 0 4px; }
+.esc-prep-bar > i { display: block; height: 100%; background: var(--teal); border-radius: 5px; }
+.esc-prep-bar.is-mini { width: 64px; height: 6px; margin: 0; flex: none; align-self: center; }
+.esc-prep-meta { font-size: 13px; color: var(--ink-soft); margin: 0 0 6px; }
+.esc-list-link { display: inline-block; margin-top: 10px; border: none; background: none; padding: 4px 0; font: inherit; font-size: 14px; color: var(--accent); cursor: pointer; }
+.esc-list-link:hover { text-decoration: underline; }

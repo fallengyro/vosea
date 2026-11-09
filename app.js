@@ -695,8 +695,14 @@
       esc_missing_intro: "Te faltan {n} de lo que usa esta escena:",
       esc_practice_these: "Practicar estas {n}",
       esc_practice_all: "Practicar lo que usa",
-      esc_list_open: "Ver su lista",
-      esc_list_add: "Agregar su lista",
+      esc_list_open: "Ver su lista ›",
+      esc_list_add: "Agregar su lista ›",
+      esc_prep: "Preparación",
+      esc_prep_list: "{n} de {total} de su lista en Bien",
+      esc_prep_scene: "{n} de {total} frases de la escena en Bien",
+      esc_prep_practice_list: "Practicar su lista",
+      esc_prep_practice_scene: "Practicar sus frases",
+      esc_start_anyway: "Empezar igual",
       esc_who: "Quién habla",
       esc_noise: "Ruido de fondo",
       esc_noise_off: "No",
@@ -2143,8 +2149,14 @@
       esc_missing_intro: "You still need {n} of the things this scene uses:",
       esc_practice_these: "Practice these {n}",
       esc_practice_all: "Practice what it uses",
-      esc_list_open: "See its list",
-      esc_list_add: "Add its list",
+      esc_list_open: "See its list ›",
+      esc_list_add: "Add its list ›",
+      esc_prep: "Getting ready",
+      esc_prep_list: "{n} of {total} from its list got right",
+      esc_prep_scene: "{n} of {total} of the scene's phrases got right",
+      esc_prep_practice_list: "Practice its list",
+      esc_prep_practice_scene: "Practice its phrases",
+      esc_start_anyway: "Start anyway",
       esc_who: "Who's talking",
       esc_noise: "Background noise",
       esc_noise_off: "Off",
@@ -6225,7 +6237,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "222";
+  var VOSEA_BUILD = "223";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7620,11 +7632,9 @@
       // one you've played but not finished first, then a new one
       var played = open.filter(function (sc) { return escBest(sc.id).plays; });
       var sc = (played.length ? played : open)[0];
-      return { sc: sc, open: true, best: escBest(sc.id) };
+      var best = escBest(sc.id);
+      return { sc: sc, open: true, best: best, prep: best.plays ? null : escPrep(sc) };
     }
-    var locked = path.filter(function (sc) { return !escUnlocked(sc); }).map(function (sc) { return { sc: sc, miss: escMissing(sc) }; })
-      .sort(function (a, b) { return a.miss.length - b.miss.length; });
-    if (locked.length) return { sc: locked[0].sc, open: false, miss: locked[0].miss };
     return { all3: true };
   }
   function renderHoy() {
@@ -7694,18 +7704,18 @@
     var toScenes = function () { setMainTab("play"); openEscenas(true); };
     if (sp && sp.all3) {
       box.appendChild(hoyCard({ id: "hoy-play", kicker: t("hoy_k_play"), title: t("hoy_play_all3"), btn: t("hoy_play_go"), onGo: function () { setMainTab("play"); } }));
+    } else if (sp && sp.prep && sp.prep.total && sp.prep.ratio < ESC_PREP_SHARE) {
+      // (2026-11-09) not ready yet: Hoy suggests getting ready with its list
+      var scp = escCast(sp.sc);
+      box.appendChild(hoyCard({ id: "hoy-play", kicker: t("hoy_k_play"), title: t("hoy_quote", { name: topicText(scp.name) }),
+        sub: t(sp.prep.src === "list" ? "esc_prep_list" : "esc_prep_scene", { n: sp.prep.done, total: sp.prep.total }),
+        btn: t(sp.prep.src === "list" ? "esc_prep_practice_list" : "esc_prep_practice_scene"), onGo: function () { escPrepPractice(sp.sc, sp.prep); },
+        link: t("hoy_play_btn"), onLink: function () { setMainTab("play"); openEscenas(true, sp.sc.id); } }));
     } else if (sp && sp.open) {
       var sc = escCast(sp.sc);
       box.appendChild(hoyCard({ id: "hoy-play", kicker: t("hoy_k_play"), title: t("hoy_quote", { name: topicText(sc.name) }),
         sub: sp.best.plays ? t("hoy_play_best", { stars: "★★★".slice(0, sp.best.stars) || "—" }) : t("hoy_play_new"),
         btn: t("hoy_play_btn"), onGo: function () { setMainTab("play"); openEscenas(true, sp.sc.id); },
-        link: t("hoy_all_scenes", { what: t("esc_title") }), onLink: toScenes }));
-    } else if (sp) {
-      var scl = escCast(sp.sc), n = sp.miss.length;
-      box.appendChild(hoyCard({ id: "hoy-play", kicker: t("hoy_k_play"), title: t("hoy_quote", { name: topicText(scl.name) }),
-        sub: t(n === 1 ? "hoy_play_locked_one" : "hoy_play_locked", { n: n }),
-        btn: t(n === 1 ? "hoy_play_practice_one" : "hoy_play_practice", { n: n }),
-        onGo: function () { startPracticeDeck(escPrepDeck(sp.sc, sp.miss.map(function (it) { return it.id; }))); },
         link: t("hoy_all_scenes", { what: t("esc_title") }), onLink: toScenes }));
     }
 
@@ -16543,11 +16553,47 @@
     st.units.forEach(function (u) { byId[u.formKey] = u; });
     return tp.items.filter(function (it) { var u = byId[it.id]; return !(u && u.last && u.last.grade === "bien"); });
   }
-  function escUnlocked(sc) {
-    if (sc.open || sc.charla || escBest(sc.id).plays) return true; // a charla is open from the start (mason, 2026-11-06)
+  // No lock any more (2026-11-09, mason picked option C of the board
+  // escenas-gate-options.png: "locking the scene out behind the few specific
+  // keywords feels a little limp"). Every scene is open; how ready you are
+  // shows as a preparation bar from the scene's list (escPrep), and the start
+  // screen leads with «Practicar su lista» until you're halfway there.
+  function escUnlocked(sc) { return true; }
+  var ESC_PREP_SHARE = 0.5;
+  // How much of the scene's list (or, without the list, of its own phrases)
+  // was last answered Bien, in any mode: { src, list, done, total, ratio }.
+  function escPrep(sc, P) {
+    var l = escOwnList(sc);
+    var items = l ? (l.data.items || []) : [];
+    if (items.length) {
+      P = P || computeProgress(practiceAllRows());
+      var lastVerb = {};
+      Object.keys(P.units).forEach(function (k) {
+        var u = P.units[k];
+        if (u.kind !== "verb" || !u.last) return;
+        var cur = lastVerb[u.itemKey];
+        if (!cur || u.last.at > cur.at) lastVerb[u.itemKey] = u.last;
+      });
+      var done = items.filter(function (it) {
+        var last = it.type === "verb" ? lastVerb[it.key] : (P.units[unitKey(it.type, it.key, null)] || {}).last;
+        return !!(last && last.grade === "bien");
+      }).length;
+      return { src: "list", list: l, done: done, total: items.length, ratio: done / items.length };
+    }
     var tp = escTopic(sc);
-    if (!tp || !tp.items.length) return true;
-    return 1 - escMissing(sc).length / tp.items.length >= ESC_READY_SHARE;
+    var total = tp ? tp.items.length : 0, miss = total ? escMissing(sc).length : 0;
+    return { src: "scene", list: null, done: total - miss, total: total, ratio: total ? (total - miss) / total : 1 };
+  }
+  function escPrepPractice(sc, prep) {
+    if (prep.src === "list") startPracticeDeck(cardsForListRows(prep.list.data.rawItems));
+    else startPracticeDeck(escPrepDeck(sc));
+  }
+  function escPrepBar(prep) {
+    var bar = progEl("div", "esc-prep-bar");
+    var fill = progEl("i");
+    fill.style.width = Math.round(100 * Math.min(1, prep.ratio)) + "%";
+    bar.appendChild(fill);
+    return bar;
   }
   function escGaps(it) { var g = []; topicPieces(it.es).forEach(function (pc) { if (pc.fill) g.push(pc.text); }); return g.length ? g.join(" … ") : topicPlain(it.es); }
   function escPrepDeck(sc, ids) {
@@ -16601,7 +16647,7 @@
     var list = progEl("div", "esc-list");
     // the ones you can play first, then the rest, each in path order (2026-10-11)
     var ordered = charlas ? escCharlas() : escScenesOrder();
-    ordered = ordered.filter(escUnlocked).concat(ordered.filter(function (sc) { return !escUnlocked(sc); }));
+    var rowP = null; // the practice model, worked out once for the rows' bars
     ordered.forEach(function (sc) {
       var open = escUnlocked(sc), b = escBest(sc.id);
       var row = progEl(open ? "button" : "div", "esc-row" + (open ? "" : " is-locked"));
@@ -16612,7 +16658,10 @@
       var name = progEl("span", "esc-row-name", (open ? "" : "🔒 ") + topicText(cs.name));
       if (sc.roles.length > 1 && !sc.charla) name.appendChild(progEl("span", "esc-two", t("esc_two_voices")));
       top.appendChild(name);
-      if (!sc.charla) top.appendChild(escStarsNode(b.stars)); // a charla has no score
+      if (!sc.charla) {
+        if (b.plays) top.appendChild(escStarsNode(b.stars)); // a charla has no score
+        else { var pp = escPrep(sc, rowP || (rowP = computeProgress(practiceAllRows()))); if (pp.total) { var mini = escPrepBar(pp); mini.classList.add("is-mini"); mini.setAttribute("aria-label", t(pp.src === "list" ? "esc_prep_list" : "esc_prep_scene", { n: pp.done, total: pp.total })); top.appendChild(mini); } }
+      }
       row.appendChild(top);
       var miss = open ? [] : escMissing(sc);
       row.appendChild(progEl("div", "esc-row-sub", open ? topicText(cs.sub) + " · " + t(sc.charla ? "ch_turns" : "esc_turns", { n: escSceneTurns(sc) }) : t("esc_missing_n", { n: miss.length })));
@@ -16764,14 +16813,13 @@
       });
       box.appendChild(tchips);
     });
-    var tp = escTopic(sc);
-    if (tp) {
-      box.appendChild(progEl("div", "esc-label", t("esc_uses")));
-      var chips = progEl("div", "esc-chips");
-      tp.items.forEach(function (it) { chips.appendChild(progEl("span", "esc-chip", escGaps(it))); });
-      box.appendChild(chips);
-    }
     var b = escBest(sc.id);
+    var prep = sc.charla ? null : escPrep(sc);
+    if (prep && prep.total) {
+      box.appendChild(progEl("div", "esc-label", t("esc_prep")));
+      box.appendChild(escPrepBar(prep));
+      box.appendChild(progEl("p", "esc-prep-meta", t(prep.src === "list" ? "esc_prep_list" : "esc_prep_scene", { n: prep.done, total: prep.total })));
+    }
     if (sc.charla) {
       box.appendChild(progEl("p", "esc-ahead-note ch-note", t("ch_no_score")));
       if (b.plays) box.appendChild(progEl("p", "esc-best", t(b.plays === 1 ? "ch_plays_one" : "ch_plays", { n: b.plays })));
@@ -16782,16 +16830,17 @@
       box.appendChild(best);
     }
     if (!escCanPlay()) box.appendChild(progEl("p", "form-msg is-warn", t(quietMode ? "esc_needs_sound" : "speak_unsupported")));
-    var start = progButton(t("esc_start"), true, function () { escStart(sc); });
+    // Until you're halfway through its list (and haven't played it), the big
+    // button prepares you; then «Empezar» takes over.
+    var ready = !prep || !prep.total || prep.ratio >= ESC_PREP_SHARE || b.plays > 0;
+    var start = progButton(t(ready ? "esc_start" : "esc_start_anyway"), ready, function () { escStart(sc); });
     start.id = "esc-start";
     start.classList.add("esc-start");
     start.disabled = !escCanPlay();
-    box.appendChild(start);
-    if (tp) {
-      var pr = progButton(t("esc_practice_all"), false, function () { startPracticeDeck(escPrepDeck(sc)); });
-      pr.classList.add("esc-practice");
-      box.appendChild(pr);
-    }
+    var pr = prep && prep.total ? progButton(t(prep.src === "list" ? "esc_prep_practice_list" : "esc_prep_practice_scene"), !ready, function () { escPrepPractice(sc, prep); }) : null;
+    if (pr) pr.classList.add("esc-practice");
+    if (ready) { box.appendChild(start); if (pr) box.appendChild(pr); }
+    else { box.appendChild(pr); box.appendChild(start); }
     escListButton(sc, box);
   }
 
@@ -16828,7 +16877,7 @@
         loadLists().then(function () { var l = escOwnList(sc); if (l) escOpenList(l.id); else btn.disabled = false; });
       });
     });
-    btn.classList.add("esc-practice", "esc-list-btn");
+    btn.className = "esc-list-btn esc-list-link";
     box.appendChild(btn);
     if (have) return;
     btn.style.display = "none";
