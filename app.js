@@ -4093,8 +4093,8 @@
     Object.keys(TTS_VOICES).forEach(function (vk) { byName[TTS_VOICES[vk]] = vk; });
     var jobs = [];
     warmPlan.sets.forEach(function (s) {
-      if (s.pairs) s.pairs.forEach(function (pr) { jobs.push({ g: s.key, vk: byName[pr.voice], voice: pr.voice, text: pr.text }); });
-      else Object.keys(TTS_VOICES).forEach(function (vk) { s.texts.forEach(function (tx) { jobs.push({ g: s.key, vk: vk, voice: TTS_VOICES[vk], text: tx }); }); });
+      if (s.pairs) s.pairs.forEach(function (pr) { jobs.push({ g: s.key, vk: byName[pr.voice], voice: pr.voice, text: ttsSayAs(pr.text) }); });
+      else Object.keys(TTS_VOICES).forEach(function (vk) { s.texts.forEach(function (tx) { jobs.push({ g: s.key, vk: vk, voice: TTS_VOICES[vk], text: ttsSayAs(tx) }); }); });
     });
     var elJobs = [];
     Object.keys(ELEVEN_VOICES).forEach(function (vk) {
@@ -4699,8 +4699,8 @@
     var voices = warmVoiceList(), jobs = [];
     warmPlan.sets.forEach(function (s) {
       if (!warmPicked[s.key]) return;
-      if (s.pairs) { s.pairs.forEach(function (pr) { if (voices.indexOf(pr.voice) !== -1) jobs.push({ text: pr.text, voice: pr.voice }); }); return; }
-      voices.forEach(function (voice) { s.texts.forEach(function (text) { jobs.push({ text: text, voice: voice }); }); });
+      if (s.pairs) { s.pairs.forEach(function (pr) { if (voices.indexOf(pr.voice) !== -1) jobs.push({ text: ttsSayAs(pr.text), voice: pr.voice }); }); return; }
+      voices.forEach(function (voice) { s.texts.forEach(function (text) { jobs.push({ text: ttsSayAs(text), voice: voice }); }); });
     });
     if (!jobs.length) return;
     var fr = warmFreeRoom();
@@ -6221,7 +6221,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "218";
+  var VOSEA_BUILD = "221";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -9773,11 +9773,21 @@
   var verbGlossFailures = 0;
   var verbGlossPriorityId = null; // a verb just saved in the form jumps the queue
   var verbGlossFirst = new Set(); // the verbs in the open deck
+  // 2026-11-09 (mason: list verbs on Escuchar cards still showed "(to pick
+  // up; to collect)"): a list that's switched off is practiced from the
+  // list's own version — fresh data objects that aren't in allVerbs, so the
+  // queue never saw them. Those go in verbGlossExtra (ids "b:x:…", so they're
+  // never saved), and every English set fetched this session is kept by
+  // fingerprint (verbGlossMemo) so the next deck built from the same list
+  // gets it at once.
+  var verbGlossExtra = [];
+  var verbGlossMemo = {};
 
   function verbGlossNext() {
     var pending = function (v) { return verbNeedsGloss(v.data) && !verbGlossAttempted.has(v.id + ":" + verbGlossSig(v.data)); };
     return allVerbs.find(function (v) { return v.id === verbGlossPriorityId && pending(v); }) ||
       (verbGlossFirst.size ? allVerbs.find(function (v) { return verbGlossFirst.has(v.id) && pending(v); }) : null) ||
+      verbGlossExtra.find(pending) ||
       allVerbs.find(pending);
   }
   function queueVerbGlosses() {
@@ -9799,12 +9809,20 @@
   // the verbs of a deck being opened jump the queue
   function verbGlossPrioritize(cards) {
     verbGlossFirst = new Set();
+    var extra = false;
     (cards || []).forEach(function (c) {
       if (c.kind !== "verb" || !verbNeedsGloss(c.data)) return;
+      var sig = verbGlossSig(c.data);
+      if (verbGlossMemo[sig]) { c.data.forms_en = verbGlossMemo[sig]; c.data.forms_en_sig = sig; return; }
       var v = allVerbs.find(function (x) { return x.data === c.data; });
-      if (v) verbGlossFirst.add(v.id);
+      if (v) { verbGlossFirst.add(v.id); return; }
+      // the same verb elsewhere (your own copy, or the list switched on) may already have it
+      var twin = allVerbs.find(function (x) { return x.data.forms_en && x.data.forms_en_sig === sig; });
+      if (twin) { c.data.forms_en = twin.data.forms_en; c.data.forms_en_sig = sig; return; }
+      if (!verbGlossExtra.some(function (x) { return x.data === c.data; })) verbGlossExtra.push({ id: "b:x:" + sig, data: c.data });
+      extra = true;
     });
-    if (verbGlossFirst.size) queueVerbGlosses();
+    if (verbGlossFirst.size || extra) queueVerbGlosses();
   }
   function verbGlossResume() {
     if (!verbGlossDisabled || Date.now() - verbGlossDisabledAt < 5 * 60000) return;
@@ -9873,6 +9891,8 @@
         [data, current && current.data].forEach(function (d) {
           if (d && verbGlossSig(d) === sig) { d.forms_en = glosses; d.forms_en_sig = sig; }
         });
+        verbGlossMemo[sig] = glosses;
+        verbGlossExtra = verbGlossExtra.filter(function (x) { return x.data !== data; });
         refreshOpenFlashCardSub(); // the card on screen shows it right away
         var d = res.data;
         console.info("[verb-gloss] " + data.infinitive + ": " + Object.keys(glosses).length + "/" + entries.length + " forms in " + (Date.now() - started) + " ms" +
@@ -10307,8 +10327,17 @@
   // its own voice. Without it, the voice from Configuración.
   function ttsVoiceName(vk) { return vk && ELEVEN_VOICES[vk] ? "eleven:" + vk : TTS_VOICES[vk && TTS_VOICES[vk] ? vk : ttsVoiceKey]; }
   // opts (ElevenLabs only): { tag, take } — part of which clip it is
+  // What the voice is asked to say (2026-11-08, mason: the card «y · and»
+  // was read "i griega", the letter's name). A lone «y» is the conjunction
+  // everywhere it's a card or a line (the Abecedario speaks letter names,
+  // «ye» / «i griega», never a bare y), and «i» sounds exactly like it.
+  function ttsSayAs(text) {
+    var t0 = String(text || "").trim();
+    return /^[yY][.!?…]*$/.test(t0) ? "i" : t0;
+  }
+  window.voseaTtsSayAs = function (t0) { return ttsSayAs(t0); }; // tests
   function ttsKey(text, vk, opts) {
-    var k = ttsVoiceName(vk) + "\u0000" + String(text || "").trim();
+    var k = ttsVoiceName(vk) + "\u0000" + ttsSayAs(text);
     if (vk && ELEVEN_VOICES[vk]) k += "\u0000" + ((opts && opts.tag) || "") + "\u0000" + ((opts && opts.take) || 0) + (opts && opts.lang === "en" ? "\u0000en" : "");
     return k;
   }
@@ -10346,7 +10375,7 @@
     // while; clips already known keep playing. (ElevenLabs lines are only
     // looked up, never made here, so they aren't held back.)
     if (!eleven && ttsLimitHit && Date.now() < ttsLimitHit.until) return Promise.reject(ttsLimitError(ttsLimitHit.code));
-    var body = { text: String(text).trim(), voice: ttsVoiceName(vk) };
+    var body = { text: ttsSayAs(text), voice: ttsVoiceName(vk) };
     if (eleven) { body.tag = (opts && opts.tag) || ""; body.take = (opts && opts.take) || 0; if (opts && opts.lang === "en") body.lang = "en"; }
     return supabaseClient.functions.invoke("tts", { body: body })
       .then(function (res) {
@@ -14040,7 +14069,7 @@
     ["preguntas", "A1"], ["demostrativos", "A1"], ["gustar", "A1"], ["cuantos", "A1"], ["hay-que", "A1"],
     ["ir-a", "A1"], ["dia-a-dia", "A1"], ["comparativos", "A1"], ["se-impersonal", "A1"], ["ciudad", "A1"],
     ["saber-poder", "A2"], ["gerundio", "A2"], ["preterito", "A2"], ["ya-todavia", "A2"], ["empezar-terminar", "A2"],
-    ["objeto-directo", "A2"],
+    ["objeto-directo", "A2"], ["lo-que", "A2"],
     ["imperfecto", "A2"], ["historia", "A2"], ["ser-estar-pasado", "A2"],
     // Objeto indirecto and Me lo · se lo sit next to the imperative, as in
     // Aula del Sur 2, U11 (2026-10-11, the new flow)
@@ -14318,7 +14347,7 @@
     ] },
     { lvl: "A2", title: L("Moverte solo", "Getting around on your own"), groups: [
       { name: L("Lo que podés y lo que pasó", "What you can do and what happened"), temas: ["saber-poder", "gerundio", "preterito", "ya-todavia", "empezar-terminar"] },
-      { name: L("Lo y la", "Lo and la"), temas: ["objeto-directo"] },
+      { name: L("Lo y la", "Lo and la"), temas: ["objeto-directo", "lo-que"] }, // «Lo que, lo bueno» (2026-11-08)
       // «Ser y estar en pasado» (2026-10-29, mason: "I have a lot of trouble
       // with them in past tense") after the imperfect and the story Tema
       { name: L("Antes y después", "Then and now"), temas: ["imperfecto", "historia", "ser-estar-pasado"] },

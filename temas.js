@@ -8,6 +8,11 @@
 // dejar de…; source /home/claude/tema-fases/add/empezar-terminar.json).
 // 2026-10-29: «Ser y estar en pasado» added (era / fue, estaba / estuvo,
 // ¿cómo estuvo?; source /home/claude/tema-fases/add/ser-estar-pasado.json).
+// Its items carry "chips": the tense of each verb, shown on the answer side
+// (mason: "indicate if the verb(s) in the preterito or imperfecto").
+// 2026-11-08: «Lo que, lo bueno» added (A2; lo que = la cosa que, lo que pasa es
+// que / lo que sea, qué or lo que, lo + adjective / lo de; source
+// /home/claude/tema-fases/add/lo-que.json).
 window.VOSEA_TEMAS = [
  {
   "id": "presentarse",
@@ -8102,364 +8107,728 @@ window.VOSEA_TEMAS = [
     "part": "era-fue",
     "es": "Mi abuela [era] muy cariñosa con todos.",
     "en": "My grandma was very affectionate with everyone.",
-    "p": "era · cómo era"
+    "p": "era · cómo era",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     }
+    ]
    },
    {
     "id": "sep02",
     "part": "era-fue",
     "es": "Cuando [era] chico, vivía en un pueblo.",
     "en": "When I was a kid, I lived in a small town.",
-    "p": "era · la edad, de fondo"
+    "p": "era · la edad, de fondo",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     }
+    ]
    },
    {
     "id": "sep03",
     "part": "era-fue",
     "es": "[Eran] las once cuando llegamos.",
     "en": "It was eleven when we got there.",
-    "p": "eran · la hora"
+    "p": "eran · la hora",
+    "chips": [
+     {
+      "es": "eran: imperfecto",
+      "en": "eran: imperfect"
+     }
+    ]
    },
    {
     "id": "sep04",
     "part": "era-fue",
     "es": "La casa de mis viejos [era] enorme.",
     "en": "My parents' house was huge.",
-    "p": "era · descripción"
+    "p": "era · descripción",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     }
+    ]
    },
    {
     "id": "sep05",
     "part": "era-fue",
     "es": "El recital [fue] en el Luna Park.",
     "en": "The concert was at Luna Park.",
-    "p": "fue · dónde fue un evento"
+    "p": "fue · dónde fue un evento",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep06",
     "part": "era-fue",
     "es": "[Fue] un día larguísimo.",
     "en": "It was a really long day.",
-    "p": "fue · un día terminado"
+    "p": "fue · un día terminado",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep07",
     "part": "era-fue",
     "es": "¿Cómo [fue] la entrevista?",
     "en": "How did the interview go?",
-    "p": "fue · cómo salió"
+    "p": "fue · cómo salió",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep08",
     "part": "era-fue",
     "es": "Ese verano [fue] el mejor de mi vida.",
     "en": "That summer was the best of my life.",
-    "p": "fue · un tiempo cerrado"
+    "p": "fue · un tiempo cerrado",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep09",
     "part": "era-fue",
     "es": "Antes este barrio [era] muy tranquilo.",
     "en": "This neighborhood used to be really quiet.",
-    "p": "era · antes"
+    "p": "era · antes",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     }
+    ]
    },
    {
     "id": "sep10",
     "part": "era-fue",
     "es": "¿Vos [eras] el más chico de tu familia?",
     "en": "Were you the youngest in your family?",
-    "p": "eras · vos"
+    "p": "eras · vos",
+    "chips": [
+     {
+      "es": "eras: imperfecto",
+      "en": "eras: imperfect"
+     }
+    ]
    },
    {
     "id": "sep11",
     "part": "era-fue",
     "es": "[Fue] mi profe de inglés durante tres años.",
     "en": "She was my English teacher for three years.",
-    "p": "fue · un tiempo con límite"
+    "p": "fue · un tiempo con límite",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep12",
     "part": "era-fue",
     "es": "La película [era] en blanco y negro.",
     "en": "The movie was in black and white.",
-    "p": "era · cómo era"
+    "p": "era · cómo era",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     }
+    ]
    },
    {
     "id": "sep13",
     "part": "era-fue",
     "es": "¿Quién [fue] el que llamó anoche?",
     "en": "Who was it that called last night?",
-    "p": "fue · quién, una vez"
+    "p": "fue · quién, una vez",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep14",
     "part": "estaba-estuvo",
     "es": "[Estaba] muy cansado, así que me fui a dormir.",
     "en": "I was really tired, so I went to bed.",
-    "p": "estaba · cómo estaba"
+    "p": "estaba · cómo estaba",
+    "chips": [
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep15",
     "part": "estaba-estuvo",
     "es": "[Estuve] enfermo toda la semana.",
     "en": "I was sick all week.",
-    "p": "estuve · un tiempo cerrado"
+    "p": "estuve · un tiempo cerrado",
+    "chips": [
+     {
+      "es": "estuve: pretérito",
+      "en": "estuve: preterite"
+     }
+    ]
    },
    {
     "id": "sep16",
     "part": "estaba-estuvo",
     "es": "¿Dónde [estabas] cuando te llamé?",
     "en": "Where were you when I called you?",
-    "p": "estabas · vos, dónde"
+    "p": "estabas · vos, dónde",
+    "chips": [
+     {
+      "es": "estabas: imperfecto",
+      "en": "estabas: imperfect"
+     }
+    ]
    },
    {
     "id": "sep17",
     "part": "estaba-estuvo",
     "es": "[Estuvimos] tres días en Mendoza.",
     "en": "We were in Mendoza for three days.",
-    "p": "estuvimos · cuánto tiempo"
+    "p": "estuvimos · cuánto tiempo",
+    "chips": [
+     {
+      "es": "estuvimos: pretérito",
+      "en": "estuvimos: preterite"
+     }
+    ]
    },
    {
     "id": "sep18",
     "part": "estaba-estuvo",
     "es": "El súper ya [estaba] cerrado.",
     "en": "The supermarket was already closed.",
-    "p": "estaba · cómo estaba"
+    "p": "estaba · cómo estaba",
+    "chips": [
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep19",
     "part": "estaba-estuvo",
     "es": "¿[Estuviste] alguna vez en Bariloche?",
     "en": "Have you ever been to Bariloche?",
-    "p": "estuviste · alguna vez"
+    "p": "estuviste · alguna vez",
+    "chips": [
+     {
+      "es": "estuviste: pretérito",
+      "en": "estuviste: preterite"
+     }
+    ]
    },
    {
     "id": "sep20",
     "part": "estaba-estuvo",
     "es": "El café [estaba] helado.",
     "en": "The coffee was ice cold.",
-    "p": "estaba · cómo estaba"
+    "p": "estaba · cómo estaba",
+    "chips": [
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep21",
     "part": "estaba-estuvo",
     "es": "[Estuve] dos horas en la fila del banco.",
     "en": "I was in line at the bank for two hours.",
-    "p": "estuve · cuánto tiempo"
+    "p": "estuve · cuánto tiempo",
+    "chips": [
+     {
+      "es": "estuve: pretérito",
+      "en": "estuve: preterite"
+     }
+    ]
    },
    {
     "id": "sep22",
     "part": "estaba-estuvo",
     "es": "Mi hermana [estaba] de vacaciones en Brasil.",
     "en": "My sister was on vacation in Brazil.",
-    "p": "estaba de vacaciones"
+    "p": "estaba de vacaciones",
+    "chips": [
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep23",
     "part": "estaba-estuvo",
     "es": "Ayer [estuvo] nublado todo el día.",
     "en": "Yesterday it was cloudy all day.",
-    "p": "estuvo · el día entero"
+    "p": "estuvo · el día entero",
+    "chips": [
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep24",
     "part": "estaba-estuvo",
     "es": "Cuando entré, todos [estaban] en la cocina.",
     "en": "When I walked in, everyone was in the kitchen.",
-    "p": "estaban · la escena"
+    "p": "estaban · la escena",
+    "chips": [
+     {
+      "es": "estaban: imperfecto",
+      "en": "estaban: imperfect"
+     }
+    ]
    },
    {
     "id": "sep25",
     "part": "estaba-estuvo",
     "es": "¿Cuánto tiempo [estuviste] en el hospital?",
     "en": "How long were you in the hospital?",
-    "p": "estuviste · cuánto tiempo"
+    "p": "estuviste · cuánto tiempo",
+    "chips": [
+     {
+      "es": "estuviste: pretérito",
+      "en": "estuviste: preterite"
+     }
+    ]
    },
    {
     "id": "sep26",
     "part": "estaba-estuvo",
     "es": "[Estaba] nerviosa antes del examen.",
     "en": "I was nervous before the exam.",
-    "p": "estaba · el ánimo"
+    "p": "estaba · el ánimo",
+    "chips": [
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep27",
     "part": "ser-o-estar",
     "es": "La fiesta [fue] en lo de Martín, pero él no [estaba].",
     "en": "The party was at Martín's place, but he wasn't there.",
-    "p": "un evento: fue · una persona: estaba"
+    "p": "un evento: fue · una persona: estaba",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep28",
     "part": "ser-o-estar",
     "es": "El chico [era] simpático, pero ese día [estaba] de mal humor.",
     "en": "The guy was nice, but that day he was in a bad mood.",
-    "p": "cómo era · cómo estaba"
+    "p": "cómo era · cómo estaba",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep29",
     "part": "ser-o-estar",
     "es": "El restaurante [era] caro, pero la comida [estaba] buenísima.",
     "en": "The restaurant was expensive, but the food was amazing.",
-    "p": "era caro · estaba buenísima"
+    "p": "era caro · estaba buenísima",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep30",
     "part": "ser-o-estar",
     "es": "[Era] tarde y [estábamos] todos cansados.",
     "en": "It was late and we were all tired.",
-    "p": "era tarde · estábamos cansados"
+    "p": "era tarde · estábamos cansados",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estábamos: imperfecto",
+      "en": "estábamos: imperfect"
+     }
+    ]
    },
    {
     "id": "sep31",
     "part": "ser-o-estar",
     "es": "Mi viejo [era] médico y siempre [estaba] de guardia.",
     "en": "My dad was a doctor and he was always on call.",
-    "p": "la profesión · estar de guardia"
+    "p": "la profesión · estar de guardia",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep32",
     "part": "ser-o-estar",
     "es": "[Fue] una sorpresa: no [estaba] en mis planes.",
     "en": "It was a surprise: it wasn't in my plans.",
-    "p": "fue + sustantivo · estar en"
+    "p": "fue + sustantivo · estar en",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep33",
     "part": "ser-o-estar",
     "es": "La clase [era] aburrida y yo [estaba] aburrido.",
     "en": "The class was boring and I was bored.",
-    "p": "ser aburrido · estar aburrido"
+    "p": "ser aburrido · estar aburrido",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep34",
     "part": "ser-o-estar",
     "es": "¿De dónde [era] tu profe? ¿[Estaba] contenta acá?",
     "en": "Where was your teacher from? Was she happy here?",
-    "p": "de dónde · cómo estaba"
+    "p": "de dónde · cómo estaba",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep35",
     "part": "ser-o-estar",
     "es": "El departamento [era] lindo, pero [estaba] sucio.",
     "en": "The apartment was nice, but it was dirty.",
-    "p": "cómo era · cómo estaba"
+    "p": "cómo era · cómo estaba",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep36",
     "part": "ser-o-estar",
     "es": "¿Ya [estabas] lista cuando llegó el taxi?",
     "en": "Were you ready when the taxi came?",
-    "p": "estar listo = preparado"
+    "p": "estar listo = preparado",
+    "chips": [
+     {
+      "es": "estabas: imperfecto",
+      "en": "estabas: imperfect"
+     }
+    ]
    },
    {
     "id": "sep37",
     "part": "ser-o-estar",
     "es": "[Era] la primera vez que [estaba] en Buenos Aires.",
     "en": "It was the first time I'd been in Buenos Aires.",
-    "p": "era la primera vez · estaba en"
+    "p": "era la primera vez · estaba en",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep38",
     "part": "ser-o-estar",
     "es": "La reunión [fue] a las diez y [estuvo] bastante bien.",
     "en": "The meeting was at ten and it went pretty well.",
-    "p": "fue a las · estuvo bien"
+    "p": "fue a las · estuvo bien",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     },
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep39",
     "part": "ser-o-estar",
     "es": "Mi abuelo [era] alto, pero de viejo [estaba] muy flaco.",
     "en": "My grandpa was tall, but in his old age he was very thin.",
-    "p": "cómo era · cómo estaba"
+    "p": "cómo era · cómo estaba",
+    "chips": [
+     {
+      "es": "era: imperfecto",
+      "en": "era: imperfect"
+     },
+     {
+      "es": "estaba: imperfecto",
+      "en": "estaba: imperfect"
+     }
+    ]
    },
    {
     "id": "sep40",
     "part": "como-estuvo",
     "es": "¿Cómo [estuvo] la fiesta? [Estuvo] buenísima.",
     "en": "How was the party? It was great.",
-    "p": "¿cómo estuvo? · estuvo buenísima"
+    "p": "¿cómo estuvo? · estuvo buenísima",
+    "chips": [
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep41",
     "part": "como-estuvo",
     "es": "La cena [estuvo] riquísima, gracias.",
     "en": "Dinner was delicious, thanks.",
-    "p": "estuvo · la comida"
+    "p": "estuvo · la comida",
+    "chips": [
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep42",
     "part": "como-estuvo",
     "es": "[Fue] un placer conocerte.",
     "en": "It was a pleasure to meet you.",
-    "p": "fue un placer"
+    "p": "fue un placer",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep43",
     "part": "como-estuvo",
     "es": "El partido [estuvo] re aburrido.",
     "en": "The game was really boring.",
-    "p": "estuvo re + adjetivo"
+    "p": "estuvo re + adjetivo",
+    "chips": [
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep44",
     "part": "como-estuvo",
     "es": "¿Qué tal [estuvo] el finde?",
     "en": "How was the weekend?",
-    "p": "¿qué tal estuvo?"
+    "p": "¿qué tal estuvo?",
+    "chips": [
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep45",
     "part": "como-estuvo",
     "es": "La mudanza [fue] un desastre.",
     "en": "The move was a disaster.",
-    "p": "fue + sustantivo"
+    "p": "fue + sustantivo",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep46",
     "part": "como-estuvo",
     "es": "[Estuvo] lindo el paseo por San Telmo.",
     "en": "The walk around San Telmo was nice.",
-    "p": "estuvo lindo"
+    "p": "estuvo lindo",
+    "chips": [
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep47",
     "part": "como-estuvo",
     "es": "¿Cómo te [fue] en el examen?",
     "en": "How did your exam go?",
-    "p": "te fue: es ir, no ser"
+    "p": "te fue: es ir, no ser",
+    "chips": [
+     {
+      "es": "fue (de ir): pretérito",
+      "en": "fue (from ir): preterite"
+     }
+    ]
    },
    {
     "id": "sep48",
     "part": "como-estuvo",
     "es": "Esa cena [fue] lo mejor del viaje.",
     "en": "That dinner was the best part of the trip.",
-    "p": "fue lo mejor"
+    "p": "fue lo mejor",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep49",
     "part": "como-estuvo",
     "es": "La película [estuvo] bien, nada más.",
     "en": "The movie was OK, nothing special.",
-    "p": "estuvo bien"
+    "p": "estuvo bien",
+    "chips": [
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep50",
     "part": "como-estuvo",
     "es": "El viaje [fue] largo, pero [estuvo] buenísimo.",
     "en": "The trip was long, but it was great.",
-    "p": "fue largo · estuvo buenísimo"
+    "p": "fue largo · estuvo buenísimo",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     },
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    },
    {
     "id": "sep51",
     "part": "como-estuvo",
     "es": "[Fue] una semana complicada en el laburo.",
     "en": "It was a rough week at work.",
-    "p": "fue + sustantivo"
+    "p": "fue + sustantivo",
+    "chips": [
+     {
+      "es": "fue: pretérito",
+      "en": "fue: preterite"
+     }
+    ]
    },
    {
     "id": "sep52",
     "part": "como-estuvo",
     "es": "¡[Estuvo] genial tu cumple!",
     "en": "Your birthday party was great!",
-    "p": "estuvo genial"
+    "p": "estuvo genial",
+    "chips": [
+     {
+      "es": "estuvo: pretérito",
+      "en": "estuvo: preterite"
+     }
+    ]
    }
   ]
  },
@@ -14117,6 +14486,442 @@ window.VOSEA_TEMAS = [
     "es": "Quería que me [recomendaras] una buena verdulería.",
     "en": "I wanted you to recommend a good produce store.",
     "p": "quería que + imp. subj."
+   }
+  ]
+ },
+ {
+  "id": "lo-que",
+  "name": {
+   "es": "Lo que, lo bueno",
+   "en": "Lo que and lo bueno"
+  },
+  "desc": {
+   "es": "Lo que pasa es que, lo que sea, ¿qué o lo que?, lo bueno, lo mejor, lo de siempre.",
+   "en": "Lo que pasa es que, lo que sea, qué or lo que, lo bueno, lo mejor, lo de siempre."
+  },
+  "intro": {
+   "es": "Lo que quiere decir «la cosa que»: «lo que más me gusta es caminar», «no entendí lo que dijo». Aparece en frases de todos los días: lo que pasa es que (para explicar), lo que sea, lo que quieras, es lo que hay. En las preguntas, y antes de un infinitivo o un sustantivo, va qué: «¿qué querés?», «no sé qué hacer». Y lo con un adjetivo habla de una parte de algo: lo bueno, lo malo, lo mejor, lo más difícil. Lo de algo es «el tema de»: lo de siempre.",
+   "en": "Lo que means “the thing that”: “lo que más me gusta es caminar,” “no entendí lo que dijo.” It shows up in everyday phrases: lo que pasa es que (to explain), lo que sea, lo que quieras, es lo que hay. In questions, and before an infinitive or a noun, it's qué: “¿qué querés?,” “no sé qué hacer.” And lo with an adjective talks about one part of something: lo bueno, lo malo, lo mejor, lo más difícil. Lo de something means “the matter of”: lo de siempre."
+  },
+  "tag": {
+   "es": "lo que · lo bueno",
+   "en": "lo que · lo bueno"
+  },
+  "fam": [
+   "articulos"
+  ],
+  "parts": [
+   {
+    "key": "lo-que",
+    "label": {
+     "es": "lo que = la cosa que",
+     "en": "lo que = the thing that"
+    }
+   },
+   {
+    "key": "frases",
+    "label": {
+     "es": "lo que pasa es que, lo que sea…",
+     "en": "set phrases: lo que pasa es que, lo que sea…"
+    }
+   },
+   {
+    "key": "que-o-lo-que",
+    "label": {
+     "es": "¿qué o lo que?",
+     "en": "qué or lo que?"
+    }
+   },
+   {
+    "key": "lo-adj",
+    "label": {
+     "es": "lo bueno, lo mejor, lo de",
+     "en": "lo bueno, lo mejor, lo de"
+    }
+   }
+  ],
+  "lesson": [
+   {
+    "f": "lo que + verbo = la cosa que · todo lo que = todas las cosas que",
+    "ex": "[Lo que] más me gusta es el mate. Gracias por [todo lo que] hiciste."
+   },
+   {
+    "f": "lo que pasa es que = la explicación · lo que sea, lo que quieras = cualquier cosa · por lo que = así que, según",
+    "ex": "[Lo que pasa es que] no llego. Elegí [lo que quieras]."
+   },
+   {
+    "f": "en una pregunta, y antes de un infinitivo o un sustantivo → qué · «la cosa que» → lo que",
+    "ex": "¿[Qué] querés? No sé [qué] hacer. Me gusta [lo que] hacés."
+   },
+   {
+    "f": "lo + adjetivo = la parte… · lo más + adjetivo · lo de + algo = el tema de",
+    "ex": "[Lo bueno] es que queda cerca. [Lo de siempre], por favor."
+   }
+  ],
+  "items": [
+   {
+    "id": "lq01",
+    "part": "lo-que",
+    "es": "[Lo que] más me gusta de Buenos Aires son los cafés.",
+    "en": "What I like most about Buenos Aires is the cafés.",
+    "p": "lo que = la cosa que"
+   },
+   {
+    "id": "lq02",
+    "part": "lo-que",
+    "es": "No entendí [lo que] dijo el profe.",
+    "en": "I didn't understand what the teacher said.",
+    "p": "lo que + verbo"
+   },
+   {
+    "id": "lq03",
+    "part": "lo-que",
+    "es": "¿Esto es [lo que] pediste?",
+    "en": "Is this what you ordered?",
+    "p": "lo que"
+   },
+   {
+    "id": "lq04",
+    "part": "lo-que",
+    "es": "Contame [lo que] pasó ayer.",
+    "en": "Tell me what happened yesterday.",
+    "p": "contame lo que"
+   },
+   {
+    "id": "lq05",
+    "part": "lo-que",
+    "es": "[Lo que] necesito es dormir una siesta.",
+    "en": "What I need is to take a nap.",
+    "p": "lo que … es"
+   },
+   {
+    "id": "lq06",
+    "part": "lo-que",
+    "es": "Comprá [lo que] falta para la cena.",
+    "en": "Buy whatever's missing for dinner.",
+    "p": "lo que falta"
+   },
+   {
+    "id": "lq07",
+    "part": "lo-que",
+    "es": "Eso es justo [lo que] estaba buscando.",
+    "en": "That's exactly what I was looking for.",
+    "p": "justo lo que"
+   },
+   {
+    "id": "lq08",
+    "part": "lo-que",
+    "es": "Me olvidé de [lo que] tenía que hacer.",
+    "en": "I forgot what I had to do.",
+    "p": "de lo que"
+   },
+   {
+    "id": "lq09",
+    "part": "lo-que",
+    "es": "[Todo lo que] tengo entra en esta valija.",
+    "en": "Everything I have fits in this suitcase.",
+    "p": "todo lo que"
+   },
+   {
+    "id": "lq10",
+    "part": "lo-que",
+    "es": "Gracias por [todo lo que] hiciste.",
+    "en": "Thanks for everything you did.",
+    "p": "todo lo que"
+   },
+   {
+    "id": "lq11",
+    "part": "lo-que",
+    "es": "[Lo que] me dijiste me ayudó mucho.",
+    "en": "What you told me helped me a lot.",
+    "p": "lo que al principio"
+   },
+   {
+    "id": "lq12",
+    "part": "lo-que",
+    "es": "No creas todo [lo que] leés en internet.",
+    "en": "Don't believe everything you read online.",
+    "p": "todo lo que · vos"
+   },
+   {
+    "id": "lq13",
+    "part": "lo-que",
+    "es": "Eso no es [lo que] te pregunté.",
+    "en": "That's not what I asked you.",
+    "p": "lo que"
+   },
+   {
+    "id": "lq14",
+    "part": "frases",
+    "es": "[Lo que pasa es que] no tengo tiempo.",
+    "en": "The thing is, I don't have time.",
+    "p": "lo que pasa es que = la explicación"
+   },
+   {
+    "id": "lq15",
+    "part": "frases",
+    "es": "Quería ir, pero [lo que pasa es que] llueve.",
+    "en": "I wanted to go, but the thing is, it's raining.",
+    "p": "lo que pasa es que"
+   },
+   {
+    "id": "lq16",
+    "part": "frases",
+    "es": "—¿Qué querés comer? —[Lo que sea].",
+    "en": "“What do you want to eat?” “Whatever.”",
+    "p": "lo que sea = cualquier cosa"
+   },
+   {
+    "id": "lq17",
+    "part": "frases",
+    "es": "Pedí [lo que quieras], invito yo.",
+    "en": "Order whatever you want, it's on me.",
+    "p": "lo que quieras · subjuntivo"
+   },
+   {
+    "id": "lq18",
+    "part": "frases",
+    "es": "Ayudame con [lo que puedas].",
+    "en": "Help me with whatever you can.",
+    "p": "lo que puedas"
+   },
+   {
+    "id": "lq19",
+    "part": "frases",
+    "es": "No hay otra cosa: [es lo que hay].",
+    "en": "There's nothing else: it is what it is.",
+    "p": "es lo que hay = no hay más"
+   },
+   {
+    "id": "lq20",
+    "part": "frases",
+    "es": "Llegué tarde, [por lo que] me perdí el principio.",
+    "en": "I got there late, so I missed the beginning.",
+    "p": "por lo que = así que"
+   },
+   {
+    "id": "lq21",
+    "part": "frases",
+    "es": "Hacé [lo que te parezca].",
+    "en": "Do whatever you think is best.",
+    "p": "lo que te parezca"
+   },
+   {
+    "id": "lq22",
+    "part": "frases",
+    "es": "[A lo que voy] es que hay que salir antes.",
+    "en": "My point is we need to leave earlier.",
+    "p": "a lo que voy = lo que quiero decir"
+   },
+   {
+    "id": "lq23",
+    "part": "frases",
+    "es": "[Lo que te digo] es que el subte está cerrado.",
+    "en": "What I'm telling you is the subway is closed.",
+    "p": "lo que te digo es que"
+   },
+   {
+    "id": "lq24",
+    "part": "frases",
+    "es": "Pagá con [lo que tengas], después vemos.",
+    "en": "Pay with whatever you have, we'll sort it out later.",
+    "p": "lo que tengas"
+   },
+   {
+    "id": "lq25",
+    "part": "frases",
+    "es": "[Por lo que] me contaron, el lugar está bueno.",
+    "en": "From what they told me, the place is good.",
+    "p": "por lo que = según"
+   },
+   {
+    "id": "lq26",
+    "part": "frases",
+    "es": "Comé [lo que haya] en la heladera.",
+    "en": "Eat whatever's in the fridge.",
+    "p": "lo que haya"
+   },
+   {
+    "id": "lq27",
+    "part": "que-o-lo-que",
+    "es": "¿[Qué] querés hacer hoy?",
+    "en": "What do you want to do today?",
+    "p": "pregunta → qué"
+   },
+   {
+    "id": "lq28",
+    "part": "que-o-lo-que",
+    "es": "Me encanta [lo que] cocinás.",
+    "en": "I love what you cook.",
+    "p": "la cosa que → lo que"
+   },
+   {
+    "id": "lq29",
+    "part": "que-o-lo-que",
+    "es": "¿[Qué] dijiste? No te escuché.",
+    "en": "What did you say? I didn't hear you.",
+    "p": "pregunta → qué"
+   },
+   {
+    "id": "lq30",
+    "part": "que-o-lo-que",
+    "es": "Repetí [lo que] dijiste, por favor.",
+    "en": "Repeat what you said, please.",
+    "p": "la cosa que → lo que"
+   },
+   {
+    "id": "lq31",
+    "part": "que-o-lo-que",
+    "es": "No sé [qué] hacer el finde.",
+    "en": "I don't know what to do this weekend.",
+    "p": "qué + infinitivo"
+   },
+   {
+    "id": "lq32",
+    "part": "que-o-lo-que",
+    "es": "No me importa [lo que] piensen.",
+    "en": "I don't care what they think.",
+    "p": "lo que + subjuntivo"
+   },
+   {
+    "id": "lq33",
+    "part": "que-o-lo-que",
+    "es": "¿Sabés [qué] hora es?",
+    "en": "Do you know what time it is?",
+    "p": "qué + sustantivo"
+   },
+   {
+    "id": "lq34",
+    "part": "que-o-lo-que",
+    "es": "Hacé [lo que] te dije.",
+    "en": "Do what I told you.",
+    "p": "la cosa que → lo que"
+   },
+   {
+    "id": "lq35",
+    "part": "que-o-lo-que",
+    "es": "No sé [qué] decirte.",
+    "en": "I don't know what to tell you.",
+    "p": "qué + infinitivo"
+   },
+   {
+    "id": "lq36",
+    "part": "que-o-lo-que",
+    "es": "[Lo que] dijiste es cierto.",
+    "en": "What you said is true.",
+    "p": "la cosa que → lo que"
+   },
+   {
+    "id": "lq37",
+    "part": "que-o-lo-que",
+    "es": "¿[Qué] te parece el barrio?",
+    "en": "What do you think of the neighborhood?",
+    "p": "pregunta → qué"
+   },
+   {
+    "id": "lq38",
+    "part": "que-o-lo-que",
+    "es": "Me preguntó [qué] estaba haciendo.",
+    "en": "They asked me what I was doing.",
+    "p": "pregunta indirecta → qué"
+   },
+   {
+    "id": "lq39",
+    "part": "que-o-lo-que",
+    "es": "No es [lo que] parece.",
+    "en": "It's not what it looks like.",
+    "p": "la cosa que → lo que"
+   },
+   {
+    "id": "lq40",
+    "part": "lo-adj",
+    "es": "[Lo bueno] es que mañana no trabajo.",
+    "en": "The good thing is I'm off tomorrow.",
+    "p": "lo + adjetivo"
+   },
+   {
+    "id": "lq41",
+    "part": "lo-adj",
+    "es": "[Lo malo] es que queda lejos.",
+    "en": "The bad thing is it's far away.",
+    "p": "lo malo"
+   },
+   {
+    "id": "lq42",
+    "part": "lo-adj",
+    "es": "[Lo mejor] del viaje fue la comida.",
+    "en": "The best part of the trip was the food.",
+    "p": "lo mejor de"
+   },
+   {
+    "id": "lq43",
+    "part": "lo-adj",
+    "es": "[Lo peor] es el tránsito a la tarde.",
+    "en": "The worst part is the afternoon traffic.",
+    "p": "lo peor"
+   },
+   {
+    "id": "lq44",
+    "part": "lo-adj",
+    "es": "[Lo más difícil] es entender cuando hablan rápido.",
+    "en": "The hardest part is understanding when people talk fast.",
+    "p": "lo más + adjetivo"
+   },
+   {
+    "id": "lq45",
+    "part": "lo-adj",
+    "es": "[Lo raro] es que nadie contestó.",
+    "en": "The strange thing is nobody answered.",
+    "p": "lo raro"
+   },
+   {
+    "id": "lq46",
+    "part": "lo-adj",
+    "es": "[Lo único] que quiero es un café.",
+    "en": "The only thing I want is a coffee.",
+    "p": "lo único que"
+   },
+   {
+    "id": "lq47",
+    "part": "lo-adj",
+    "es": "[Lo lindo] de este barrio son los árboles.",
+    "en": "The nice thing about this neighborhood is the trees.",
+    "p": "lo lindo de"
+   },
+   {
+    "id": "lq48",
+    "part": "lo-adj",
+    "es": "[Lo importante] es que llegaste bien.",
+    "en": "The important thing is you got here safe.",
+    "p": "lo importante"
+   },
+   {
+    "id": "lq49",
+    "part": "lo-adj",
+    "es": "[Lo de siempre], por favor.",
+    "en": "The usual, please.",
+    "p": "lo de siempre"
+   },
+   {
+    "id": "lq50",
+    "part": "lo-adj",
+    "es": "¿Cómo quedó [lo de] mañana?",
+    "en": "So what's the plan for tomorrow?",
+    "p": "lo de + algo = el tema de"
+   },
+   {
+    "id": "lq51",
+    "part": "lo-adj",
+    "es": "No sabés [lo lindo] que es Bariloche.",
+    "en": "You have no idea how beautiful Bariloche is.",
+    "p": "lo + adjetivo + que = qué tan"
+   },
+   {
+    "id": "lq52",
+    "part": "lo-adj",
+    "es": "[Lo bueno] de vivir acá es que todo queda cerca.",
+    "en": "The good thing about living here is that everything's close by.",
+    "p": "lo bueno de + infinitivo"
    }
   ]
  }
