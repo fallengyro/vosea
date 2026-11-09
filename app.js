@@ -695,6 +695,8 @@
       esc_missing_intro: "Te faltan {n} de lo que usa esta escena:",
       esc_practice_these: "Practicar estas {n}",
       esc_practice_all: "Practicar lo que usa",
+      esc_list_open: "Ver su lista",
+      esc_list_add: "Agregar su lista",
       esc_who: "Quién habla",
       esc_noise: "Ruido de fondo",
       esc_noise_off: "No",
@@ -2141,6 +2143,8 @@
       esc_missing_intro: "You still need {n} of the things this scene uses:",
       esc_practice_these: "Practice these {n}",
       esc_practice_all: "Practice what it uses",
+      esc_list_open: "See its list",
+      esc_list_add: "Add its list",
       esc_who: "Who's talking",
       esc_noise: "Background noise",
       esc_noise_off: "Off",
@@ -6221,7 +6225,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "221";
+  var VOSEA_BUILD = "222";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -16445,6 +16449,7 @@
     var cast = escCast(u.sc, voices), r = cast.roles.find(function (x) { return x.key === u.role; });
     return topicText(cast.name) + " · " + topicText(r ? r.name : { es: u.role, en: u.role });
   }
+  window.voseaOpenEscena = function (id) { setMainTab("play"); openEscenas(true, id); }; // tests
   window.voseaEscVoices = function (id) { var sc = escById(id); return sc ? escVoices(sc) : null; }; // tests
   window.voseaElevenUnit = function (id, role, vk) { var sc = escById(id); return sc ? elevenUnit(sc, role, vk || "valeria") : null; }; // tests
 
@@ -16787,6 +16792,56 @@
       pr.classList.add("esc-practice");
       box.appendChild(pr);
     }
+    escListButton(sc, box);
+  }
+
+  // ---- the scene's list (2026-11-09, mason: "access the escenas practice
+  // list from the respective escenas") ----
+  // Every scene has a list «Escena · <name>» (its words, verbs and lines;
+  // C:\Dev\vosea data\escenas-listas, published for everyone). The start
+  // screen links to it: «Ver su lista» opens it in Colección → Listas when
+  // you have it; «Agregar su lista» adds it from the Biblioteca first. No
+  // button when neither (the list isn't published yet).
+  var escLibRows = null; // the Biblioteca, fetched once per session for this
+  function escListName(sc) {
+    return "Escena · " + String(sc.name.es || "").replace(/\{\w+:([^{}|]*)\|([^{}|]*)\}/g, "$2");
+  }
+  function escOwnList(sc) {
+    var n = norm(escListName(sc));
+    return allLists.find(function (l) { return norm(l.data.name || "") === n; }) || null;
+  }
+  function escOpenList(id) {
+    setMainTab("lists");
+    selectListRow(id);
+    try { window.scrollTo({ top: 0 }); } catch (e) {}
+  }
+  function escListButton(sc, box) {
+    var have = escOwnList(sc);
+    var btn = progButton(t(have ? "esc_list_open" : "esc_list_add"), false, function () {
+      var mine = escOwnList(sc);
+      if (mine) { escOpenList(mine.id); return; }
+      var row = (escLibRows || []).find(function (r) { return norm(r.name || "") === norm(escListName(sc)); });
+      if (!row) return;
+      btn.disabled = true;
+      Promise.resolve(supabaseClient.rpc("library_add", { p_entry: row.entry_id })).then(function (res) {
+        if (res.error) { btn.disabled = false; return; }
+        loadLists().then(function () { var l = escOwnList(sc); if (l) escOpenList(l.id); else btn.disabled = false; });
+      });
+    });
+    btn.classList.add("esc-practice", "esc-list-btn");
+    box.appendChild(btn);
+    if (have) return;
+    btn.style.display = "none";
+    var show = function () {
+      var name = norm(escListName(sc));
+      btn.style.display = (escLibRows || []).some(function (r) { return norm(r.name || "") === name; }) ? "" : "none";
+    };
+    if (escLibRows) { show(); return; }
+    if (!currentUser) return;
+    Promise.resolve(supabaseClient.rpc("library_lists")).then(function (res) {
+      escLibRows = (res && !res.error && Array.isArray(res.data)) ? res.data : [];
+      show();
+    }, function () { escLibRows = []; });
   }
 
   // ---- playing ----
