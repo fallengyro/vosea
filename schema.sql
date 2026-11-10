@@ -3834,3 +3834,179 @@ begin
   end loop;
   raise notice 'reflexive merge: % pair(s), % practice row(s) moved', nv, np;
 end $$;
+-- ===========================================================================
+-- 2026-11-10 — reflexive uses for the verbs you already have (build 227)
+-- ===========================================================================
+-- mason: "There are still many verbs that have a normal dative and
+-- reflexive form that don't show all three. For example tocar."
+-- The first file (pending_2026-11-10_reflexive.sql) only merged pairs an
+-- account already had (ir + irse). Verbs you only had as the plain verb got
+-- no reflexive use, and the lookup only fills a verb when it's looked up.
+-- This gives the reflexive use to 90 everyday verbs (list reviewed by mason:
+-- `reflexivos-2026-11-10.csv` in the data folder):
+--   1. your own verbs, in every account, that don't have one yet (one you
+--      wrote yourself is never replaced; -se-only verbs are left alone);
+--   2. the verbs in lists (list_items), so a list shows it too, and a list
+--      that has both «lavar» and «lavarse» keeps one «lavar» with the use;
+--   3. the copies in the Biblioteca (library_entries), the same way.
+-- Nothing moves in practice_log or Sabido: these uses are new.
+-- Run AFTER pending_2026-11-10_reflexive.sql. Safe to run twice.
+-- ===========================================================================
+
+begin;
+create temporary table refl_uses (inf text primary key, rdef text, rex text) on commit drop;
+insert into refl_uses (inf, rdef, rex) values
+  ('abotonar', 'to button up', 'Abotonate la campera, que hace frío.'),
+  ('abrir', 'to open (by itself); to open up (to someone)', 'La puerta se abrió sola.'),
+  ('acercar', 'to come closer', 'Acercate, que no te escucho.'),
+  ('acostar', 'to go to bed; to lie down', 'Anoche me acosté tarde.'),
+  ('afeitar', 'to shave', 'Me afeito todas las mañanas.'),
+  ('alejar', 'to move away', 'No te alejes mucho de la orilla.'),
+  ('animar', 'to dare; to feel up to', '¿Te animás a probar el mate?'),
+  ('apurar', 'to hurry up', 'Apurate, que perdemos el colectivo.'),
+  ('aprovechar', 'to take advantage (of someone)', 'No dejes que se aprovechen de vos.'),
+  ('arreglar', 'to get ready; to manage', 'Me arreglo y salimos.'),
+  ('asegurar', 'to make sure', 'Asegurate de cerrar la puerta.'),
+  ('aburrir', 'to get bored', 'Me aburro en las reuniones largas.'),
+  ('bajar', 'to get off (a bus, a train)', 'Me bajo en la próxima parada.'),
+  ('bañar', 'to take a bath', 'Los domingos me baño a la noche.'),
+  ('caer', 'to fall (down)', 'Me caí en la vereda.'),
+  ('cambiar', 'to change (clothes)', 'Me cambio y vamos.'),
+  ('cansar', 'to get tired', 'Me canso rápido cuando subo escaleras.'),
+  ('casar', 'to get married', 'Se casaron el año pasado.'),
+  ('cerrar', 'to close (by itself)', 'La ventana se cerró con el viento.'),
+  ('comer', 'to eat up', 'Se comió toda la pizza.'),
+  ('conocer', 'to meet (for the first time); to know each other', '¿Dónde se conocieron?'),
+  ('cortar', 'to cut oneself; to go out (the power)', 'Se cortó la luz en todo el barrio.'),
+  ('creer', 'to think one is (something)', 'Se cree el más inteligente.'),
+  ('cuidar', 'to take care of oneself', 'Cuidate mucho, ¿eh?'),
+  ('dar', 'to realize (darse cuenta)', 'Me di cuenta tarde.'),
+  ('decidir', 'to make up one''s mind', 'Decidite, que se hace tarde.'),
+  ('dedicar', 'to do for a living', '¿A qué te dedicás?'),
+  ('despertar', 'to wake up', 'Me despierto a las siete.'),
+  ('detener', 'to stop', 'El colectivo se detuvo en la esquina.'),
+  ('dirigir', 'to head (toward); to speak (to someone)', 'Nos dirigimos al centro.'),
+  ('divertir', 'to have fun', 'Nos divertimos mucho en el asado.'),
+  ('dormir', 'to fall asleep', 'Me dormí en el colectivo.'),
+  ('duchar', 'to take a shower', 'Me ducho antes de desayunar.'),
+  ('encontrar', 'to meet up; to be (somewhere)', 'Nos encontramos en la plaza a las seis.'),
+  ('enfermar', 'to get sick', 'Me enfermé el fin de semana.'),
+  ('enojar', 'to get angry', 'No te enojes, era un chiste.'),
+  ('enterar', 'to find out', 'Me enteré ayer de la noticia.'),
+  ('entender', 'to get along; to understand each other', 'Nos entendemos muy bien.'),
+  ('equivocar', 'to make a mistake; to be wrong', 'Perdón, me equivoqué de número.'),
+  ('escapar', 'to escape; to sneak out', 'El perro se escapó otra vez.'),
+  ('estirar', 'to stretch', 'Me estiro antes de correr.'),
+  ('fijar', 'to check; to notice', 'Fijate si queda leche en la heladera.'),
+  ('hacer', 'to become; to pretend to be', 'Se hizo el dormido.'),
+  ('imaginar', 'to imagine', 'Me imagino que vas a venir.'),
+  ('ir', 'to leave', 'Me voy a las ocho.'),
+  ('juntar', 'to get together', 'Nos juntamos el sábado en casa.'),
+  ('lastimar', 'to hurt oneself', 'Me lastimé la mano jugando al fútbol.'),
+  ('lavar', 'to wash (oneself)', 'Lavate las manos antes de comer.'),
+  ('levantar', 'to get up', 'Me levanto temprano para ir al laburo.'),
+  ('llamar', 'to be called (one''s name)', 'Me llamo Ana, ¿y vos?'),
+  ('llevar', 'to take (with you); to get along', 'Me llevo bien con mis vecinos.'),
+  ('mejorar', 'to get better', '¡Que te mejores pronto!'),
+  ('meter', 'to get into; to meddle', 'No te metas en lo que no te importa.'),
+  ('mirar', 'to look at oneself', 'Se miró en el espejo antes de salir.'),
+  ('mojar', 'to get wet', 'Me mojé toda la ropa con la lluvia.'),
+  ('morir', 'to die; to be dying (to)', 'Me muero de hambre.'),
+  ('mover', 'to move (oneself)', 'No te muevas, que te saco una foto.'),
+  ('mudar', 'to move (to a new home)', 'Nos mudamos a Palermo en marzo.'),
+  ('negar', 'to refuse', 'Se negó a pagar la cuenta.'),
+  ('ocupar', 'to take care of (something)', 'Yo me ocupo de las compras.'),
+  ('olvidar', 'to forget', 'Me olvidé de comprar pan.'),
+  ('parecer', 'to look like (someone)', 'Te parecés mucho a tu mamá.'),
+  ('pasar', 'to go too far; to overdo it', 'Te pasaste con la sal.'),
+  ('peinar', 'to comb one''s hair', 'Me peino y salgo.'),
+  ('perder', 'to get lost; to miss (something)', 'Me perdí en el subte.'),
+  ('poner', 'to put on (clothes); to become', 'Ponete el buzo, que hace frío.'),
+  ('preocupar', 'to worry', 'No te preocupes, yo te aviso.'),
+  ('preparar', 'to get ready', 'Me preparo para el examen.'),
+  ('presentar', 'to introduce oneself; to show up', 'Me presento: soy Lucas.'),
+  ('probar', 'to try on', '¿Me puedo probar esta remera?'),
+  ('quedar', 'to stay', 'Me quedo en casa esta noche.'),
+  ('quemar', 'to burn oneself', 'Me quemé con la pava.'),
+  ('quitar', 'to take off (clothes)', 'Quitate los zapatos antes de entrar.'),
+  ('reír', 'to laugh', 'Nos reímos mucho con esa película.'),
+  ('reunir', 'to meet (get together)', 'Nos reunimos los martes.'),
+  ('romper', 'to break', 'Se rompió el celular.'),
+  ('sacar', 'to take off (clothes); to get (a grade, a photo)', 'Me saqué un ocho en el examen.'),
+  ('secar', 'to dry off', 'Secate bien antes de salir.'),
+  ('sentar', 'to sit down', 'Sentate, por favor.'),
+  ('sentir', 'to feel', 'Hoy me siento mucho mejor.'),
+  ('separar', 'to separate; to split up', 'Se separaron hace dos años.'),
+  ('servir', 'to help yourself (to food or drink)', 'Servite lo que quieras.'),
+  ('subir', 'to get on (a bus, a train)', 'Subite al colectivo, que arranca.'),
+  ('tirar', 'to lie down; to jump', 'Me tiro un rato en el sillón.'),
+  ('tocar', 'to touch (oneself)', 'No te toques la cara.'),
+  ('tomar', 'to take (a bus); to have (a drink)', 'Me tomo el 152 hasta el centro.'),
+  ('tratar', 'to be about (tratarse de)', '¿De qué se trata la película?'),
+  ('vestir', 'to get dressed', 'Me visto y salimos.'),
+  ('ver', 'to look (a certain way); to see each other', 'Te ves muy bien hoy.'),
+  ('volver', 'to go back (home); to become', 'Me vuelvo a casa en taxi.');
+
+-- 1. your own verbs
+update public.verbs v set reflexive_use = true, reflexive_definition = u.rdef, reflexive_example = u.rex
+from refl_uses u
+where vosea_norm(v.infinitive) = vosea_norm(u.inf)
+  and not coalesce(v.reflexive, false) and not coalesce(v.reflexive_use, false);
+
+-- an items array (list snapshot): «Xse» next to «X» folds into X; then the uses
+create or replace function pg_temp.refl_items(items jsonb) returns jsonb language plpgsql as $f$
+declare
+  out jsonb := '[]'; it jsonb; d jsonb; k text; b jsonb; u record; keys jsonb := '{}';
+begin
+  if items is null or jsonb_typeof(items) <> 'array' then return items; end if;
+  for it in select x from jsonb_array_elements(items) x loop
+    if it->>'item_type' = 'verb' then keys := keys || jsonb_build_object(vosea_norm(it->'data'->>'infinitive'), true); end if;
+  end loop;
+  for it in select x from jsonb_array_elements(items) x loop
+    if it->>'item_type' = 'verb' then
+      d := it->'data'; k := vosea_norm(d->>'infinitive');
+      -- «lavarse» next to «lavar»: dropped here, its meaning goes to lavar below
+      if k ~ '(ar|er|ir)se$' and keys ? left(k, -2) then continue; end if;
+      if not coalesce((d->>'reflexive')::boolean, false) and not coalesce((d->>'reflexive_use')::boolean, false) then
+        select x->'data' into b from jsonb_array_elements(items) x
+          where x->>'item_type' = 'verb' and vosea_norm(x->'data'->>'infinitive') = k || 'se' limit 1;
+        if b is not null then
+          d := d || jsonb_build_object('reflexive_use', true, 'reflexive_definition', coalesce(b->>'definition', ''), 'reflexive_example', coalesce(b->>'example', ''));
+        else
+          select * into u from refl_uses where vosea_norm(inf) = k;
+          if found then d := d || jsonb_build_object('reflexive_use', true, 'reflexive_definition', u.rdef, 'reflexive_example', u.rex); end if;
+        end if;
+        it := jsonb_set(it, '{data}', d);
+      end if;
+    end if;
+    out := out || jsonb_build_array(it);
+  end loop;
+  return out;
+end $f$;
+
+-- 2. lists: each list's items, rewritten together
+do $d$
+declare l record; snap jsonb; newsnap jsonb; it record; n int := 0;
+begin
+  for l in select distinct list_id from public.list_items where item_type = 'verb' loop
+    select jsonb_agg(jsonb_build_object('id', i.id, 'item_type', i.item_type, 'data', i.data) order by i.created_at, i.id)
+      into snap from public.list_items i where i.list_id = l.list_id;
+    newsnap := pg_temp.refl_items(snap);
+    if newsnap is distinct from snap then
+      delete from public.list_items i where i.list_id = l.list_id and i.item_type = 'verb'
+        and not exists (select 1 from jsonb_array_elements(newsnap) x where (x->>'id')::uuid = i.id);
+      for it in select x from jsonb_array_elements(newsnap) x loop
+        update public.list_items i set data = it.x->'data' where i.id = (it.x->>'id')::uuid and i.data is distinct from it.x->'data';
+      end loop;
+      n := n + 1;
+    end if;
+  end loop;
+  raise notice 'lists updated: %', n;
+end $d$;
+
+-- 3. the Biblioteca's copies
+update public.library_entries e set items = pg_temp.refl_items(e.items),
+  n_verbs = (select count(*) from jsonb_array_elements(pg_temp.refl_items(e.items)) x where x->>'item_type' = 'verb')
+where pg_temp.refl_items(e.items) is distinct from e.items;
+
+commit;

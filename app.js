@@ -6384,7 +6384,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "226";
+  var VOSEA_BUILD = "227";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -7553,6 +7553,18 @@
         });
       });
       return;
+    }
+
+    // A verb that becomes dative now: its Sabido marks were on the standard
+    // use, which is keyed "|p" on a dative verb.
+    var wasEntry = editingId && ownVerbs.find(function (v) { return v.id === editingId; });
+    if (wasEntry && data.gustar_like && !wasEntry.data.gustar_like && wasEntry.data.known_forms) {
+      var moved = {};
+      Object.keys(wasEntry.data.known_forms).forEach(function (k) {
+        var personal = FLASH_PERSONAL_TENSES.some(function (tn) { return k.indexOf(tn.key + "|") === 0; }) && !/\|(impersonal|[pr])$/.test(k);
+        moved[personal ? k + PERSONAL_USE_SUFFIX : k] = wasEntry.data.known_forms[k];
+      });
+      data.known_forms = moved;
     }
 
     var query = editingId
@@ -10912,6 +10924,7 @@
             term = gotInf;
             if (!infinitiveIsReflexive(gotInf)) setReflexive(false);
           }
+          var defBefore = el.fDefinition.value.trim(), exBefore = el.fExample.value.trim(), wasDative = el.fGustarLike.checked;
           fillIfEmpty(el.fDefinition, data.definition);
           fillIfEmpty(el.fExample, data.example);
           fillIfEmpty(el.fNotes, data.notes);
@@ -10925,6 +10938,14 @@
             fillIfEmpty(el.fReflexiveExample, data.reflexiveExample);
           }
           if (data.gustarLike) {
+            // (2026-11-10) a verb you had as a plain verb: what you wrote is
+            // its standard use, so it moves down and the dative use goes on top
+            if (!wasDative && defBefore && !el.fPersonalDefinition.value.trim()) {
+              el.fPersonalDefinition.value = defBefore;
+              if (!el.fPersonalExample.value.trim()) el.fPersonalExample.value = exBefore;
+              el.fDefinition.value = data.definition || defBefore;
+              el.fExample.value = data.example || "";
+            }
             el.fGustarLike.checked = true;
             el.fPersonalDefinitionWrap.hidden = false;
             fillIfEmpty(el.fPersonalDefinition, data.personalDefinition);
