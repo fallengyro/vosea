@@ -199,19 +199,19 @@
       welcome_text_0: "voseá funciona como un ciclo. Aprendés cómo funciona algo en **Temas**, guardás lo que vas escuchando en tu **Colección**, lo fijás practicando con tarjetas y lo usás en voz alta en **Jugar**. **Hoy** te dice qué te conviene hacer cada día y **Progreso** te muestra cómo vas. En los próximos pasos te mostramos dónde está cada cosa.",
       welcome_kick_1: "Pestaña Hoy",
       welcome_title_1: "Empezá cada día acá",
-      welcome_text_1: "Es la primera pestaña y la que conviene abrir cada día. Tiene tres partes: **Practicar**, con las tarjetas que se te están por olvidar; **Aprender**, con el tema en el que ibas; y **Jugar**, con la próxima escena. Tocá cualquiera y vas directo, sin tener que buscar nada.",
+      welcome_text_1: "Es la primera pestaña y la que conviene abrir cada día. Tiene tres partes: **Practicar**, con las tarjetas que se te están por olvidar; **Aprender**, con el tema en el que ibas; y **Jugar**, con la próxima escena (o su lista, para prepararte). Tocá cualquiera y vas directo, sin tener que buscar nada.",
       welcome_kick_2: "Pestaña Colección",
       welcome_title_2: "Lo tuyo: verbos, palabras y frases",
-      welcome_text_2: "Acá vive todo lo que vas sumando. Cuando escuchás algo nuevo en la calle, lo agregás con el **+** de arriba. Podés filtrar por tipo o por lista, armar **Listas** y compartirlas, y tocar **Practicar** para convertir lo que elegiste en tarjetas.",
+      welcome_text_2: "Acá vive todo lo que vas sumando. Cuando escuchás algo nuevo en la calle, lo agregás con el **+** de arriba. Podés elegir qué ver con **Ver** y los filtros, armar **Listas** y compartirlas, sumar listas hechas desde la **Biblioteca** (como las mil palabras más usadas) y tocar **Practicar** para convertir lo que elegiste en tarjetas.",
       welcome_kick_3: "Pestaña Temas",
       welcome_title_3: "Cómo funciona el castellano de acá",
       welcome_text_3: "Cada tema explica una parte del idioma (el voseo, los números, el pretérito…) con ejemplos que vas a escuchar en la calle. Después lo practicás en tarjetas de tres maneras: **Leer**, **Escuchar** o **Hablar**. Están todos abiertos. **Camino** te muestra los Temas en el orden típico de los libros de texto, con las Escenas como hitos para practicar los Temas conversando.",
       welcome_kick_4: "Pestaña Jugar",
       welcome_title_4: "Usalo en voz alta",
-      welcome_text_4: "Las **Escenas** son charlas de todos los días (la panadería, el taxi, el médico) en las que respondés hablando. La panadería está abierta desde el principio; las demás se abren cuando ya sabés sus frases. Y para desafiarte a vos o a tus amigos tenés **Partida** (sin fin), **Contrarreloj** (60 segundos) y **Te reto** (las mismas tarjetas para los dos).",
+      welcome_text_4: "Las **Escenas** son charlas de todos los días (la panadería, el taxi, el médico) en las que respondés hablando. Todas están abiertas, y cada una tiene su lista para prepararte antes. En las **Charlas** no hay guion: la conversación va para donde la lleves. Y para desafiarte a vos o a tus amigos tenés **Partida** (sin fin), **Contrarreloj** (60 segundos) y **Te reto** (las mismas tarjetas para los dos).",
       welcome_kick_5: "Pestaña Progreso",
       welcome_title_5: "Mirá cómo vas",
-      welcome_text_5: "Acá ves tu semana y tu racha, lo que más te cuesta, lo que ya aprendiste y cómo vas con cada tiempo verbal y cada persona. Es el lugar para decidir qué repasar.",
+      welcome_text_5: "Acá ves tu semana y tu racha, lo que más te cuesta, lo que ya aprendiste y cómo vas con cada tiempo verbal y cada persona, en Leer, Escuchar y Hablar. Es el lugar para decidir qué repasar.",
       welcome_mute: "Silenciar",
       welcome_unmute: "Activar la voz",
       welcome_pack_title: "¿Arrancamos con el paquete inicial?",
@@ -1659,19 +1659,19 @@
       welcome_text_0: "voseá works as a loop. You learn how something works in **Topics**, keep what you hear in your **Collection**, make it stick by practicing with flashcards, and use it out loud in **Play**. **Today** tells you what's worth doing each day, and **Progress** shows how you're doing. The next steps show you where everything is.",
       welcome_kick_1: "The Today tab",
       welcome_title_1: "Start each day here",
-      welcome_text_1: "It's the first tab, and the one to open every day. It has three parts: **Practice**, with the flashcards you're about to forget; **Learn**, with the topic you were on; and **Play**, with the next scene. Tap any of them and you go straight there, without having to look for anything.",
+      welcome_text_1: "It's the first tab, and the one to open every day. It has three parts: **Practice**, with the flashcards you're about to forget; **Learn**, with the topic you were on; and **Play**, with the next scene (or its list, to get ready). Tap any of them and you go straight there, without having to look for anything.",
       welcome_kick_2: "The Collection tab",
       welcome_title_2: "Yours: verbs, words and phrases",
-      welcome_text_2: "Everything you add lives here. When you hear something new on the street, add it with the **+** at the top. You can filter by type or by list, make **Lists** and share them, and tap **Practice** to turn what you picked into flashcards.",
+      welcome_text_2: "Everything you add lives here. When you hear something new on the street, add it with the **+** at the top. You can choose what to see with **Show** and the filters, make **Lists** and share them, add ready-made lists from the **Library** (like the thousand most-used words), and tap **Practice** to turn what you picked into flashcards.",
       welcome_kick_3: "The Topics tab",
       welcome_title_3: "How the Spanish here works",
       welcome_text_3: "Each topic explains one part of the language (voseo, numbers, the past tense…) with examples you'll hear on the street. Then you practice it on flashcards three ways: **Read**, **Listen** or **Speak**. They're all open. **Path** shows Topics in a typical learning order from textbooks, with Escenas used as milestones to practice the Topics conversationally along the way.",
       welcome_kick_4: "The Play tab",
       welcome_title_4: "Use it out loud",
-      welcome_text_4: "**Escenas** are everyday conversations (the bakery, the taxi, the doctor) where you answer out loud. The bakery is open from the start; the others open once you know their phrases. And to challenge yourself or your friends, there's **Partida** (endless), **Contrarreloj** (60 seconds) and **Te reto** (the same flashcards for both of you).",
+      welcome_text_4: "**Escenas** are everyday conversations (the bakery, the taxi, the doctor) where you answer out loud. They're all open, and each one has its own list to get you ready first. In **Charlas** there's no script: the conversation goes wherever you take it. And to challenge yourself or your friends, there's **Partida** (endless), **Contrarreloj** (60 seconds) and **Te reto** (the same flashcards for both of you).",
       welcome_kick_5: "The Progress tab",
       welcome_title_5: "See how you're doing",
-      welcome_text_5: "Here you see your week and your streak, what's giving you the most trouble, what you've learned, and how you're doing with each verb tense and person. It's the place to decide what to review.",
+      welcome_text_5: "Here you see your week and your streak, what's giving you the most trouble, what you've learned, and how you're doing with each verb tense and person, in Read, Listen and Speak. It's the place to decide what to review.",
       welcome_mute: "Mute",
       welcome_unmute: "Turn the voice on",
       welcome_pack_title: "Start with the starter pack?",
@@ -6237,7 +6237,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "223";
+  var VOSEA_BUILD = "224";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
