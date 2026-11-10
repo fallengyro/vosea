@@ -6237,7 +6237,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "224";
+  var VOSEA_BUILD = "225";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -9871,6 +9871,7 @@
       }
     }).then(function (res) {
       var g = res && res.data && res.data.glosses;
+      if (res.error && res.error.context && res.error.context.status === 429) { var le = new Error("daily_limit"); le.limit = true; throw le; }
       if (res.error || !g || !Object.keys(g).length) throw new Error((res.error && res.error.message) || "empty reply");
       if (!personal) return { glosses: g, data: res.data };
       var out = {};
@@ -9913,10 +9914,20 @@
           (typeof d.cached === "number" ? " (" + d.cached + " from the shared cache, " + (d.generated || 0) + " newly generated)" : ""));
       });
     }).catch(function (err) {
+      // (2026-11-09) The account's daily cap only stops verbs nobody has
+      // glossed yet; verbs already in the shared cache still come back free.
+      // So it skips this verb for the session instead of counting as a
+      // failure (two failures in a row used to pause the whole queue, which
+      // left even cached verbs, like a list's «respetar», on the definition).
+      if (err && err.limit) {
+        if (!verbGlossLimitNoted) { verbGlossLimitNoted = true; console.warn("[verb-gloss] daily limit reached: until tomorrow only verbs already in the shared cache get their English"); }
+        return "limit";
+      }
       noteVerbGlossFailure(data.infinitive, (err && err.message) || String(err));
       return false;
     });
   }
+  var verbGlossLimitNoted = false;
 
   // A flashcard is { kind: "verb"|"word"|"phrase", data, frontMain, frontSub, backMain, backSub,
   // frontSpeak, backSpeak }. frontMain/backMain are the big headline text; the *Sub lines and
@@ -21588,7 +21599,7 @@
     var b = el.flashKeep;
     if (!b) return;
     var kind = card && card.kind;
-    if (kind !== "verb" && kind !== "word" && kind !== "phrase") { b.hidden = true; return; }
+    if (kind !== "verb" && kind !== "word" && kind !== "phrase") { b.hidden = true; if (b.parentNode) b.parentNode.classList.remove("has-keep"); return; }
     var id = findItemId(kind, card.data);
     if (card.data && card.data._kept) {
       b.hidden = false; b.disabled = true; b.textContent = t("kept_done");
@@ -21597,6 +21608,8 @@
     } else {
       b.hidden = true;
     }
+    // (2026-11-09) Sabido takes the whole second row when there's no Quedármela
+    if (b.parentNode) b.parentNode.classList.toggle("has-keep", !b.hidden);
   }
   function flashKeepClick() {
     var card = flashDeck[flashIndex];

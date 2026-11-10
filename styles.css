@@ -1624,7 +1624,18 @@
      node, because applyI18n() sets textContent on [data-i18n] elements — same
      precedent as .chip.active::before. Off = outline with a faint check;
      on = filled accent, like an included filter chip. */
-  .flash-known-row { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 14px; }
+  /* Two even rows (2026-11-09, mason picked A: "I don't love that the
+     widgets are different sizes"): Otra vez | Bien across the full width,
+     then Sabido and Quedármela as two equal halves (Sabido alone takes the
+     row when there's no Quedármela: .has-keep). Same height, same corners,
+     nothing wraps. */
+  .flash-known-row { display: grid; grid-template-columns: 1fr; gap: 10px; width: min(100% - 32px, 420px); margin: 14px auto 0; box-sizing: border-box; }
+  .flash-known-row.has-keep { grid-template-columns: 1fr 1fr; }
+  .flash-known-row .flash-grade { grid-column: 1 / -1; display: flex; border-radius: 12px; }
+  .flash-known-row .flash-grade-opt { flex: 1; padding: 11px 8px; font-size: 16px; white-space: nowrap; }
+  .flash-known-row .known-toggle, .flash-known-row .keep-toggle { border-radius: 12px; padding: 10px 8px; font-size: 15px; white-space: nowrap; text-align: center; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .flash-known-row .known-toggle { display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .flash-known-row .known-toggle::before { position: static; transform: none; }
   /* Otra vez | Bien (2026-10-03, "option B" from the progress mockups): a
      small two-way switch beside Sabido that only marks how the card went —
      never flips or advances. Kept in the layout (visibility, not display)
