@@ -2034,6 +2034,9 @@
   /* the legends under the table hold their largest height across a verb's
      uses (stabilizeVerbUses), margins included */
   #d-legends { display: flow-root; }
+  /* Armar el mazo: the «Usos» chips sit under the tense chips, same look */
+  .flash-uses { margin-top: 14px; }
+  .flash-uses .flash-group-label { margin: 0 0 8px; }
 
   /* the shared-list preview reuses .flash-overlay's full-screen chrome
      (same topbar, same close button) but its own scrollable body, since a

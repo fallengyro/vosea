@@ -427,7 +427,8 @@
       flash_dir_word2def: "Palabra → definición",
       flash_start_btn: "Empezar",
       flash_no_source: "Activá al menos una fuente (verbos, vocabulario o frases).",
-      flash_no_cards: "No hay tarjetas para esta combinación de filtros — probá activar más tiempos, personas o fuentes.",
+      flash_no_cards: "No hay tarjetas para esta combinación de filtros — probá activar más tiempos, personas, usos o fuentes.",
+      flash_group_uses: "Usos",
       close: "Cerrar",
       btn_import_done: "Listo",
       import_json_done_heading: "Se importó",
@@ -1892,7 +1893,8 @@
       flash_dir_word2def: "Word → definition",
       flash_start_btn: "Start",
       flash_no_source: "Turn on at least one source (verbs, vocabulary, or phrases).",
-      flash_no_cards: "There are no cards for this filter combination — try enabling more tenses, persons, or sources.",
+      flash_no_cards: "There are no cards for this filter combination — try enabling more tenses, persons, uses, or sources.",
+      flash_group_uses: "Uses",
       close: "Close",
       btn_import_done: "Done",
       import_json_done_heading: "Imported",
@@ -5756,6 +5758,16 @@
   var activeFlashCells = new Set(flashAllCellKeys());
   // gerundio/participio have no person axis, so they're plain on/off toggles.
   var activeFlashStandalone = new Set(["gerundio", "participio"]);
+  // (2026-11-10) mason: "include which of the three verb types to use when
+  // doing verb deck building like we handle pronouns". All on to start
+  // (decks as before), remembered on the device.
+  var FLASH_USES = ["estandar", "reflexivo", "dativo"];
+  var FLASH_USES_KEY = "vosea-deck-uses";
+  var activeFlashUses = (function () {
+    try { var v = JSON.parse(localStorage.getItem(FLASH_USES_KEY) || "null"); if (Array.isArray(v)) return new Set(v.filter(function (u) { return FLASH_USES.indexOf(u) !== -1; })); } catch (e) {}
+    return new Set(FLASH_USES);
+  })();
+  function saveFlashUses() { try { localStorage.setItem(FLASH_USES_KEY, JSON.stringify(Array.from(activeFlashUses))); } catch (e) {} }
   var flashDirection = "def2word"; // or "word2def"
   // Leer / Escuchar and auto-play (2026-10-03). Both remembered per device,
   // like quiet mode. "Escuchar" can't be used while quiet mode is on — see
@@ -6047,6 +6059,8 @@
     flashPickAll: document.getElementById("flash-pick-all"),
     flashPickNone: document.getElementById("flash-pick-none"),
     flashDeckCount: document.getElementById("flash-deck-count"),
+    flashUses: document.getElementById("flash-uses"),
+    flashUseChips: document.getElementById("flash-use-chips"),
     flashLimit: document.getElementById("flash-limit"),
     flashVerbFilt: document.getElementById("flash-verb-filt"),
     flashWordFilt: document.getElementById("flash-word-filt"),
@@ -6389,7 +6403,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "228";
+  var VOSEA_BUILD = "229";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -9767,6 +9781,8 @@
     if (on) {
       flashAllCellKeys().forEach(function (k) { activeFlashCells.add(k); });
       FLASH_STANDALONE_KEYS.forEach(function (k) { activeFlashStandalone.add(k); });
+      FLASH_USES.forEach(function (u) { activeFlashUses.add(u); }); // «Todo» means every use too
+      saveFlashUses();
     } else {
       activeFlashCells.clear();
       activeFlashStandalone.clear();
@@ -9777,8 +9793,37 @@
   // How many cards Empezar would deal right now — the real deck (verbs ×
   // selected forms, plus words and phrases, after every tab's filters and
   // Sabido chips), so the number always matches what you get.
+  // The «Usos» chips: only the uses the verbs in play have, and only when
+  // that's more than one.
+  var FLASH_USE_LABEL = { estandar: "gustar_tab_personal", reflexivo: "gustar_tab_reflexivo", dativo: "gustar_tab_dativo" };
+  function flashUsesAvailable() {
+    var have = {};
+    if (activeFlashSources.verbs) verbFlashSource().forEach(function (v) {
+      var d = v.data;
+      if (d.reflexive) have.reflexivo = true; else have.estandar = true;
+      if (hasReflexiveUse(d)) have.reflexivo = true;
+      if (d.gustar_like) have.dativo = true;
+    });
+    return FLASH_USES.filter(function (u) { return have[u]; });
+  }
+  function renderFlashUses() {
+    if (!el.flashUses) return;
+    var avail = flashUsesAvailable();
+    el.flashUses.hidden = avail.length < 2;
+    el.flashUseChips.innerHTML = "";
+    if (avail.length < 2) return;
+    avail.forEach(function (u) {
+      el.flashUseChips.appendChild(flashPickChip(t(FLASH_USE_LABEL[u]), activeFlashUses.has(u) ? "all" : "none", function () {
+        if (activeFlashUses.has(u)) activeFlashUses.delete(u); else activeFlashUses.add(u);
+        saveFlashUses();
+        updateFlashDeckCount();
+      }));
+    });
+  }
+
   function updateFlashDeckCount() {
     if (!el.flashDeckCount) return;
+    renderFlashUses();
     var n = buildFlashDeck().length;
     var lim = deckSizeN();
     el.flashDeckCount.textContent = n > lim ? t("flash_deck_count_of", { n: lim, total: n }) : t(n === 1 ? "flash_deck_count_1" : "flash_deck_count", { n: n });
@@ -10319,7 +10364,7 @@
 
     FLASH_PERSONAL_TENSES.forEach(function (t) {
       PERSONS.forEach(function (p) {
-        if (!want(flashCellKey(t.key, p.key), t.key, "personal")) return;
+        if (!want(flashCellKey(t.key, p.key), t.key, "personal", data)) return;
         var frontLabel, val;
         if (data.gustar_like) {
           val = gustarCellText(forms, t.key, p.key);
@@ -10347,7 +10392,7 @@
       FLASH_PERSONAL_TENSES.forEach(function (t) {
         PERSONS.forEach(function (p) {
           var key = flashCellKey(t.key, p.key) + PERSONAL_USE_SUFFIX;
-          if (!want(key, t.key, "personal")) return;
+          if (!want(key, t.key, "personal", data)) return;
           var val = (forms[t.key] && forms[t.key][p.key]) || "";
           if (!val) return;
           deck.push({
@@ -10364,7 +10409,7 @@
     // same idea as the extra row the conjugation table shows for them.
     var imp = forms.impersonal || {};
     FLASH_PERSONAL_TENSES.forEach(function (t) {
-      if (!want(flashCellKey(t.key, "impersonal"), t.key, "impersonal")) return;
+      if (!want(flashCellKey(t.key, "impersonal"), t.key, "impersonal", data)) return;
       var val = imp[t.key] || "";
       if (!val) return;
       deck.push({
@@ -10377,7 +10422,7 @@
 
     if (forms.imperativo) {
       Object.keys(IMPERATIVO_FORM_KEY).forEach(function (personKey) {
-        if (!want(flashCellKey("imperativo", personKey), "imperativo", "imperativo")) return;
+        if (!want(flashCellKey("imperativo", personKey), "imperativo", "imperativo", data)) return;
         var val = forms.imperativo[IMPERATIVO_FORM_KEY[personKey]] || "";
         if (!val) return;
         var idef = verbUseDefinition(data, true); // a command is always a personal use
@@ -10391,7 +10436,7 @@
     }
 
     [{ key: "gerundio", i18nKey: "tile_gerundio" }, { key: "participio", i18nKey: "tile_participio" }].forEach(function (item) {
-      if (!want(item.key, item.key, "standalone")) return;
+      if (!want(item.key, item.key, "standalone", data)) return;
       var val = forms[item.key] || "";
       if (!val) return;
       deck.push({
@@ -10421,23 +10466,33 @@
     FLASH_PERSONAL_TENSES.forEach(function (tn) {
       PERSONS.forEach(function (p) {
         var key = flashCellKey(tn.key, p.key) + REFLEXIVE_USE_SUFFIX;
-        if (!want(key, tn.key, "personal")) return;
+        if (!want(key, tn.key, "personal", data)) return;
         var val = (rf[tn.key] && rf[tn.key][p.key]) || "";
         if (val) push(key, p.label + " · " + tn.label.toLowerCase(), val);
       });
     });
     Object.keys(IMPERATIVO_FORM_KEY).forEach(function (personKey) {
       var key = flashCellKey("imperativo", personKey) + REFLEXIVE_USE_SUFFIX;
-      if (!want(key, "imperativo", "imperativo")) return;
+      if (!want(key, "imperativo", "imperativo", data)) return;
       var val = (rf.imperativo || {})[IMPERATIVO_FORM_KEY[personKey]] || "";
       if (val) push(key, IMPERATIVO_DISPLAY[personKey] + " · " + t("mood_imperativo").toLowerCase(), val);
     });
-    if (rf.gerundio && want("gerundio" + REFLEXIVE_USE_SUFFIX, "gerundio", "standalone")) push("gerundio" + REFLEXIVE_USE_SUFFIX, t("tile_gerundio"), rf.gerundio);
+    if (rf.gerundio && want("gerundio" + REFLEXIVE_USE_SUFFIX, "gerundio", "standalone", data)) push("gerundio" + REFLEXIVE_USE_SUFFIX, t("tile_gerundio"), rf.gerundio);
     return deck;
   }
 
   // The forms picked in the flashcard setup (quick picks / Personalizar).
-  function setupVerbWant(formKey, tenseKey, tag) {
+  // Which use a card drills: «irse» cards (|r) and -se-only verbs are
+  // Reflexivo; a dative verb's «me gusta» cells are Dativo; everything else
+  // (its |p cells, commands, gerund) is Estándar.
+  function verbCardUse(formKey, tag, data) {
+    if (isReflexiveUseKey(formKey)) return "reflexivo";
+    if (data && data.reflexive) return "reflexivo";
+    if (data && data.gustar_like && tag === "personal" && !isPersonalUseKey(formKey)) return "dativo";
+    return "estandar";
+  }
+  function setupVerbWant(formKey, tenseKey, tag, data) {
+    if (data && !activeFlashUses.has(verbCardUse(formKey, tag, data))) return false;
     if (tag === "impersonal") return flashTenseHasAnySelected(tenseKey);
     if (tag === "standalone") return activeFlashStandalone.has(baseFormKey(formKey));
     return activeFlashCells.has(baseFormKey(formKey)); // a cell picks every use of the verb (dative, reflexive)
@@ -10764,6 +10819,7 @@
     return /^[yY][.!?…]*$/.test(t0) ? "i" : t0;
   }
   window.voseaTtsSayAs = function (t0) { return ttsSayAs(t0); }; // tests
+  window.voseaDeckPreview = function () { return buildFlashDeck().filter(function (c) { return c.kind === "verb"; }).map(function (c) { return { inf: c.data.infinitive, fk: c.formKey, back: c.backMain, use: verbCardUse(c.formKey, /^(imperativo|gerundio|participio)/.test(c.formKey) ? "x" : "personal", c.data) }; }); }; // tests
   window.voseaRefl = { forms: function (f) { return reflexiveForms(f); }, enc: function (w, c) { return encliticForm(w, c); }, // tests
     cards: function (inf) { var v = allVerbs.find(function (x) { return x.data.infinitive === inf; }); return v ? verbCards(v.data, setupVerbWant).map(function (c) { return [c.formKey, c.frontMain, c.frontSub, c.backMain, cardBackSub(c)]; }) : []; },
     entries: function (inf) { var v = allVerbs.find(function (x) { return x.data.infinitive === inf; }); return v ? verbFormEntries(v.data).map(function (e) { return e.key + "=" + e.es; }) : []; } };

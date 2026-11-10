@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="228">
+<meta name="vosea-build" content="229">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -911,6 +911,12 @@
           </div>
         </div>
         <div class="flash-presets" id="flash-presets"></div>
+        <!-- (2026-11-10) which uses of the verbs: Estándar / Reflexivo / Dativo.
+             Only when the verbs in play have more than one. renderFlashUses(). -->
+        <div class="flash-uses" id="flash-uses" hidden>
+          <p class="flash-group-label" data-i18n="flash_group_uses">Usos</p>
+          <div class="flash-presets" id="flash-use-chips"></div>
+        </div>
         <button type="button" class="flash-custom-toggle" id="flash-custom-toggle" aria-expanded="false" aria-controls="flash-custom"><span class="flash-custom-caret" aria-hidden="true"></span><span data-i18n="flash_custom_toggle">Personalizar tiempos y personas</span></button>
         <div class="flash-custom" id="flash-custom" hidden></div>
       </div>
