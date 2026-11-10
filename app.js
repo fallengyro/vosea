@@ -353,6 +353,15 @@
       label_preposicion: "Preposición fija",
       placeholder_preposicion: "ej. en, de, a",
       check_reflexivo: "¿Reflexivo?",
+      check_reflexive_use: "¿También «{inf}»?",
+      rae_lookup_as_base: "«{typed}» quedó como el uso reflexivo de «{inf}».",
+      rae_lookup_as_se: "Se usa con -se: quedó como «{inf}».",
+      rae_lookup_pair_have: "Ya tenés «{base}»: al guardar, «{typed}» se suma a «{base}» como su uso reflexivo.",
+      label_reflexive_definition: "Definición («{inf}»)",
+      label_reflexive_example: "Ejemplo («{inf}»)",
+      hint_reflexive_use: "Las formas con pronombre (me voy, andate, yéndose) salen solas de la tabla.",
+      msg_reflexive_merged: "Lo agregué a «{base}» como su uso reflexivo.",
+      row_reflexive_def: "{inf}: {def}",
       check_auxiliar: "¿Auxiliar / modal?",
       check_gustar: "¿Tipo gustar?",
       label_personal_definition: "Definición (uso estándar)",
@@ -360,6 +369,7 @@
       hint_personal_definition: "La definición y el ejemplo de arriba son los del uso dativo («me gusta», «me pasa»). Estos son los del uso estándar, con la persona como sujeto: «vos me gustás», «pasé por tu casa».",
       gustar_tab_personal: "Estándar",
       gustar_tab_dativo: "Dativo",
+      gustar_tab_reflexivo: "Reflexivo",
       impersonal_optional: "impersonal (opcional)",
       imperativo_afirmativo: "Imperativo afirmativo (opcional)",
       btn_save: "Guardar",
@@ -1807,6 +1817,15 @@
       label_preposicion: "Fixed preposition",
       placeholder_preposicion: "e.g., en, de, a",
       check_reflexivo: "Reflexive?",
+      check_reflexive_use: "Also “{inf}”?",
+      rae_lookup_as_base: "“{typed}” is now the reflexive use of “{inf}”.",
+      rae_lookup_as_se: "It’s used with -se: saved as “{inf}”.",
+      rae_lookup_pair_have: "You already have “{base}”: saving adds “{typed}” to “{base}” as its reflexive use.",
+      label_reflexive_definition: "Definition (“{inf}”)",
+      label_reflexive_example: "Example (“{inf}”)",
+      hint_reflexive_use: "The forms with the pronoun (me voy, andate, yéndose) come from the table on their own.",
+      msg_reflexive_merged: "Added to “{base}” as its reflexive use.",
+      row_reflexive_def: "{inf}: {def}",
       check_auxiliar: "Auxiliary / modal?",
       check_gustar: "Gustar-type?",
       label_personal_definition: "Definition (standard use)",
@@ -1814,6 +1833,7 @@
       hint_personal_definition: "The definition and example above are the dative use (“me gusta”, “me pasa”). These are the standard use, with the person as the subject: “vos me gustás”, “pasé por tu casa”.",
       gustar_tab_personal: "Standard",
       gustar_tab_dativo: "Dative",
+      gustar_tab_reflexivo: "Reflexive",
       impersonal_optional: "impersonal (optional)",
       imperativo_afirmativo: "Affirmative imperative (optional)",
       btn_save: "Save",
@@ -4984,6 +5004,7 @@
     el.fReflexive.checked = on;
     applyReflexivePronouns(on);
     renderFormIrregularity();
+    syncReflexiveUseUi();
   }
 
   // "Tipo gustar" verbs (gustar, doler, encantar, ...) are grammatically
@@ -5227,7 +5248,121 @@
   // dative meaning, as before).
   var PERSONAL_USE_SUFFIX = "|p";
   function isPersonalUseKey(formKey) { return /\|p$/.test(String(formKey || "")); }
-  function baseFormKey(formKey) { return String(formKey || "").replace(/\|p$/, ""); }
+  function baseFormKey(formKey) { return String(formKey || "").replace(/\|[pr]$/, ""); }
+
+  // ---- the reflexive use (2026-11-10, build 226)
+  // mason: "some verbs are being stored separately for their normal and
+  // reflexive versions (for example ir and irse). as the dative and normal
+  // verbs are being kept as a single verb … reflexive verbs should also be
+  // managed this way". So «ir» has an optional reflexive use: «irse», with
+  // its own definition and example (verbs.reflexive_use /
+  // reflexive_definition / reflexive_example). Its forms aren't stored:
+  // they're the plain forms with the pronoun (me voy, te vas…; andate,
+  // váyase, vámonos, yéndose), and its cards are keyed "<tense>|<person>|r"
+  // (and "gerundio|r") for their own Sabido, English and progress. Verbs
+  // that only exist with -se (quejarse, arrepentirse) stay -se verbs
+  // (verbs.reflexive), as before.
+  var REFLEXIVE_USE_SUFFIX = "|r";
+  function isReflexiveUseKey(formKey) { return /\|r$/.test(String(formKey || "")); }
+  function hasReflexiveUse(data) { return !!(data && data.reflexive_use && !data.reflexive); }
+  function reflexiveInfinitive(inf) {
+    var s = String(inf || "").trim();
+    return s && !infinitiveIsReflexive(s) ? s + "se" : s;
+  }
+  function reflexiveUseDefinition(data) { return (data.reflexive_definition || "").trim() || data.definition || ""; }
+  function reflexiveUseExample(data) { return (data.reflexive_example || "").trim(); }
+  // A pronoun on the end of a command or a gerund moves the stress mark:
+  // andá + te → andate, levante + se → levántese, vamos + nos → vámonos,
+  // yendo + se → yéndose, reí + te → reíte (the hiatus accent stays).
+  var ENC_ACC = { a: "á", e: "é", i: "í", o: "ó", u: "ú" };
+  var ENC_PLAIN = { "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u" };
+  function encIsVowel(c) { return !!c && "aeiouáéíóúü".indexOf(c) !== -1; }
+  function encStrong(c) { return !!c && "aeoáéó".indexOf(c) !== -1; }
+  function encNuclei(w) {
+    var out = [], i = 0;
+    while (i < w.length) {
+      var c = w[i];
+      if (!encIsVowel(c)) { i++; continue; }
+      // the silent u of que / qui / gue / gui
+      if (c === "u" && i > 0 && (w[i - 1] === "q" || w[i - 1] === "g") && "eéií".indexOf(w[i + 1] || "") !== -1) { i++; continue; }
+      var j = i + 1;
+      while (j < w.length && encIsVowel(w[j])) {
+        var a = w[j - 1], b = w[j];
+        if ((encStrong(a) && encStrong(b)) || a === "í" || a === "ú" || b === "í" || b === "ú") break; // hiatus
+        j++;
+      }
+      out.push({ s: i, e: j });
+      i = j;
+    }
+    return out;
+  }
+  function encliticForm(word, clitic) {
+    var w = String(word || "").trim();
+    if (!w || w === "—") return "";
+    var lw = w.toLowerCase();
+    var nuc = encNuclei(lw);
+    if (!nuc.length) return w + clitic;
+    var stress = -1;
+    nuc.forEach(function (n, k) { for (var x = n.s; x < n.e; x++) if (ENC_PLAIN[lw[x]]) stress = k; });
+    if (stress === -1) stress = /[aeiouns]$/.test(lw) && nuc.length > 1 ? nuc.length - 2 : nuc.length - 1;
+    var chars = (w + clitic).split("");
+    var fromEnd = encNuclei((lw + clitic).toLowerCase()).length - stress;
+    var n0 = nuc[stress];
+    var hiatusAccent = function (x) {
+      var c = lw[x];
+      return (c === "í" || c === "ú") && (encStrong(lw[x - 1] || "") || encStrong(lw[x + 1] || "") || (x + 1 === lw.length && encStrong(clitic[0])));
+    };
+    if (fromEnd >= 3) {
+      // esdrújula: the stressed vowel needs its mark
+      var has = false;
+      for (var x = n0.s; x < n0.e; x++) if (ENC_PLAIN[lw[x]]) has = true;
+      if (!has) {
+        var pick = -1;
+        for (var y = n0.s; y < n0.e; y++) if (encStrong(lw[y])) { pick = y; break; }
+        if (pick === -1) pick = n0.e - 1; // iu / ui: the second one
+        if (ENC_ACC[lw[pick]]) chars[pick] = chars[pick] === chars[pick].toUpperCase() ? ENC_ACC[lw[pick]].toUpperCase() : ENC_ACC[lw[pick]];
+      }
+    } else {
+      // llana ending in a vowel or -s: no mark, except one that splits two vowels
+      for (var z = n0.s; z < n0.e; z++) if (ENC_PLAIN[lw[z]] && !hiatusAccent(z)) chars[z] = ENC_PLAIN[lw[z]];
+    }
+    return chars.join("");
+  }
+  var IMPERATIVO_CLITIC = { vos: "te", usted: "se", nosotros: "nos", ustedes: "se" };
+  function reflexiveImperative(personKey, val) {
+    return String(val || "").split(/\s*\/\s*/).map(function (one) {
+      one = one.trim();
+      if (!one || one === "—") return "";
+      // nosotros drops its -s: vamos + nos → vámonos, levantemos → levantémonos
+      if (personKey === "nosotros") one = one.replace(/s$/, "");
+      return encliticForm(one, IMPERATIVO_CLITIC[personKey]);
+    }).filter(Boolean).join(" / ");
+  }
+  var reflexiveFormsCache = new WeakMap();
+  function reflexiveForms(forms) {
+    forms = forms || {};
+    var cached = reflexiveFormsCache.get(forms);
+    if (cached) return cached;
+    var out = {};
+    TENSES.concat(SUBJ_TENSES).forEach(function (tn) {
+      var src = forms[tn.key];
+      if (!src) return;
+      var row = {};
+      PERSONS.forEach(function (p) {
+        var v = String(src[p.key] || "").trim();
+        row[p.key] = v && v !== "—" ? v.split(/\s*\/\s*/).map(function (one) { return REFLEXIVE_PRONOUNS[p.key] + " " + one; }).join(" / ") : "";
+      });
+      out[tn.key] = row;
+    });
+    if (forms.imperativo) {
+      out.imperativo = {};
+      IMPERATIVE_PERSONS.forEach(function (p) { out.imperativo[p.key] = reflexiveImperative(p.key, forms.imperativo[p.key]); });
+    }
+    if (forms.gerundio) out.gerundio = encliticForm(forms.gerundio, "se");
+    if (forms.participio) out.participio = forms.participio; // me he ido: the participle takes no pronoun
+    reflexiveFormsCache.set(forms, out);
+    return out;
+  }
   function verbUseDefinition(data, personal) {
     if (personal && data.gustar_like && data.personal_definition) return data.personal_definition;
     return data.definition || "";
@@ -5718,6 +5853,18 @@
     dGustarTabs: document.getElementById("d-gustar-tabs"),
     dGustarTabPersonal: document.getElementById("d-gustar-tab-personal"),
     dGustarTabDativo: document.getElementById("d-gustar-tab-dativo"),
+    dGustarTabReflexivo: document.getElementById("d-gustar-tab-reflexivo"),
+    dGerundioTile: document.getElementById("d-gerundio-tile"),
+    fReflexiveWrap: document.getElementById("f-reflexive-wrap"),
+    fReflexiveUse: document.getElementById("f-reflexive-use"),
+    fReflexiveUseCheck: document.getElementById("f-reflexive-use-check"),
+    fReflexiveUseLabel: document.getElementById("f-reflexive-use-label"),
+    fReflexiveUseWrap: document.getElementById("f-reflexive-use-wrap"),
+    fReflexiveDefinition: document.getElementById("f-reflexive-definition"),
+    fReflexiveExample: document.getElementById("f-reflexive-example"),
+    fReflexiveDefinitionLabel: document.getElementById("f-reflexive-definition-label"),
+    fReflexiveExampleLabel: document.getElementById("f-reflexive-example-label"),
+    dParticipioTile: document.getElementById("d-participio-tile"),
     dGerundio: document.getElementById("d-gerundio"),
     dParticipio: document.getElementById("d-participio"),
     dEdit: document.getElementById("d-edit"),
@@ -6237,7 +6384,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "225";
+  var VOSEA_BUILD = "226";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6633,7 +6780,8 @@
 
     var def = document.createElement("span");
     def.className = "def";
-    def.textContent = (data.definition || "") + (data.gustar_like && data.personal_definition ? " · " + data.personal_definition : "");
+    def.textContent = (data.definition || "") + (data.gustar_like && data.personal_definition ? " · " + data.personal_definition : "") +
+      (hasReflexiveUse(data) && data.reflexive_definition ? " · " + t("row_reflexive_def", { inf: reflexiveInfinitive(data.infinitive), def: data.reflexive_definition }) : "");
     btn.appendChild(def);
 
     btn.addEventListener("click", function () {
@@ -6662,7 +6810,7 @@
     if (!facetOk(activeVerbFilters, "transitivity", v.data.transitivity || "transitivo", ignoreExcludes)) return false;
     // "flag" chips are independent boolean switches, not OR'd alternatives.
     if (!flagOk(activeVerbFilters, "flag", function (value) {
-      if (value === "reflexive") return !!v.data.reflexive;
+      if (value === "reflexive") return !!v.data.reflexive || hasReflexiveUse(v.data);
       if (value === "auxiliar") return !!v.data.auxiliar;
       if (value === "gustarLike") return !!v.data.gustar_like;
       if (value === "known") return !!v.data.known;
@@ -6792,22 +6940,33 @@
     // further down deliberately keeps reading data.gustar_like directly —
     // it reflects the verb's true canonical tag, not the active tab.
     var gustarDualMode = !!data.gustar_like; // every dative verb has both uses (2026-10-10)
-    if (el.dGustarTabs) el.dGustarTabs.hidden = !gustarDualMode;
-    if (gustarDualMode) {
+    // (2026-11-10) a verb with a reflexive use gets a third tab, «Reflexivo»
+    // (Estándar · Reflexivo, or Dativo · Estándar · Reflexivo)
+    var reflUse = hasReflexiveUse(data);
+    if (detailGustarTab === "dativo" && !gustarDualMode) detailGustarTab = "personal";
+    if (detailGustarTab === "reflexivo" && !reflUse) detailGustarTab = gustarDualMode ? "dativo" : "personal";
+    var showRefl = reflUse && detailGustarTab === "reflexivo";
+    if (el.dGustarTabs) el.dGustarTabs.hidden = !gustarDualMode && !reflUse;
+    if (el.dGustarTabDativo) el.dGustarTabDativo.hidden = !gustarDualMode;
+    if (el.dGustarTabReflexivo) el.dGustarTabReflexivo.hidden = !reflUse;
+    if (gustarDualMode || reflUse) {
       el.dGustarTabPersonal.classList.toggle("active", detailGustarTab === "personal");
       el.dGustarTabDativo.classList.toggle("active", detailGustarTab === "dativo");
+      el.dGustarTabReflexivo.classList.toggle("active", showRefl);
     }
     var effectiveGustar = gustarDualMode ? (detailGustarTab === "dativo") : !!data.gustar_like;
+    if (showRefl) forms = reflexiveForms(data.forms);
+    var plainForms = data.forms || {};
 
-    el.dInfinitive.textContent = data.infinitive || id;
+    el.dInfinitive.textContent = showRefl ? reflexiveInfinitive(data.infinitive) : (data.infinitive || id);
     // the definition follows the tab: the dative meaning ("me pasó algo" —
     // something happened to me) or the personal one ("pasé por tu casa")
-    el.dDefinition.textContent = verbUseDefinition(data, !effectiveGustar) || "";
+    el.dDefinition.textContent = (showRefl ? reflexiveUseDefinition(data) : verbUseDefinition(data, !effectiveGustar)) || "";
     el.dBadges.innerHTML = "";
     if (data.type) el.dBadges.appendChild(badge("type", tagLabel(data.type)));
     verbIrregularities(data).forEach(function (tag) { el.dBadges.appendChild(badge("irregular", tagLabel(tag))); });
     el.dBadges.appendChild(badge("transitivity", tagLabel(data.transitivity || "transitivo")));
-    if (data.reflexive) el.dBadges.appendChild(badge("reflexive", tagLabel("reflexivo")));
+    if (data.reflexive || reflUse) el.dBadges.appendChild(badge("reflexive", tagLabel("reflexivo")));
     if (data.auxiliar) el.dBadges.appendChild(badge("auxiliar", tagLabel("auxiliar")));
     if (data.gustar_like) el.dBadges.appendChild(badge("gustarLike", tagLabel("dativo")));
     appendKnownToggle(el.dBadges, el.dKnown, data.known);
@@ -6819,7 +6978,7 @@
     // list-specific sense of a verb lives here, not in its definition.
     el.dNotes.textContent = data.notes || "";
     el.dNotes.style.display = data.notes ? "" : "none";
-    var dEx = verbUseExample(data, !effectiveGustar); // the example follows the tab, like the definition
+    var dEx = showRefl ? reflexiveUseExample(data) : verbUseExample(data, !effectiveGustar); // the example follows the tab, like the definition
     el.dExample.textContent = dEx;
     el.dExample.style.display = dEx ? "" : "none";
     el.dTtsMsg.textContent = "";
@@ -6843,13 +7002,13 @@
       if (personKey === "vos") {
         td.textContent = imper.vos || "—";
         if (imper.vos) td.classList.add("speakable");
-        td.dataset.formKey = flashCellKey("imperativo", "vos");
+        td.dataset.formKey = flashCellKey("imperativo", "vos") + (showRefl ? REFLEXIVE_USE_SUFFIX : "");
         return td;
       }
       if (personKey === "nosotros") {
         td.textContent = imper.nosotros || "—";
         if (imper.nosotros) td.classList.add("speakable");
-        td.dataset.formKey = flashCellKey("imperativo", "nosotros");
+        td.dataset.formKey = flashCellKey("imperativo", "nosotros") + (showRefl ? REFLEXIVE_USE_SUFFIX : "");
         return td;
       }
       var realVal = personKey === "el" ? imper.usted : imper.ustedes;
@@ -6866,12 +7025,14 @@
       // the full "— / — / <real>" td.textContent — see the tap-to-hear
       // click handler below, which special-cases td.imp-col for this.
       if (realVal) td.classList.add("speakable");
-      td.dataset.formKey = flashCellKey("imperativo", personKey);
+      td.dataset.formKey = flashCellKey("imperativo", personKey) + (showRefl ? REFLEXIVE_USE_SUFFIX : "");
       return td;
     }
 
     // a dative verb's personal-use forms are their own cards (Sabido, progress)
-    var useSuffix = gustarDualMode && !effectiveGustar ? PERSONAL_USE_SUFFIX : "";
+    var useSuffix = showRefl ? REFLEXIVE_USE_SUFFIX : gustarDualMode && !effectiveGustar ? PERSONAL_USE_SUFFIX : "";
+    // irregular marks compare the plain form (me voy → voy)
+    function irregCell(tk, pk, val) { return isCellIrregular(data, tk, pk, showRefl ? ((plainForms[tk] && plainForms[tk][pk]) || "") : val); }
     buildTenseHeader();
     el.dConjBody.innerHTML = "";
     el.dConjPronounBody.innerHTML = "";
@@ -6894,7 +7055,7 @@
         } else {
           var val = (forms[t.key] && forms[t.key][p.key]) || "";
           td.textContent = val || "—";
-          if (isCellIrregular(data, t.key, p.key, val)) td.classList.add("irreg");
+          if (irregCell(t.key, p.key, val)) td.classList.add("irreg");
           if (val) td.classList.add("speakable");
         }
         td.dataset.formKey = flashCellKey(t.key, p.key) + useSuffix; // see paintVerbFormMarks()
@@ -6909,7 +7070,7 @@
         } else {
           var subjVal = (forms[t.key] && forms[t.key][p.key]) || "";
           tdSubj.textContent = subjVal || "—";
-          if (isCellIrregular(data, t.key, p.key, subjVal)) tdSubj.classList.add("irreg");
+          if (irregCell(t.key, p.key, subjVal)) tdSubj.classList.add("irreg");
           if (subjVal) tdSubj.classList.add("speakable");
         }
         tdSubj.dataset.formKey = flashCellKey(t.key, p.key) + useSuffix;
@@ -6953,6 +7114,7 @@
       el.dConjBody.appendChild(impTr);
     }
 
+    if (el.dGerundioTile) el.dGerundioTile.dataset.formKey = "gerundio" + (showRefl ? REFLEXIVE_USE_SUFFIX : "");
     el.dGerundio.textContent = forms.gerundio || "—";
     el.dGerundio.classList.toggle("speakable", !!forms.gerundio);
     el.dParticipio.textContent = forms.participio || "—";
@@ -7111,6 +7273,11 @@
     el.fPersonalDefinition.value = "";
     el.fPersonalExample.value = "";
     el.fPersonalDefinitionWrap.hidden = true;
+    el.fReflexiveUse.checked = false;
+    el.fReflexiveDefinition.value = "";
+    el.fReflexiveExample.value = "";
+    formHadReflexiveUse = false;
+    syncReflexiveUseUi();
     el.fGerundio.value = "";
     el.fParticipio.value = "";
     PERSONS.forEach(function (p) {
@@ -7146,6 +7313,10 @@
     el.fPersonalDefinition.value = data.personal_definition || "";
     el.fPersonalExample.value = data.personal_example || "";
     el.fPersonalDefinitionWrap.hidden = !data.gustar_like;
+    el.fReflexiveUse.checked = !!data.reflexive_use;
+    el.fReflexiveDefinition.value = data.reflexive_definition || "";
+    el.fReflexiveExample.value = data.reflexive_example || "";
+    formHadReflexiveUse = !!data.reflexive_use;
     var forms = data.forms || {};
     el.fGerundio.value = forms.gerundio || "";
     el.fParticipio.value = forms.participio || "";
@@ -7165,6 +7336,7 @@
       var inp = document.getElementById("f-imperativo-" + p.key);
       if (inp) inp.value = imper[p.key] || "";
     });
+    syncReflexiveUseUi();
   }
 
   function openForm(mode, data) {
@@ -7241,7 +7413,7 @@
     });
     if (hasImper) forms.imperativo = imper;
 
-    return {
+    var out = {
       infinitive: el.fInfinitive.value.trim(),
       definition: el.fDefinition.value.trim(),
       type: verbTypeOf(el.fInfinitive.value) || el.fType.value,
@@ -7259,6 +7431,31 @@
       personal_example: el.fGustarLike.checked ? el.fPersonalExample.value.trim() : "",
       forms: forms
     };
+    // the reflexive use (sent only when it's on, or was: a database without
+    // the 2026-11-10 columns still saves every other verb)
+    var reflOn = el.fReflexiveUse.checked && !el.fReflexive.checked && !infinitiveIsReflexive(out.infinitive);
+    if (reflOn || formHadReflexiveUse) {
+      out.reflexive_use = reflOn;
+      out.reflexive_definition = reflOn ? el.fReflexiveDefinition.value.trim() : "";
+      out.reflexive_example = reflOn ? el.fReflexiveExample.value.trim() : "";
+    }
+    return out;
+  }
+  var formHadReflexiveUse = false;
+  // «¿También «irse»?» shows for a plain infinitive; «¿Reflexivo?» (a verb
+  // that only exists with -se) for one typed with -se, or one already ticked.
+  function syncReflexiveUseUi() {
+    var inf = el.fInfinitive.value.trim();
+    var seVerb = infinitiveIsReflexive(inf);
+    var plain = !!verbClass(inf.toLowerCase()) && !seVerb;
+    if (el.fReflexiveWrap) el.fReflexiveWrap.hidden = !seVerb && !el.fReflexive.checked;
+    var showUse = plain && !el.fReflexive.checked;
+    el.fReflexiveUseCheck.hidden = !showUse;
+    var rinf = reflexiveInfinitive(inf || "…");
+    el.fReflexiveUseLabel.textContent = t("check_reflexive_use", { inf: rinf });
+    el.fReflexiveDefinitionLabel.textContent = t("label_reflexive_definition", { inf: rinf });
+    el.fReflexiveExampleLabel.textContent = t("label_reflexive_example", { inf: rinf });
+    el.fReflexiveUseWrap.hidden = !(showUse && el.fReflexiveUse.checked);
   }
 
   // ================= Supabase-backed data layer =================
@@ -7281,6 +7478,9 @@
         also_personal_use: !!row.also_personal_use,
         personal_definition: row.personal_definition || "",
         personal_example: row.personal_example || "",
+        reflexive_use: !!row.reflexive_use,
+        reflexive_definition: row.reflexive_definition || "",
+        reflexive_example: row.reflexive_example || "",
         known: !!row.known,
         known_forms: row.known_forms || {},
         forms_en: row.forms_en || {},
@@ -7304,6 +7504,7 @@
         var prevById = {};
         allVerbs.forEach(function (v) { prevById[v.id] = v.data; });
         ownVerbs = sortByText((res.data || []).map(rowToVerb), "infinitive");
+        if (lastListRows) rebuildListMembership(lastListRows); // «irse» items follow ir's reflexive use
         rebuildCollection("verb");
         carryOverVerbGlosses(prevById, allVerbs);
         renderList();
@@ -7334,6 +7535,26 @@
     if (origin && origin.keep) { data.known = !!origin.keep.known; data.known_forms = origin.keep.known_forms || {}; }
     el.formMsg.textContent = t("msg_guardando");
 
+    // (2026-11-10) a new «irse» when you already have «ir» becomes ir's
+    // reflexive use instead of a second verb
+    var pairBase = !editingId && reflexivePairBase(data.infinitive);
+    if (pairBase) {
+      var bd = pairBase.data;
+      var patch = { reflexive_use: true,
+        reflexive_definition: (bd.reflexive_use && bd.reflexive_definition) || data.definition || "",
+        reflexive_example: (bd.reflexive_use && bd.reflexive_example) || data.example || "" };
+      supabaseClient.from("verbs").update(patch).eq("id", pairBase.id).then(function (res) {
+        if (res.error) { el.formMsg.textContent = t("msg_error_guardar", { msg: res.error.message }); return; }
+        verbGlossPriorityId = pairBase.id;
+        closeForm();
+        loadVerbs().then(function () {
+          detailGustarTab = "reflexivo"; selectedId = pairBase.id; selectVerb(pairBase.id);
+          el.dTtsMsg.textContent = t("msg_reflexive_merged", { base: bd.infinitive });
+        });
+      });
+      return;
+    }
+
     var query = editingId
       ? supabaseClient.from("verbs").update(data).eq("id", editingId).select().single()
       : supabaseClient.from("verbs").insert(data).select().single();
@@ -7345,6 +7566,15 @@
       closeForm();
       loadVerbs().then(function () { selectVerb(savedId); });
     });
+  }
+
+  // Your own plain verb that an «X-se» belongs to (ir for irse), or null.
+  // Only a verb you already have counts, so a verb that only exists with -se
+  // (quejarse) is never split.
+  function reflexivePairBase(inf) {
+    if (!infinitiveIsReflexive(inf)) return null;
+    var base = norm(String(inf).trim().replace(/se$/i, ""));
+    return ownVerbs.find(function (v) { return !v.data.reflexive && norm(v.data.infinitive || "") === base; }) || null;
   }
 
   function handleDelete() {
@@ -9676,6 +9906,24 @@
     if (forms.gerundio) out.push({ key: "gerundio", es: forms.gerundio, slot: "gerundio" });
     if (forms.participio) out.push({ key: "participio", es: forms.participio, slot: "participio" });
     if (data.gustar_like) out = out.concat(verbPersonalUseEntries(data));
+    if (hasReflexiveUse(data)) out = out.concat(verbReflexiveUseEntries(data));
+    return out;
+  }
+  // The reflexive use: the plain forms with the pronoun, keyed "…|r".
+  function verbReflexiveUseEntries(data) {
+    var rf = reflexiveForms(data.forms), out = [];
+    FLASH_PERSONAL_TENSES.forEach(function (tn) {
+      var mood = SUBJ_TENSES.some(function (s) { return s.key === tn.key; }) ? "subjuntivo" : "indicativo";
+      PERSONS.forEach(function (p) {
+        var val = (rf[tn.key] && rf[tn.key][p.key]) || "";
+        if (val) out.push({ key: flashCellKey(tn.key, p.key) + REFLEXIVE_USE_SUFFIX, es: val, slot: p.label + " · " + tn.label.toLowerCase() + " (" + mood + ")" });
+      });
+    });
+    Object.keys(IMPERATIVO_FORM_KEY).forEach(function (pk) {
+      var val = (rf.imperativo || {})[IMPERATIVO_FORM_KEY[pk]];
+      if (val) out.push({ key: flashCellKey("imperativo", pk) + REFLEXIVE_USE_SUFFIX, es: val, slot: IMPERATIVO_FORM_KEY[pk] + " · imperativo afirmativo" });
+    });
+    if (rf.gerundio) out.push({ key: "gerundio" + REFLEXIVE_USE_SUFFIX, es: rf.gerundio, slot: "gerundio" });
     return out;
   }
   // A dative verb's personal use: the plain stored forms, keyed "…|p".
@@ -9702,6 +9950,7 @@
       v: VERB_GLOSS_VERSION,
       i: (data.infinitive || "").normalize("NFC").trim().toLowerCase(),
       g: !!data.gustar_like,
+      r: hasReflexiveUse(data) || undefined,
       k: verbFormEntries(data).map(function (e) { return e.key; }).sort()
     });
     var h = 5381;
@@ -9862,20 +10111,24 @@
   // dative definition) and its personal-use forms (personal mode, with the
   // personal definition, sent under their plain keys so they share the
   // cache with the same verb used personally anywhere else).
-  function verbGlossCall(data, entries, personal) {
+  // The reflexive use is sent as the -se verb itself («irse», reflexive
+  // definition, plain keys), so it shares the cache with «irse» everywhere.
+  function verbGlossCall(data, entries, use) {
+    var personal = use === "personal", refl = use === "reflexive";
     return supabaseClient.functions.invoke("verb-gloss", {
       body: {
-        infinitive: data.infinitive || "", definition: verbUseDefinition(data, personal),
-        reflexive: !!data.reflexive, gustarLike: !!data.gustar_like && !personal,
-        forms: personal ? entries.map(function (e) { return { key: baseFormKey(e.key), es: e.es, slot: e.slot }; }) : entries
+        infinitive: refl ? reflexiveInfinitive(data.infinitive) : (data.infinitive || ""),
+        definition: refl ? reflexiveUseDefinition(data) : verbUseDefinition(data, personal),
+        reflexive: refl || !!data.reflexive, gustarLike: !!data.gustar_like && !personal && !refl,
+        forms: personal || refl ? entries.map(function (e) { return { key: baseFormKey(e.key), es: e.es, slot: e.slot }; }) : entries
       }
     }).then(function (res) {
       var g = res && res.data && res.data.glosses;
       if (res.error && res.error.context && res.error.context.status === 429) { var le = new Error("daily_limit"); le.limit = true; throw le; }
       if (res.error || !g || !Object.keys(g).length) throw new Error((res.error && res.error.message) || "empty reply");
-      if (!personal) return { glosses: g, data: res.data };
-      var out = {};
-      Object.keys(g).forEach(function (k) { out[k + PERSONAL_USE_SUFFIX] = g[k]; });
+      if (!personal && !refl) return { glosses: g, data: res.data };
+      var out = {}, suffix = refl ? REFLEXIVE_USE_SUFFIX : PERSONAL_USE_SUFFIX;
+      Object.keys(g).forEach(function (k) { out[k + suffix] = g[k]; });
       return { glosses: out, data: res.data };
     });
   }
@@ -9884,10 +10137,12 @@
     var entries = verbFormEntries(data);
     var sig = verbGlossSig(data);
     var started = Date.now();
-    var mainEntries = entries.filter(function (e) { return !isPersonalUseKey(e.key); });
+    var mainEntries = entries.filter(function (e) { return !isPersonalUseKey(e.key) && !isReflexiveUseKey(e.key); });
     var persEntries = entries.filter(function (e) { return isPersonalUseKey(e.key); });
-    var calls = [verbGlossCall(data, mainEntries, false)];
-    if (persEntries.length) calls.push(verbGlossCall(data, persEntries, true));
+    var reflEntries = entries.filter(function (e) { return isReflexiveUseKey(e.key); });
+    var calls = [verbGlossCall(data, mainEntries, "main")];
+    if (persEntries.length) calls.push(verbGlossCall(data, persEntries, "personal"));
+    if (reflEntries.length) calls.push(verbGlossCall(data, reflEntries, "reflexive"));
     return Promise.all(calls).then(function (parts) {
       var glosses = {}, cachedN = 0, genN = 0, counted = false;
       parts.forEach(function (x) {
@@ -10030,14 +10285,46 @@
         frontSpeak: inf, backSpeak: val
       });
     });
+
+    // the reflexive use: «irse» · yo · presente → «me voy» (to leave), its
+    // own cards next to «ir» · yo · presente → «voy»
+    if (hasReflexiveUse(data)) Array.prototype.push.apply(deck, verbReflexiveCards(data, want));
+    return deck;
+  }
+  function verbReflexiveCards(data, want) {
+    var deck = [], rf = reflexiveForms(data.forms), rinf = reflexiveInfinitive(data.infinitive);
+    var rdef = reflexiveUseDefinition(data);
+    var sub = rdef ? "(" + rdef + ")" : "";
+    function push(key, frontSub, val) {
+      deck.push({
+        kind: "verb", data: data, formKey: key, reflexiveUse: true,
+        frontMain: rinf, frontSub: frontSub, backMain: val, backSub: sub,
+        frontSpeak: rinf, backSpeak: val
+      });
+    }
+    FLASH_PERSONAL_TENSES.forEach(function (tn) {
+      PERSONS.forEach(function (p) {
+        var key = flashCellKey(tn.key, p.key) + REFLEXIVE_USE_SUFFIX;
+        if (!want(key, tn.key, "personal")) return;
+        var val = (rf[tn.key] && rf[tn.key][p.key]) || "";
+        if (val) push(key, p.label + " · " + tn.label.toLowerCase(), val);
+      });
+    });
+    Object.keys(IMPERATIVO_FORM_KEY).forEach(function (personKey) {
+      var key = flashCellKey("imperativo", personKey) + REFLEXIVE_USE_SUFFIX;
+      if (!want(key, "imperativo", "imperativo")) return;
+      var val = (rf.imperativo || {})[IMPERATIVO_FORM_KEY[personKey]] || "";
+      if (val) push(key, IMPERATIVO_DISPLAY[personKey] + " · " + t("mood_imperativo").toLowerCase(), val);
+    });
+    if (rf.gerundio && want("gerundio" + REFLEXIVE_USE_SUFFIX, "gerundio", "standalone")) push("gerundio" + REFLEXIVE_USE_SUFFIX, t("tile_gerundio"), rf.gerundio);
     return deck;
   }
 
   // The forms picked in the flashcard setup (quick picks / Personalizar).
   function setupVerbWant(formKey, tenseKey, tag) {
     if (tag === "impersonal") return flashTenseHasAnySelected(tenseKey);
-    if (tag === "standalone") return activeFlashStandalone.has(formKey);
-    return activeFlashCells.has(baseFormKey(formKey)); // a cell picks both uses of a dative verb
+    if (tag === "standalone") return activeFlashStandalone.has(baseFormKey(formKey));
+    return activeFlashCells.has(baseFormKey(formKey)); // a cell picks every use of the verb (dative, reflexive)
   }
 
   function wordCard(data, direction) {
@@ -10361,6 +10648,9 @@
     return /^[yY][.!?…]*$/.test(t0) ? "i" : t0;
   }
   window.voseaTtsSayAs = function (t0) { return ttsSayAs(t0); }; // tests
+  window.voseaRefl = { forms: function (f) { return reflexiveForms(f); }, enc: function (w, c) { return encliticForm(w, c); }, // tests
+    cards: function (inf) { var v = allVerbs.find(function (x) { return x.data.infinitive === inf; }); return v ? verbCards(v.data, setupVerbWant).map(function (c) { return [c.formKey, c.frontMain, c.frontSub, c.backMain, cardBackSub(c)]; }) : []; },
+    entries: function (inf) { var v = allVerbs.find(function (x) { return x.data.infinitive === inf; }); return v ? verbFormEntries(v.data).map(function (e) { return e.key + "=" + e.es; }) : []; } };
   function ttsKey(text, vk, opts) {
     var k = ttsVoiceName(vk) + "\u0000" + ttsSayAs(text);
     if (vk && ELEVEN_VOICES[vk]) k += "\u0000" + ((opts && opts.tag) || "") + "\u0000" + ((opts && opts.take) || 0) + (opts && opts.lang === "en" ? "\u0000en" : "");
@@ -10605,12 +10895,42 @@
         var msg = t("rae_lookup_filled");
 
         if (isVerb) {
+          // (2026-11-10) one lookup fills every use: a typed «irse» comes
+          // back as «ir» with its reflexive use, unless you already have
+          // «ir» (then saving adds it there); «quejar» comes back as «quejarse».
+          var gotInf = String(data.infinitive || term).trim();
+          var haveBase = !editingId && data.typed && gotInf !== term && reflexivePairBase(term);
+          if (haveBase) {
+            fillIfEmpty(el.fDefinition, data.reflexiveDefinition || data.definition);
+            fillIfEmpty(el.fExample, data.reflexiveExample || data.example);
+            el.formMsg.textContent = t("rae_lookup_pair_have", { typed: term, base: haveBase.data.infinitive });
+            return;
+          }
+          if (gotInf && norm(gotInf) !== norm(term)) {
+            el.fInfinitive.value = gotInf;
+            msg += " " + t(infinitiveIsReflexive(gotInf) ? "rae_lookup_as_se" : "rae_lookup_as_base", { typed: term, inf: gotInf });
+            term = gotInf;
+            if (!infinitiveIsReflexive(gotInf)) setReflexive(false);
+          }
           fillIfEmpty(el.fDefinition, data.definition);
           fillIfEmpty(el.fExample, data.example);
           fillIfEmpty(el.fNotes, data.notes);
           fillIfEmpty(el.fPreposicion, data.preposicion);
           if (data.transitivity) el.fTransitivity.value = data.transitivity;
           if (data.reflexive || infinitiveIsReflexive(term)) setReflexive(true, false);
+          else if (reflexiveAuto) setReflexive(false);
+          if (data.reflexiveUse && !infinitiveIsReflexive(term)) {
+            el.fReflexiveUse.checked = true;
+            fillIfEmpty(el.fReflexiveDefinition, data.reflexiveDefinition);
+            fillIfEmpty(el.fReflexiveExample, data.reflexiveExample);
+          }
+          if (data.gustarLike) {
+            el.fGustarLike.checked = true;
+            el.fPersonalDefinitionWrap.hidden = false;
+            fillIfEmpty(el.fPersonalDefinition, data.personalDefinition);
+            fillIfEmpty(el.fPersonalExample, data.personalExample);
+          }
+          syncReflexiveUseUi();
           if (data.gerundio) el.fGerundio.value = data.gerundio;
           if (data.participio) el.fParticipio.value = data.participio;
 
@@ -10842,6 +11162,10 @@
     if (entry.data.gustar_like) {
       renderAndCollect("dativo");
     }
+    if (hasReflexiveUse(entry.data)) {
+      texts.push(reflexiveInfinitive(entry.data.infinitive));
+      renderAndCollect("reflexivo");
+    }
     return texts;
   }
 
@@ -11068,6 +11392,7 @@
   // "everyday sentence / list sentence" shows its last part (the one in the
   // list's context); a single sentence shows as is.
   function flashExampleText(data, card) {
+    if (card && card.kind === "verb" && data && card.reflexiveUse) return reflexiveUseExample(data);
     if (card && card.kind === "verb" && data && data.gustar_like) return verbUseExample(data, !!card.personalUse);
     var ex = String((data && data.example) || "").trim();
     if (!ex) return "";
@@ -18266,7 +18591,7 @@
   function crPresetKey(p) { return p.i18n.replace("flash_preset_", ""); }
   function crPresetWant(p) {
     return function (fk, tenseKey, tag) {
-      if (tag === "standalone") return !!(p.standalone && p.standalone.indexOf(fk) !== -1);
+      if (tag === "standalone") return !!(p.standalone && p.standalone.indexOf(baseFormKey(fk)) !== -1);
       return !!(p.tenses && p.tenses.indexOf(tenseKey) !== -1);
     };
   }
@@ -21241,7 +21566,9 @@
   // loadLists() — success or offline-cache-fallback — so every place that
   // already refreshes the lists panel also keeps the "Listas" filter chips
   // and list-membership filtering current, with no extra call sites needed.
+  var lastListRows = null;
   function rebuildListMembership(rows) {
+    lastListRows = rows;
     verbListMembership = {};
     wordListMembership = {};
     phraseListMembership = {};
@@ -21249,7 +21576,7 @@
       (row.list_items || []).forEach(function (item) {
         var data = item.data || {};
         var map, key;
-        if (item.item_type === "verb") { map = verbListMembership; key = norm(data.infinitive || ""); }
+        if (item.item_type === "verb") { map = verbListMembership; key = verbCoverKey(data.infinitive || ""); }
         else if (item.item_type === "word") { map = wordListMembership; key = norm(data.word || ""); }
         else if (item.item_type === "phrase") { map = phraseListMembership; key = norm(data.phrase || ""); }
         else return;
@@ -21324,9 +21651,28 @@
   // The borrowed entries of one kind, in list order. A data object is reused
   // while its snapshot is unchanged, so an open flashcard deck keeps working
   // across reloads.
+  // (2026-11-10) «irse» in a list is the reflexive use of your own «ir»
+  // when ir has one: it maps onto ir (Ver, list filters) and isn't borrowed
+  // as a second verb.
+  var reflBaseCache = { src: null, set: null };
+  function reflUseBases() {
+    if (reflBaseCache.src !== ownVerbs) {
+      var set = {};
+      ownVerbs.forEach(function (v) { if (hasReflexiveUse(v.data)) set[norm(v.data.infinitive || "")] = true; });
+      reflBaseCache = { src: ownVerbs, set: set };
+    }
+    return reflBaseCache.set;
+  }
+  function verbCoverKey(inf) {
+    var k = norm(inf || "");
+    if (!infinitiveIsReflexive(inf)) return k;
+    var base = norm(String(inf).trim().replace(/se$/i, ""));
+    return reflUseBases()[base] ? base : k;
+  }
   function borrowedFor(kind) {
     var have = {};
     ownCollection(kind).forEach(function (e) { var k = norm(kindText(kind, e.data)); if (k) have[k] = true; });
+    if (kind === "verb") Object.keys(reflUseBases()).forEach(function (b) { have[norm(reflexiveInfinitive(b))] = true; });
     var out = [];
     allLists.forEach(function (l) {
       if (!l.data.enabled) return;
@@ -21530,7 +21876,7 @@
   // version is different now (its owner or an editor changed it), say so and
   // offer to use it. Your Sabido marks stay as they are.
   var LIST_VERSION_FIELDS = {
-    verb: ["definition", "notes", "example", "preposicion", "transitivity", "reflexive", "gustar_like", "personal_definition", "personal_example", "forms"],
+    verb: ["definition", "notes", "example", "preposicion", "transitivity", "reflexive", "gustar_like", "personal_definition", "personal_example", "reflexive_use", "reflexive_definition", "reflexive_example", "forms"],
     word: ["definition", "partOfSpeech", "gender", "register", "notes", "example"],
     phrase: ["definition", "function", "register", "idiomatic", "literal", "notes", "example"]
   };
@@ -23219,7 +23565,7 @@
   // live reference — if that source document changes, this copy needs to
   // be updated by hand too, since there is no build step tying them
   // together.
-  var IMPORT_FORMAT_SPEC = "# voseá — Custom Content Import Format (v1)\n\nPaste this whole document into your preferred LLM, along with the source\nmaterial you want turned into study content (a webpage, a PDF, your own\nlist of words), and ask it to produce one JSON file matching the shape\nbelow. Then point voseá's import screen at that file.\n\nEverything imported lands in **your own** verbs/words/phrases — never the\napp's shared starter content — the same as adding an item by hand.\n\n## Top-level shape\n\n```json\n{\n  \"version\": 1,\n  \"list_name\": \"Petrofísica y Perfilaje de Pozos\",\n  \"verbs\": [ /* verb objects, see below */ ],\n  \"words\": [ /* word objects, see below */ ],\n  \"phrases\": [ /* phrase objects, see below */ ]\n}\n```\n\n- `version` — always `1` for this format. Lets the app detect and reject a\n  future incompatible format instead of silently importing garbage.\n- `list_name` — optional. If present, every verb/word/phrase below is also\n  added to a list with this exact name (a new list is created if none\n  matches; an existing one with the same name is added to instead of\n  duplicated). Omit this to just add items to your collection without\n  creating a list.\n- `verbs`, `words` and `phrases` are all optional arrays — include\n  whichever you have.\n\n## Verb object shape\n\n```json\n{\n  \"infinitive\": \"escalar\",\n  \"definition\": \"to climb; to scale\",\n  \"notes\": \"en perfilaje: escalar una curva = to set a log curve's scale\",\n  \"example\": \"Escalamos el cerro en tres horas. / Escalá la resistividad en logarítmico.\",\n  \"type\": \"-ar\",\n  \"reflexive\": false,\n  \"irregularity\": \"regular\",\n  \"pattern\": \"\",\n  \"transitivity\": \"transitivo\",\n  \"preposicion\": \"\",\n  \"auxiliar\": false,\n  \"gustar_like\": false,\n  \"personal_definition\": \"\",\n  \"personal_example\": \"\",\n  \"forms\": {\n    \"presente\":     { \"yo\": \"escalo\",    \"vos\": \"escalás\",   \"el\": \"escala\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalan\" },\n    \"preterito\":    { \"yo\": \"escalé\",    \"vos\": \"escalaste\", \"el\": \"escaló\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalaron\" },\n    \"imperfecto\":   { \"yo\": \"escalaba\",  \"vos\": \"escalabas\", \"el\": \"escalaba\",  \"nosotros\": \"escalábamos\",  \"ellos\": \"escalaban\" },\n    \"futuro\":       { \"yo\": \"escalaré\",  \"vos\": \"escalarás\", \"el\": \"escalará\",  \"nosotros\": \"escalaremos\",  \"ellos\": \"escalarán\" },\n    \"condicional\":  { \"yo\": \"escalaría\", \"vos\": \"escalarías\",\"el\": \"escalaría\", \"nosotros\": \"escalaríamos\", \"ellos\": \"escalarían\" },\n    \"subjPresente\": { \"yo\": \"escale\",    \"vos\": \"escales\",   \"el\": \"escale\",    \"nosotros\": \"escalemos\",    \"ellos\": \"escalen\" },\n    \"subjPasado\":   { \"yo\": \"escalara\",  \"vos\": \"escalaras\", \"el\": \"escalara\",  \"nosotros\": \"escaláramos\",  \"ellos\": \"escalaran\" },\n    \"imperativo\":   { \"vos\": \"escalá\", \"usted\": \"escale\", \"nosotros\": \"escalemos\", \"ustedes\": \"escalen\" },\n    \"gerundio\": \"escalando\",\n    \"participio\": \"escalado\"\n  }\n}\n```\n\nField notes:\n- `type` — one of `-ar` / `-er` / `-ir`, must match the infinitive's ending.\n- `irregularity` — optional. The app works it out from `forms` itself, and a verb can have several:\n  `cambio de raíz` (él/ellos change the stem vowel), `irregular (yo)` (the present yo breaks the\n  pattern beyond that: tengo, digo, conozco), `pretérito irregular` (tuve, dije, hice), or\n  `irregular (total)` alone (ser, ir, haber, ver). So \"decir\" is `cambio de raíz, irregular (yo),\n  pretérito irregular`. If you include it, write the tags separated by commas; when it disagrees\n  with the table, the preview warns you and the table's tags are saved.\n- `pattern` — a short free-text note on what's irregular (e.g. `\"e→i en formas acentuadas\"`), blank if fully regular.\n- `transitivity` — one of `transitivo` / `intransitivo` / `ambos`.\n- `preposicion` — a fixed preposition the verb idiomatically takes (`\"a\"`, `\"de\"`, `\"en\"`...), or `\"\"`.\n- `gustar_like` — `true` for a dative (\"tipo gustar\") verb: gustar, encantar, doler, faltar, pasar, quedar, tocar, parecer, importar... Then `definition` and `example` are the **dative** use (pasar: `\"to happen (to someone)\"`, `\"¿Qué te pasó en la mano?\"`), and `personal_definition` and `personal_example` are the use with the person as the subject, in the indicative (`\"to pass, to come by; to spend (time)\"`, `\"Paso por tu casa a las ocho.\"`). Put examples only in the example fields, never inside a definition. Every dative verb has both uses, and `forms` is the plain conjugation (yo paso, vos pasás…) — the app builds the \"me pasa / me pasan\" forms itself. Leave `personal_definition` and `personal_example` `\"\"` for any other verb.\n- `notes` and `example` — optional free text, same rules as for words (see \"Definitions, notes and examples\" below).\n- `forms` — every tense object must have all five persons: `yo`, `vos`, `el`, `nosotros`, `ellos`. `imperativo` has only `vos`/`usted`/`nosotros`/`ustedes` (no `yo` — you can't command yourself). `gerundio` and `participio` are plain strings, not person tables.\n- Impersonal weather verbs (`llover`, `nevar`) skip the person tables entirely and use `\"forms\": { \"impersonal\": { \"presente\": \"llueve\", \"subjPasado\": \"lloviera\", ... } }` instead — there's no \"yo llueve.\"\n- Reflexive verbs (e.g. `levantarse`) write `forms` WITH the reflexive pronoun already baked into every single-table cell (`\"yo\": \"me levanto\"`, NOT just `\"levanto\"`) — the app displays exactly what's stored here, it does not add the pronoun itself at display time. `imperativo` includes it too, wherever it attaches: enclitic on `vos` (`\"vos\": \"levantate\"`), proclitic on the other three (`\"usted\": \"se levante\"`, `\"nosotros\": \"nos levantemos\"`, `\"ustedes\": \"se levanten\"`).\n\n## Word object shape\n\n```json\n{\n  \"word\": \"porosidad\",\n  \"definition\": \"porosity\",\n  \"part_of_speech\": \"sustantivo\",\n  \"gender\": \"femenino\",\n  \"register\": \"neutro\",\n  \"notes\": \"φ; se mide con los perfiles de densidad, neutrón o sónico\",\n  \"example\": \"Esta arenisca tiene buena porosidad.\"\n}\n```\n\n- `part_of_speech` — one of `sustantivo` / `adjetivo` / `adverbio` / `pronombre` / `preposición` / `conjunción` / `interjección`.\n- `gender` — one of `masculino` / `femenino` / `neutro` / `\"\"` (blank for anything ungendered, e.g. most adverbs).\n- `register` — optional, one of `neutro` (standard) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires slang: laburo, guita, bondi). Defaults to `neutro`.\n- `notes` and `example` are both optional free text; `example` is a Spanish sentence using the word, if you want one.\n\n## Phrase object shape\n\nShort common phrases/expressions — kept separate from single-word\nvocabulary because a phrase doesn't have one part of speech or gender.\nInstead it has its own two facets: what it's *for* (`function`) and how\nformal/slangy it is (`register`).\n\n```json\n{\n  \"phrase\": \"Dale\",\n  \"definition\": \"okay / sure / sounds good\",\n  \"function\": \"acuerdo\",\n  \"register\": \"coloquial\",\n  \"idiomatic\": true,\n  \"literal\": \"give it / go\",\n  \"notes\": \"\",\n  \"example\": \"\"\n}\n```\n\n- `function` — the phrase's communicative role, one of `saludo` (greeting) / `despedida` (farewell) / `cortesía` (courtesy — please, thanks, excuse me) / `acuerdo` (agreement) / `desacuerdo` (disagreement) / `sorpresa` (surprise/reaction) / `pregunta` (question) / `muletilla` (filler/discourse marker) / `otro` (other).\n- `register` — one of `neutro` (standard, textbook-safe) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires-specific slang).\n- `idiomatic` — `true` if the meaning isn't guessable word-by-word (e.g. \"ni en pedo\" doesn't mean anything about being drunk), `false` if it's a plain, literal combination of words.\n- `literal` — only meaningful when `idiomatic` is `true`: a short word-by-word gloss, so both the real meaning and the literal words are visible. Leave `\"\"` when `idiomatic` is `false`.\n- `notes` and `example` are both optional free text, same as for words.\n\n## Definitions, notes and examples (verbs, words and phrases)\n\n- Write every English field (`definition`, `literal`, English in `notes`)\n  in **American English**: American spelling (\"practice\", \"color\",\n  \"canceled\") and American words (\"check\" for a restaurant bill, \"store\",\n  \"candy\", \"cookie\", \"soccer\").\n- `definition` starts with the item's **everyday meaning**, never just\n  the list's topic: \"carrito\" is \"cart\" (not \"luggage cart\") even in an\n  airport list. One item can belong to several lists, and it has only one\n  definition.\n- When the list uses a word in a **genuinely different meaning** — not\n  just a narrower case of the everyday one — add that meaning after the\n  everyday one, with a short qualifier in parentheses:\n  `\"revoque\": \"plaster (on a wall); mudcake (in a well)\"`,\n  `\"carrera\": \"race; career; logging run (in a well)\"`. \"Carrito\" gets no\n  second meaning: an airport cart is still a cart. Keep it to one added\n  meaning. The definition is what a flashcard shows as the answer, so it\n  has to contain the meaning being studied.\n- **Verbs are the exception:** keep a verb's definition to its everyday\n  meaning (\"correr\": \"to run\") and put the list's sense in `notes` and\n  `example`. A verb's flashcards show the English of each conjugated form,\n  which is generated from the definition, so a second meaning there would\n  muddle every form.\n- The list's context also goes in `example` and `notes`. `example` gives a\n  typical sentence first; if the list's use is very different from the\n  everyday one, add a second, list-specific sentence after \" / \" (the\n  flashcards show that last sentence under the answer):\n  `\"Agarrá un carrito en la entrada del súper. / Pusimos las valijas en un carrito.\"`\n- `notes` says what the item means in the list's world when that isn't\n  obvious from the definition: `\"en perfilaje: una carrera = one logging run\"`.\n  Don't use notes for bare topic labels (\"petrofísica\", \"aeropuerto\") —\n  the list itself already says that.\n\n## ⚠️ Dialect requirement — this app uses Rioplatense Spanish (voseo)\n\nEvery verb form below MUST use **vos**, never tú. This is the single\nmost common mistake a general-purpose LLM makes here, so check it\ncarefully — a wrong-but-fluent \"tú\" conjugation will look completely\nplausible and still be wrong for this app:\n\n- Present tense **does not diphthongize** for vos, even for stem-changing\n  verbs: **vos podés** (not \"puedés\"), **vos mostrás** (not \"muestrás\"),\n  **vos pedís** (not \"pidís\"), **vos medís** (not \"midís\"). Stress falls\n  on the ending, not the stem — so vos present tense is always the\n  \"regular-looking\" stem plus `-ás`/`-és`/`-ís`.\n- Affirmative vos imperative = the infinitive's stem + its final accented\n  vowel, no `-s`: **hablá, comé, viví, tené, poné, vení, decí** — never\n  the tú-form (habla, ven, di).\n- Preterite, imperfecto, futuro, condicional, and both subjunctives all\n  use the vos-shaped ending shown in the example above (which mirrors\n  \"tú\" minus the final `-s` for most tenses, except present and imperative\n  where the difference is larger).\n- Compounds of irregular verbs keep the irregularity: **obtener → obtengo,\n  obtuve, obtendré** (not a regular pattern), because it's built on\n  \"tener.\" Same logic for any verb built on **poner**, **venir**,\n  **decir**, etc.\n- Phrases should also reflect real rioplatense usage (e.g. \"¿Vos querés\n  algo?\" not \"¿Tú quieres algo?\") — a phrase generated by an LLM defaulting\n  to Spain/Mexico Spanish will read as noticeably foreign here.\n\n## What the app checks before saving anything\n\n- The file must be valid JSON matching this shape, or the whole import is\n  rejected with an error — nothing partial gets written.\n- Every verb's `forms` must have all required tense/person cells filled in.\n- Before you confirm the import, you'll see a preview of every parsed\n  verb/word/phrase. For verbs, any cell that doesn't match the app's own\n  built-in *regular* conjugation pattern is highlighted — same highlight\n  used everywhere else in the app for irregular verbs. If the file's\n  `irregularity` doesn't match what the table gives, the preview says so:\n  usually that's the LLM having made a mistake in a form; fix it before\n  confirming. Spelling-only changes (sacar → saqué, llegar → llegue,\n  empezar → empecé, surgir → surjo) light up in the table but don't make\n  a verb irregular; describe them in `pattern`.\n- Duplicates are matched by infinitive/word/phrase (case- and\n  accent-insensitive), same as the existing \"add to list\" flow — importing\n  the same file twice won't create duplicate rows.\n";
+  var IMPORT_FORMAT_SPEC = "# voseá — Custom Content Import Format (v1)\n\nPaste this whole document into your preferred LLM, along with the source\nmaterial you want turned into study content (a webpage, a PDF, your own\nlist of words), and ask it to produce one JSON file matching the shape\nbelow. Then point voseá's import screen at that file.\n\nEverything imported lands in **your own** verbs/words/phrases — never the\napp's shared starter content — the same as adding an item by hand.\n\n## Top-level shape\n\n```json\n{\n  \"version\": 1,\n  \"list_name\": \"Petrofísica y Perfilaje de Pozos\",\n  \"verbs\": [ /* verb objects, see below */ ],\n  \"words\": [ /* word objects, see below */ ],\n  \"phrases\": [ /* phrase objects, see below */ ]\n}\n```\n\n- `version` — always `1` for this format. Lets the app detect and reject a\n  future incompatible format instead of silently importing garbage.\n- `list_name` — optional. If present, every verb/word/phrase below is also\n  added to a list with this exact name (a new list is created if none\n  matches; an existing one with the same name is added to instead of\n  duplicated). Omit this to just add items to your collection without\n  creating a list.\n- `verbs`, `words` and `phrases` are all optional arrays — include\n  whichever you have.\n\n## Verb object shape\n\n```json\n{\n  \"infinitive\": \"escalar\",\n  \"definition\": \"to climb; to scale\",\n  \"notes\": \"en perfilaje: escalar una curva = to set a log curve's scale\",\n  \"example\": \"Escalamos el cerro en tres horas. / Escalá la resistividad en logarítmico.\",\n  \"type\": \"-ar\",\n  \"reflexive\": false,\n  \"irregularity\": \"regular\",\n  \"pattern\": \"\",\n  \"transitivity\": \"transitivo\",\n  \"preposicion\": \"\",\n  \"auxiliar\": false,\n  \"gustar_like\": false,\n  \"personal_definition\": \"\",\n  \"personal_example\": \"\",\n  \"reflexive_use\": false,\n  \"reflexive_definition\": \"\",\n  \"reflexive_example\": \"\",\n  \"forms\": {\n    \"presente\":     { \"yo\": \"escalo\",    \"vos\": \"escalás\",   \"el\": \"escala\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalan\" },\n    \"preterito\":    { \"yo\": \"escalé\",    \"vos\": \"escalaste\", \"el\": \"escaló\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalaron\" },\n    \"imperfecto\":   { \"yo\": \"escalaba\",  \"vos\": \"escalabas\", \"el\": \"escalaba\",  \"nosotros\": \"escalábamos\",  \"ellos\": \"escalaban\" },\n    \"futuro\":       { \"yo\": \"escalaré\",  \"vos\": \"escalarás\", \"el\": \"escalará\",  \"nosotros\": \"escalaremos\",  \"ellos\": \"escalarán\" },\n    \"condicional\":  { \"yo\": \"escalaría\", \"vos\": \"escalarías\",\"el\": \"escalaría\", \"nosotros\": \"escalaríamos\", \"ellos\": \"escalarían\" },\n    \"subjPresente\": { \"yo\": \"escale\",    \"vos\": \"escales\",   \"el\": \"escale\",    \"nosotros\": \"escalemos\",    \"ellos\": \"escalen\" },\n    \"subjPasado\":   { \"yo\": \"escalara\",  \"vos\": \"escalaras\", \"el\": \"escalara\",  \"nosotros\": \"escaláramos\",  \"ellos\": \"escalaran\" },\n    \"imperativo\":   { \"vos\": \"escalá\", \"usted\": \"escale\", \"nosotros\": \"escalemos\", \"ustedes\": \"escalen\" },\n    \"gerundio\": \"escalando\",\n    \"participio\": \"escalado\"\n  }\n}\n```\n\nField notes:\n- `type` — one of `-ar` / `-er` / `-ir`, must match the infinitive's ending.\n- `irregularity` — optional. The app works it out from `forms` itself, and a verb can have several:\n  `cambio de raíz` (él/ellos change the stem vowel), `irregular (yo)` (the present yo breaks the\n  pattern beyond that: tengo, digo, conozco), `pretérito irregular` (tuve, dije, hice), or\n  `irregular (total)` alone (ser, ir, haber, ver). So \"decir\" is `cambio de raíz, irregular (yo),\n  pretérito irregular`. If you include it, write the tags separated by commas; when it disagrees\n  with the table, the preview warns you and the table's tags are saved.\n- `pattern` — a short free-text note on what's irregular (e.g. `\"e→i en formas acentuadas\"`), blank if fully regular.\n- `transitivity` — one of `transitivo` / `intransitivo` / `ambos`.\n- `preposicion` — a fixed preposition the verb idiomatically takes (`\"a\"`, `\"de\"`, `\"en\"`...), or `\"\"`.\n- `gustar_like` — `true` for a dative (\"tipo gustar\") verb: gustar, encantar, doler, faltar, pasar, quedar, tocar, parecer, importar... Then `definition` and `example` are the **dative** use (pasar: `\"to happen (to someone)\"`, `\"¿Qué te pasó en la mano?\"`), and `personal_definition` and `personal_example` are the use with the person as the subject, in the indicative (`\"to pass, to come by; to spend (time)\"`, `\"Paso por tu casa a las ocho.\"`). Put examples only in the example fields, never inside a definition. Every dative verb has both uses, and `forms` is the plain conjugation (yo paso, vos pasás…) — the app builds the \"me pasa / me pasan\" forms itself. Leave `personal_definition` and `personal_example` `\"\"` for any other verb.\n- `notes` and `example` — optional free text, same rules as for words (see \"Definitions, notes and examples\" below).\n- `forms` — every tense object must have all five persons: `yo`, `vos`, `el`, `nosotros`, `ellos`. `imperativo` has only `vos`/`usted`/`nosotros`/`ustedes` (no `yo` — you can't command yourself). `gerundio` and `participio` are plain strings, not person tables.\n- Impersonal weather verbs (`llover`, `nevar`) skip the person tables entirely and use `\"forms\": { \"impersonal\": { \"presente\": \"llueve\", \"subjPasado\": \"lloviera\", ... } }` instead — there's no \"yo llueve.\"\n- `reflexive_use` — `true` when the verb is also used with -se, with its own meaning: ir / irse (`\"to leave\"`, `\"Me voy a las ocho.\"`), quedar / quedarse, llamar / llamarse, levantar / levantarse. Then `reflexive_definition` and `reflexive_example` are that use, and the verb is written once, without -se (`\"infinitive\": \"ir\"`), with its plain `forms`: the app builds \"me voy, andate, yéndose\" itself. Don't list `irse` as a separate verb. Leave them `false` / `\"\"` otherwise.\n- A verb that only exists with -se (`quejarse`, `arrepentirse`, `atreverse`) is written with -se and `\"reflexive\": true` instead, and its `forms` have the pronoun in every single-table cell (`\"yo\": \"me quejo\"`, NOT just `\"quejo\"`) — the app shows exactly what's stored for those. `imperativo` too, wherever it attaches: enclitic on `vos` (`\"vos\": \"quejate\"`), proclitic on the other three (`\"usted\": \"se queje\"`, `\"nosotros\": \"nos quejemos\"`, `\"ustedes\": \"se quejen\"`).\n\n## Word object shape\n\n```json\n{\n  \"word\": \"porosidad\",\n  \"definition\": \"porosity\",\n  \"part_of_speech\": \"sustantivo\",\n  \"gender\": \"femenino\",\n  \"register\": \"neutro\",\n  \"notes\": \"φ; se mide con los perfiles de densidad, neutrón o sónico\",\n  \"example\": \"Esta arenisca tiene buena porosidad.\"\n}\n```\n\n- `part_of_speech` — one of `sustantivo` / `adjetivo` / `adverbio` / `pronombre` / `preposición` / `conjunción` / `interjección`.\n- `gender` — one of `masculino` / `femenino` / `neutro` / `\"\"` (blank for anything ungendered, e.g. most adverbs).\n- `register` — optional, one of `neutro` (standard) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires slang: laburo, guita, bondi). Defaults to `neutro`.\n- `notes` and `example` are both optional free text; `example` is a Spanish sentence using the word, if you want one.\n\n## Phrase object shape\n\nShort common phrases/expressions — kept separate from single-word\nvocabulary because a phrase doesn't have one part of speech or gender.\nInstead it has its own two facets: what it's *for* (`function`) and how\nformal/slangy it is (`register`).\n\n```json\n{\n  \"phrase\": \"Dale\",\n  \"definition\": \"okay / sure / sounds good\",\n  \"function\": \"acuerdo\",\n  \"register\": \"coloquial\",\n  \"idiomatic\": true,\n  \"literal\": \"give it / go\",\n  \"notes\": \"\",\n  \"example\": \"\"\n}\n```\n\n- `function` — the phrase's communicative role, one of `saludo` (greeting) / `despedida` (farewell) / `cortesía` (courtesy — please, thanks, excuse me) / `acuerdo` (agreement) / `desacuerdo` (disagreement) / `sorpresa` (surprise/reaction) / `pregunta` (question) / `muletilla` (filler/discourse marker) / `otro` (other).\n- `register` — one of `neutro` (standard, textbook-safe) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires-specific slang).\n- `idiomatic` — `true` if the meaning isn't guessable word-by-word (e.g. \"ni en pedo\" doesn't mean anything about being drunk), `false` if it's a plain, literal combination of words.\n- `literal` — only meaningful when `idiomatic` is `true`: a short word-by-word gloss, so both the real meaning and the literal words are visible. Leave `\"\"` when `idiomatic` is `false`.\n- `notes` and `example` are both optional free text, same as for words.\n\n## Definitions, notes and examples (verbs, words and phrases)\n\n- Write every English field (`definition`, `literal`, English in `notes`)\n  in **American English**: American spelling (\"practice\", \"color\",\n  \"canceled\") and American words (\"check\" for a restaurant bill, \"store\",\n  \"candy\", \"cookie\", \"soccer\").\n- `definition` starts with the item's **everyday meaning**, never just\n  the list's topic: \"carrito\" is \"cart\" (not \"luggage cart\") even in an\n  airport list. One item can belong to several lists, and it has only one\n  definition.\n- When the list uses a word in a **genuinely different meaning** — not\n  just a narrower case of the everyday one — add that meaning after the\n  everyday one, with a short qualifier in parentheses:\n  `\"revoque\": \"plaster (on a wall); mudcake (in a well)\"`,\n  `\"carrera\": \"race; career; logging run (in a well)\"`. \"Carrito\" gets no\n  second meaning: an airport cart is still a cart. Keep it to one added\n  meaning. The definition is what a flashcard shows as the answer, so it\n  has to contain the meaning being studied.\n- **Verbs are the exception:** keep a verb's definition to its everyday\n  meaning (\"correr\": \"to run\") and put the list's sense in `notes` and\n  `example`. A verb's flashcards show the English of each conjugated form,\n  which is generated from the definition, so a second meaning there would\n  muddle every form.\n- The list's context also goes in `example` and `notes`. `example` gives a\n  typical sentence first; if the list's use is very different from the\n  everyday one, add a second, list-specific sentence after \" / \" (the\n  flashcards show that last sentence under the answer):\n  `\"Agarrá un carrito en la entrada del súper. / Pusimos las valijas en un carrito.\"`\n- `notes` says what the item means in the list's world when that isn't\n  obvious from the definition: `\"en perfilaje: una carrera = one logging run\"`.\n  Don't use notes for bare topic labels (\"petrofísica\", \"aeropuerto\") —\n  the list itself already says that.\n\n## ⚠️ Dialect requirement — this app uses Rioplatense Spanish (voseo)\n\nEvery verb form below MUST use **vos**, never tú. This is the single\nmost common mistake a general-purpose LLM makes here, so check it\ncarefully — a wrong-but-fluent \"tú\" conjugation will look completely\nplausible and still be wrong for this app:\n\n- Present tense **does not diphthongize** for vos, even for stem-changing\n  verbs: **vos podés** (not \"puedés\"), **vos mostrás** (not \"muestrás\"),\n  **vos pedís** (not \"pidís\"), **vos medís** (not \"midís\"). Stress falls\n  on the ending, not the stem — so vos present tense is always the\n  \"regular-looking\" stem plus `-ás`/`-és`/`-ís`.\n- Affirmative vos imperative = the infinitive's stem + its final accented\n  vowel, no `-s`: **hablá, comé, viví, tené, poné, vení, decí** — never\n  the tú-form (habla, ven, di).\n- Preterite, imperfecto, futuro, condicional, and both subjunctives all\n  use the vos-shaped ending shown in the example above (which mirrors\n  \"tú\" minus the final `-s` for most tenses, except present and imperative\n  where the difference is larger).\n- Compounds of irregular verbs keep the irregularity: **obtener → obtengo,\n  obtuve, obtendré** (not a regular pattern), because it's built on\n  \"tener.\" Same logic for any verb built on **poner**, **venir**,\n  **decir**, etc.\n- Phrases should also reflect real rioplatense usage (e.g. \"¿Vos querés\n  algo?\" not \"¿Tú quieres algo?\") — a phrase generated by an LLM defaulting\n  to Spain/Mexico Spanish will read as noticeably foreign here.\n\n## What the app checks before saving anything\n\n- The file must be valid JSON matching this shape, or the whole import is\n  rejected with an error — nothing partial gets written.\n- Every verb's `forms` must have all required tense/person cells filled in.\n- Before you confirm the import, you'll see a preview of every parsed\n  verb/word/phrase. For verbs, any cell that doesn't match the app's own\n  built-in *regular* conjugation pattern is highlighted — same highlight\n  used everywhere else in the app for irregular verbs. If the file's\n  `irregularity` doesn't match what the table gives, the preview says so:\n  usually that's the LLM having made a mistake in a form; fix it before\n  confirming. Spelling-only changes (sacar → saqué, llegar → llegue,\n  empezar → empecé, surgir → surjo) light up in the table but don't make\n  a verb irregular; describe them in `pattern`.\n- Duplicates are matched by infinitive/word/phrase (case- and\n  accent-insensitive), same as the existing \"add to list\" flow — importing\n  the same file twice won't create duplicate rows.\n";
 
   var IMPORT_VALID_TYPES = ["-ar", "-er", "-ir"];
   var IMPORT_VALID_IRREGULARITY = ["regular", "cambio de raíz", "irregular (yo)", "pretérito irregular", "irregular (total)"];
@@ -23477,6 +23823,10 @@
       also_personal_use: !!v.gustar_like,
       personal_definition: (v.gustar_like && typeof v.personal_definition === "string") ? v.personal_definition.trim() : "",
       personal_example: (v.gustar_like && typeof v.personal_example === "string") ? v.personal_example.trim() : "",
+      // (2026-11-10) the reflexive use of a plain verb (ir + irse)
+      reflexive_use: !!v.reflexive_use && !v.reflexive && !infinitiveIsReflexive(inf),
+      reflexive_definition: (v.reflexive_use && typeof v.reflexive_definition === "string") ? v.reflexive_definition.trim() : "",
+      reflexive_example: (v.reflexive_use && typeof v.reflexive_example === "string") ? v.reflexive_example.trim() : "",
       forms: v.forms
     };
   }
@@ -23774,20 +24124,50 @@
         say(t("msg_error_importar", { msg: ferr.message }));
         return { ok: false };
       }
-      var existingInf = {};
-      (vFetch.data || []).map(rowToVerb).forEach(function (v) { existingInf[norm(v.data.infinitive || "")] = v.data; });
+      var existingInf = {}, existingId = {};
+      (vFetch.data || []).map(rowToVerb).forEach(function (v) { existingInf[norm(v.data.infinitive || "")] = v.data; existingId[norm(v.data.infinitive || "")] = v.id; });
       var existingWordMap = {};
       (wFetch.data || []).map(rowToWord).forEach(function (w) { existingWordMap[norm(w.data.word || "")] = w.data; });
       var existingPhraseMap = {};
       (pFetch.data || []).map(rowToPhrase).forEach(function (p) { existingPhraseMap[norm(p.data.phrase || "")] = p.data; });
 
-      var toInsertV = [], alreadyHaveV = [];
+      var toInsertV = [], alreadyHaveV = [], reflPatches = [];
+      // (2026-11-10) «irse» next to an «ir» (yours or in this file) becomes
+      // ir's reflexive use instead of a second verb; plain verbs go first so
+      // the order in the file doesn't matter.
+      var seVerbs = [];
       ip.verbs.forEach(function (v) {
         var key = norm(v.infinitive);
+        if (infinitiveIsReflexive(v.infinitive)) { seVerbs.push(v); return; }
         if (existingInf[key]) { alreadyHaveV.push(existingInf[key]); return; }
         existingInf[key] = v; // guard against dupes within this same import batch
         toInsertV.push(v);
       });
+      seVerbs.forEach(function (v) {
+        var key = norm(v.infinitive), bkey = norm(v.infinitive.replace(/se$/i, ""));
+        var base = existingInf[bkey];
+        if (base && !base.reflexive && !existingInf[key]) {
+          var have = !!base.reflexive_use;
+          if (!have) {
+            base.reflexive_use = true;
+            base.reflexive_definition = base.reflexive_definition || v.definition || "";
+            base.reflexive_example = base.reflexive_example || v.example || "";
+            if (existingId[bkey]) reflPatches.push({ id: existingId[bkey], patch: { reflexive_use: true, reflexive_definition: base.reflexive_definition, reflexive_example: base.reflexive_example } });
+          }
+          if (existingId[bkey] && alreadyHaveV.indexOf(base) === -1) alreadyHaveV.push(base);
+          return;
+        }
+        if (existingInf[key]) { alreadyHaveV.push(existingInf[key]); return; }
+        existingInf[key] = v;
+        toInsertV.push(v);
+      });
+      // every row the same columns (see normalizeStarterVerb); the reflexive
+      // ones only when some row uses them, so a database without them still imports
+      if (toInsertV.some(function (v) { return v.reflexive_use; })) {
+        toInsertV.forEach(function (v) { v.reflexive_use = !!v.reflexive_use; v.reflexive_definition = v.reflexive_definition || ""; v.reflexive_example = v.reflexive_example || ""; });
+      } else {
+        toInsertV.forEach(function (v) { delete v.reflexive_use; delete v.reflexive_definition; delete v.reflexive_example; });
+      }
 
       var toInsertW = [], alreadyHaveW = [];
       ip.words.forEach(function (w) {
@@ -23822,7 +24202,12 @@
         });
       });
 
-      var verbsPromise = toInsertV.length ? supabaseClient.from("verbs").insert(toInsertV).select() : Promise.resolve({ data: [], error: null });
+      var verbsPromise = (toInsertV.length ? supabaseClient.from("verbs").insert(toInsertV).select() : Promise.resolve({ data: [], error: null }))
+        .then(function (r) {
+          if (r.error || !reflPatches.length) return r;
+          return Promise.all(reflPatches.map(function (x) { return supabaseClient.from("verbs").update(x.patch).eq("id", x.id); }))
+            .then(function (ups) { var bad = ups.filter(function (u) { return u && u.error; })[0]; return bad ? { data: r.data, error: bad.error } : r; });
+        });
       var wordsPromise = toInsertW.length ? wordsWrite(toInsertW, function (r) { return supabaseClient.from("words").insert(r).select(); }) : Promise.resolve({ data: [], error: null });
       var phrasesPromise = toInsertP.length ? supabaseClient.from("phrases").insert(toInsertP).select() : Promise.resolve({ data: [], error: null });
 
@@ -23833,7 +24218,7 @@
           say(t("msg_error_importar", { msg: err.message }));
           return { ok: false };
         }
-        if (toInsertV.length) loadVerbs();
+        if (toInsertV.length || reflPatches.length) loadVerbs();
         if (toInsertW.length) loadWords();
         if (toInsertP.length) loadPhrases();
 
@@ -24398,12 +24783,14 @@
       else if (reflexiveAuto) setReflexive(false);
     }
     if (/^f-(presente|preterito|imperfecto|impersonal|infinitive)/.test(id) || id === "f-reflexive") renderFormIrregularity();
+    if (id === "f-infinitive" || id === "f-reflexive") syncReflexiveUseUi();
   });
   el.fReflexive.addEventListener("change", function () { reflexiveAuto = false; applyReflexivePronouns(el.fReflexive.checked); renderFormIrregularity(); });
   el.fRaeLookup.addEventListener("click", function () { lookupInRae("verb"); });
   el.fGustarLike.addEventListener("change", function () {
     el.fPersonalDefinitionWrap.hidden = !el.fGustarLike.checked;
   });
+  el.fReflexiveUse.addEventListener("change", syncReflexiveUseUi);
   el.dGustarTabPersonal.addEventListener("click", function () {
     if (detailGustarTab === "personal") return;
     detailGustarTab = "personal";
@@ -24414,9 +24801,14 @@
     detailGustarTab = "dativo";
     if (selectedId) selectVerb(selectedId);
   });
+  el.dGustarTabReflexivo.addEventListener("click", function () {
+    if (detailGustarTab === "reflexivo") return;
+    detailGustarTab = "reflexivo";
+    if (selectedId) selectVerb(selectedId);
+  });
   el.dSpeak.addEventListener("click", function () {
     var entry = allVerbs.find(function (v) { return v.id === selectedId; });
-    if (entry) playTts(entry.data.infinitive, el.dSpeak, el.dTtsMsg);
+    if (entry) playTts(el.dInfinitive.textContent || entry.data.infinitive, el.dSpeak, el.dTtsMsg);
   });
   // Tap-any-conjugated-form-to-hear-it: one delegated listener on the whole
   // tbody rather than a button per cell (there are 35+ of them) — see
@@ -25114,8 +25506,12 @@
   }
   function searchItemText(kind, v) { return kind === "verb" ? (v.data.infinitive || v.id) : kind === "word" ? (v.data.word || v.id) : (v.data.phrase || v.id); }
   // "", "start" (start of the item or a word in it), "form" (a verb form)
+  // a verb's reflexive use is found by its -se name too («irse» → ir)
+  function searchAltText(kind, v) { return kind === "verb" && v.data && hasReflexiveUse(v.data) ? norm(reflexiveInfinitive(v.data.infinitive)) : ""; }
   function termMatchKind(kind, v, txt, t) {
     if (txt.indexOf(t) === 0) return "start";
+    var alt = searchAltText(kind, v);
+    if (alt && alt.indexOf(t) === 0) return "start";
     var words = txt.split(/[\s¿?¡!.,;:'"«»()\/-]+/);
     for (var i = 1; i < words.length; i++) if (words[i].indexOf(t) === 0) return "start";
     if (kind === "verb" && v.data && verbFormSet(v.data)[t]) return "form";
@@ -25124,10 +25520,11 @@
   function searchPredicate(kind, live) {
     var q = norm(live || "");
     var terms = searchTerms || [];
-    if (!terms.length) return function (v) { return !q || norm(searchItemText(kind, v)).indexOf(q) !== -1; };
+    if (!terms.length) return function (v) { return !q || norm(searchItemText(kind, v)).indexOf(q) !== -1 || searchAltText(kind, v).indexOf(q) !== -1 && !!searchAltText(kind, v); };
     return function (v) {
       var txt = norm(searchItemText(kind, v));
       if (q && txt.indexOf(q) !== -1) return true;
+      if (q && searchAltText(kind, v) && searchAltText(kind, v).indexOf(q) !== -1) return true;
       for (var i = 0; i < terms.length; i++) if (termMatchKind(kind, v, txt, terms[i])) return true;
       return false;
     };
@@ -25144,7 +25541,7 @@
       var m = termMatchKind(part.kind, v, txt, t);
       if (!m) return;
       out.n++;
-      if (txt === t) out.exact = true;
+      if (txt === t || searchAltText(part.kind, v) === t) out.exact = true;
       if (m === "form" && !out.form) out.form = searchItemText(part.kind, v);
     });
     return out;

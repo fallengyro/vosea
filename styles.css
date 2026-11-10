@@ -2026,7 +2026,11 @@
      verb (see the #d-gustar-tabs handling in selectVerb()) reuse .lang-toggle/
      .lang-option's segmented-button look verbatim, just narrower than the
      full-width settings-panel version and with room below before the table. */
-  .gustar-mode-toggle { max-width: 300px; margin: 2px 0 16px; }
+  .gustar-mode-toggle { max-width: 360px; margin: 2px 0 16px; }
+  /* (2026-11-10) up to three uses: Dativo · Estándar · Reflexivo; a hidden
+     first tab leaves no divider in front of the next one */
+  .gustar-mode-toggle .lang-option[hidden] { display: none; }
+  .gustar-mode-toggle .lang-option[hidden] + .lang-option { border-left: 0; }
 
   /* the shared-list preview reuses .flash-overlay's full-screen chrome
      (same topbar, same close button) but its own scrollable body, since a

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="225">
+<meta name="vosea-build" content="226">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -276,6 +276,7 @@
     <div class="lang-toggle gustar-mode-toggle" id="d-gustar-tabs" hidden>
       <button type="button" class="lang-option" id="d-gustar-tab-dativo" data-i18n="gustar_tab_dativo">Dativo</button>
       <button type="button" class="lang-option" id="d-gustar-tab-personal" data-i18n="gustar_tab_personal">Estándar</button>
+      <button type="button" class="lang-option" id="d-gustar-tab-reflexivo" data-i18n="gustar_tab_reflexivo">Reflexivo</button>
     </div>
 
     <p class="conj-hint" data-i18n="conj_hint">deslizá para ver todos los tiempos &rarr;</p>
@@ -307,8 +308,8 @@
     <p class="conj-legend known-legend" id="d-known-legend" hidden><span class="known-legend-mark" aria-hidden="true">&#10003;</span> <span data-i18n="conj_legend_known">formas que marcaste como sabidas en las tarjetas</span></p>
 
     <div class="nonpersonal">
-      <div class="tile" data-form-key="gerundio"><span class="label" data-i18n="tile_gerundio">Gerundio</span><span class="val" id="d-gerundio"></span></div>
-      <div class="tile" data-form-key="participio"><span class="label" data-i18n="tile_participio">Participio</span><span class="val" id="d-participio"></span></div>
+      <div class="tile" data-form-key="gerundio" id="d-gerundio-tile"><span class="label" data-i18n="tile_gerundio">Gerundio</span><span class="val" id="d-gerundio"></span></div>
+      <div class="tile" data-form-key="participio" id="d-participio-tile"><span class="label" data-i18n="tile_participio">Participio</span><span class="val" id="d-participio"></span></div>
     </div>
     <p class="form-msg detail-tts-msg" id="d-tts-msg"></p>
 
@@ -384,9 +385,14 @@
         <label for="f-example" data-i18n="label_ejemplo">Oración de ejemplo</label>
         <input type="text" id="f-example" data-i18n-placeholder="placeholder_ejemplo_verbo" placeholder="ej. Corrí diez kilómetros. / Corrimos el perfil a la noche." />
       </div>
-      <div class="field checks">
+      <div class="field checks" id="f-reflexive-wrap">
         <input type="checkbox" id="f-reflexive" />
         <label for="f-reflexive" style="margin:0;" data-i18n="check_reflexivo">¿Reflexivo?</label>
+      </div>
+      <!-- (2026-11-10) the reflexive use of a plain verb: «ir» + «irse» -->
+      <div class="field checks" id="f-reflexive-use-check">
+        <input type="checkbox" id="f-reflexive-use" />
+        <label for="f-reflexive-use" style="margin:0;" id="f-reflexive-use-label">¿También con -se?</label>
       </div>
       <div class="field checks">
         <input type="checkbox" id="f-auxiliar" />
@@ -402,6 +408,13 @@
         <label for="f-personal-example" data-i18n="label_personal_example" style="margin-top:8px;">Ejemplo (uso estándar)</label>
         <input type="text" id="f-personal-example" />
         <small class="field-hint" data-i18n="hint_personal_definition">La definición y el ejemplo de arriba son los del uso dativo («me gusta», «me pasa»). Estos son los del uso estándar, con la persona como sujeto: «vos me gustás», «pasé por tu casa».</small>
+      </div>
+      <div class="field field-wide" id="f-reflexive-use-wrap" hidden>
+        <label for="f-reflexive-definition" id="f-reflexive-definition-label">Definición (con -se)</label>
+        <input type="text" id="f-reflexive-definition" />
+        <label for="f-reflexive-example" id="f-reflexive-example-label" style="margin-top:8px;">Ejemplo (con -se)</label>
+        <input type="text" id="f-reflexive-example" />
+        <small class="field-hint" data-i18n="hint_reflexive_use">Las formas con pronombre (me voy, andate, yéndose) salen solas de la tabla.</small>
       </div>
     </div>
 

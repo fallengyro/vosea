@@ -48,6 +48,9 @@ app's shared starter content — the same as adding an item by hand.
   "gustar_like": false,
   "personal_definition": "",
   "personal_example": "",
+  "reflexive_use": false,
+  "reflexive_definition": "",
+  "reflexive_example": "",
   "forms": {
     "presente":     { "yo": "escalo",    "vos": "escalás",   "el": "escala",    "nosotros": "escalamos",    "ellos": "escalan" },
     "preterito":    { "yo": "escalé",    "vos": "escalaste", "el": "escaló",    "nosotros": "escalamos",    "ellos": "escalaron" },
@@ -78,7 +81,8 @@ Field notes:
 - `notes` and `example` — optional free text, same rules as for words (see "Definitions, notes and examples" below).
 - `forms` — every tense object must have all five persons: `yo`, `vos`, `el`, `nosotros`, `ellos`. `imperativo` has only `vos`/`usted`/`nosotros`/`ustedes` (no `yo` — you can't command yourself). `gerundio` and `participio` are plain strings, not person tables.
 - Impersonal weather verbs (`llover`, `nevar`) skip the person tables entirely and use `"forms": { "impersonal": { "presente": "llueve", "subjPasado": "lloviera", ... } }` instead — there's no "yo llueve."
-- Reflexive verbs (e.g. `levantarse`) write `forms` WITH the reflexive pronoun already baked into every single-table cell (`"yo": "me levanto"`, NOT just `"levanto"`) — the app displays exactly what's stored here, it does not add the pronoun itself at display time. `imperativo` includes it too, wherever it attaches: enclitic on `vos` (`"vos": "levantate"`), proclitic on the other three (`"usted": "se levante"`, `"nosotros": "nos levantemos"`, `"ustedes": "se levanten"`).
+- `reflexive_use` — `true` when the verb is also used with -se, with its own meaning: ir / irse (`"to leave"`, `"Me voy a las ocho."`), quedar / quedarse, llamar / llamarse, levantar / levantarse. Then `reflexive_definition` and `reflexive_example` are that use, and the verb is written once, without -se (`"infinitive": "ir"`), with its plain `forms`: the app builds "me voy, andate, yéndose" itself. Don't list `irse` as a separate verb. Leave them `false` / `""` otherwise.
+- A verb that only exists with -se (`quejarse`, `arrepentirse`, `atreverse`) is written with -se and `"reflexive": true` instead, and its `forms` have the pronoun in every single-table cell (`"yo": "me quejo"`, NOT just `"quejo"`) — the app shows exactly what's stored for those. `imperativo` too, wherever it attaches: enclitic on `vos` (`"vos": "quejate"`), proclitic on the other three (`"usted": "se queje"`, `"nosotros": "nos quejemos"`, `"ustedes": "se quejen"`).
 
 ## Word object shape
 
@@ -88,6 +92,7 @@ Field notes:
   "definition": "porosity",
   "part_of_speech": "sustantivo",
   "gender": "femenino",
+  "register": "neutro",
   "notes": "φ; se mide con los perfiles de densidad, neutrón o sónico",
   "example": "Esta arenisca tiene buena porosidad."
 }
@@ -95,6 +100,7 @@ Field notes:
 
 - `part_of_speech` — one of `sustantivo` / `adjetivo` / `adverbio` / `pronombre` / `preposición` / `conjunción` / `interjección`.
 - `gender` — one of `masculino` / `femenino` / `neutro` / `""` (blank for anything ungendered, e.g. most adverbs).
+- `register` — optional, one of `neutro` (standard) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires slang: laburo, guita, bondi). Defaults to `neutro`.
 - `notes` and `example` are both optional free text; `example` is a Spanish sentence using the word, if you want one.
 
 ## Phrase object shape

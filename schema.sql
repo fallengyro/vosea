@@ -3572,3 +3572,265 @@ where (l.app_wide or l.friends_can_see)
   and jsonb_array_length(s.snap) > 0
   and not exists (select 1 from public.library_entries e where e.source_list = l.id);
 update public.lists set app_wide = false, friends_can_see = false where app_wide or friends_can_see;
+-- ===========================================================================
+-- 2026-11-10 — one verb, with its reflexive use (build 226)
+-- ===========================================================================
+-- mason: "some verbs are being stored separately for their normal and
+-- reflexive versions (for example ir and irse). as the dative and normal
+-- verbs are being kept as a single verb … i wonder if reflexive verbs should
+-- also be managed this way?" — "yes let's go ahead on those terms".
+--
+-- What this does:
+--   1. adds verbs.reflexive_use, reflexive_definition, reflexive_example:
+--      «ir» can have a reflexive use, «irse», with its own meaning and
+--      example. Its forms aren't stored: the app builds them from the plain
+--      ones (me voy, andate, váyase, vámonos, yéndose). Its cards are keyed
+--      "<tense>|<person>|r" (and "gerundio|r") in known_forms, forms_en and
+--      practice_log.form_key, like the dative verbs' "|p".
+--   2. teaches the restore function the new columns (and not to bring back
+--      an «irse» that is already ir's reflexive use);
+--   3. merges every pair you already have, in every account: when an
+--      account has both «X» and «Xse», X gets the reflexive use with Xse's
+--      definition and example, Xse's notes (and its preposition) are added
+--      to X's notes, its Sabido marks and its practice history move to X's
+--      "|r" keys, and the Xse row is deleted. A verb that only exists with
+--      -se (quejarse) is left alone: there's no plain verb to merge it into.
+-- Lists aren't changed: an «irse» in a list shows as your «ir» (its
+-- reflexive use) once ir has one.
+-- Run it BEFORE deploying build 226. Safe to run twice (the second run
+-- finds no pairs).
+-- ===========================================================================
+
+alter table public.verbs add column if not exists reflexive_use boolean not null default false;
+alter table public.verbs add column if not exists reflexive_definition text not null default '';
+alter table public.verbs add column if not exists reflexive_example text not null default '';
+
+create or replace function public.vosea_restore_content(p_prefer text)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  b record;
+  r jsonb; it jsonb;
+  rv public.verbs; rw public.words; rp public.phrases;
+  ins int := 0; ovw int := 0; kept int := 0;
+  lnew int := 0; lmerged int := 0; iadd int := 0;
+  lid uuid; tok text; ikey text; n int;
+  padd int := 0; radd int := 0; gadd int := 0;
+begin
+  if uid is null then raise exception 'not_signed_in'; end if;
+  if p_prefer is null or p_prefer not in ('backup', 'active') then raise exception 'bad_prefer'; end if;
+  select * into b from public.content_backups where user_id = uid;
+  if not found then raise exception 'no_backup'; end if;
+
+  for r in select * from jsonb_array_elements(b.data->'verbs') loop
+    rv := jsonb_populate_record(null::public.verbs, r);
+    select count(*) into n from public.verbs x where x.user_id = uid and vosea_norm(x.infinitive) = vosea_norm(rv.infinitive);
+    -- (2026-11-10) an «irse» from an older backup is already ir's reflexive use
+    if n = 0 and vosea_norm(rv.infinitive) ~ '(ar|er|ir)se$' and exists (select 1 from public.verbs x where x.user_id = uid
+        and x.reflexive_use and vosea_norm(x.infinitive) || 'se' = vosea_norm(rv.infinitive)) then
+      kept := kept + 1;
+    elsif n = 0 then
+      insert into public.verbs (user_id, infinitive, definition, notes, example, type, irregularity, pattern, reflexive, transitivity,
+                                preposicion, auxiliar, gustar_like, also_personal_use, personal_definition, personal_example, reflexive_use, reflexive_definition, reflexive_example, known, known_forms, forms_en, forms_en_sig, forms)
+      values (uid, rv.infinitive, coalesce(rv.definition, ''), coalesce(rv.notes, ''), coalesce(rv.example, ''), coalesce(rv.type, '-ar'),
+              coalesce(rv.irregularity, 'regular'), coalesce(rv.pattern, ''), coalesce(rv.reflexive, false),
+              coalesce(rv.transitivity, 'transitivo'), coalesce(rv.preposicion, ''), coalesce(rv.auxiliar, false),
+              coalesce(rv.gustar_like, false), coalesce(rv.also_personal_use, false), coalesce(rv.personal_definition, ''), coalesce(rv.personal_example, ''),
+              coalesce(rv.reflexive_use, false), coalesce(rv.reflexive_definition, ''), coalesce(rv.reflexive_example, ''), coalesce(rv.known, false),
+              coalesce(rv.known_forms, '{}'), coalesce(rv.forms_en, '{}'), coalesce(rv.forms_en_sig, ''), coalesce(rv.forms, '{}'));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.verbs x set definition = coalesce(rv.definition, ''), notes = coalesce(rv.notes, ''),
+        example = coalesce(rv.example, ''), type = coalesce(rv.type, '-ar'),
+        irregularity = coalesce(rv.irregularity, 'regular'),
+        pattern = coalesce(rv.pattern, ''), reflexive = coalesce(rv.reflexive, false),
+        transitivity = coalesce(rv.transitivity, 'transitivo'), preposicion = coalesce(rv.preposicion, ''),
+        auxiliar = coalesce(rv.auxiliar, false), gustar_like = coalesce(rv.gustar_like, false),
+        also_personal_use = coalesce(rv.also_personal_use, false), personal_definition = coalesce(rv.personal_definition, ''),
+        personal_example = coalesce(rv.personal_example, ''),
+        reflexive_use = coalesce(rv.reflexive_use, false), reflexive_definition = coalesce(rv.reflexive_definition, ''),
+        reflexive_example = coalesce(rv.reflexive_example, ''),
+        known = coalesce(rv.known, false),
+        known_forms = coalesce(rv.known_forms, '{}'), forms_en = coalesce(rv.forms_en, '{}'),
+        forms_en_sig = coalesce(rv.forms_en_sig, ''), forms = coalesce(rv.forms, '{}')
+      where x.user_id = uid and vosea_norm(x.infinitive) = vosea_norm(rv.infinitive);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'words') loop
+    rw := jsonb_populate_record(null::public.words, r);
+    select count(*) into n from public.words x where x.user_id = uid and vosea_norm(x.word) = vosea_norm(rw.word);
+    if n = 0 then
+      insert into public.words (user_id, word, definition, part_of_speech, gender, register, notes, example, known)
+      values (uid, rw.word, coalesce(rw.definition, ''), coalesce(rw.part_of_speech, 'sustantivo'), coalesce(rw.gender, ''),
+              coalesce(rw.register, 'neutro'), coalesce(rw.notes, ''), coalesce(rw.example, ''), coalesce(rw.known, false));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.words x set definition = coalesce(rw.definition, ''), part_of_speech = coalesce(rw.part_of_speech, 'sustantivo'),
+        gender = coalesce(rw.gender, ''), register = coalesce(rw.register, 'neutro'), notes = coalesce(rw.notes, ''),
+        example = coalesce(rw.example, ''), known = coalesce(rw.known, false)
+      where x.user_id = uid and vosea_norm(x.word) = vosea_norm(rw.word);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'phrases') loop
+    rp := jsonb_populate_record(null::public.phrases, r);
+    select count(*) into n from public.phrases x where x.user_id = uid and vosea_norm(x.phrase) = vosea_norm(rp.phrase);
+    if n = 0 then
+      insert into public.phrases (user_id, phrase, definition, function, register, idiomatic, literal, notes, example, known)
+      values (uid, rp.phrase, coalesce(rp.definition, ''), coalesce(rp.function, 'otro'), coalesce(rp.register, 'neutro'),
+              coalesce(rp.idiomatic, false), coalesce(rp.literal, ''), coalesce(rp.notes, ''), coalesce(rp.example, ''), coalesce(rp.known, false));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.phrases x set definition = coalesce(rp.definition, ''), function = coalesce(rp.function, 'otro'),
+        register = coalesce(rp.register, 'neutro'), idiomatic = coalesce(rp.idiomatic, false), literal = coalesce(rp.literal, ''),
+        notes = coalesce(rp.notes, ''), example = coalesce(rp.example, ''), known = coalesce(rp.known, false)
+      where x.user_id = uid and vosea_norm(x.phrase) = vosea_norm(rp.phrase);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'lists') loop
+    select x.id into lid from public.lists x where x.user_id = uid and vosea_norm(x.name) = vosea_norm(r->>'name') order by x.created_at limit 1;
+    if lid is null then
+      tok := r->>'share_token';
+      if tok is null or exists (select 1 from public.lists x where x.share_token = tok) then
+        insert into public.lists (user_id, name, owner_label, share_enabled)
+        values (uid, r->>'name', coalesce(r->>'owner_label', ''), coalesce((r->>'share_enabled')::boolean, true)) returning id into lid;
+      else
+        insert into public.lists (user_id, name, owner_label, share_token, share_enabled)
+        values (uid, r->>'name', coalesce(r->>'owner_label', ''), tok, coalesce((r->>'share_enabled')::boolean, true)) returning id into lid;
+      end if;
+      lnew := lnew + 1;
+    else
+      lmerged := lmerged + 1;
+    end if;
+    for it in select * from jsonb_array_elements(coalesce(r->'items', '[]')) loop
+      ikey := vosea_norm(coalesce(it->'data'->>'infinitive', it->'data'->>'word', it->'data'->>'phrase'));
+      if exists (select 1 from public.list_items i where i.list_id = lid and i.item_type = it->>'item_type'
+                 and vosea_norm(coalesce(i.data->>'infinitive', i.data->>'word', i.data->>'phrase')) = ikey) then
+        if p_prefer = 'backup' then
+          delete from public.list_items i where i.list_id = lid and i.item_type = it->>'item_type'
+            and vosea_norm(coalesce(i.data->>'infinitive', i.data->>'word', i.data->>'phrase')) = ikey;
+          insert into public.list_items (list_id, item_type, data) values (lid, it->>'item_type', it->'data');
+        end if;
+      else
+        insert into public.list_items (list_id, item_type, data) values (lid, it->>'item_type', it->'data');
+        iadd := iadd + 1;
+      end if;
+    end loop;
+    lid := null;
+  end loop;
+
+  -- progress (2026-10-10): history only ever grows, so it's merged by id
+  -- whatever p_prefer says: rows the app already has are left alone, the
+  -- rest come back. Older backups (version 1) have none of this.
+  insert into public.practice_log
+    select (jsonb_populate_record(null::public.practice_log, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'practice', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics padd = row_count;
+  insert into public.rewards
+    select (jsonb_populate_record(null::public.rewards, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'rewards', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics radd = row_count;
+  insert into public.game_records
+    select (jsonb_populate_record(null::public.game_records, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'records', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics gadd = row_count;
+
+  return jsonb_build_object('inserted', ins, 'overwritten', ovw, 'kept', kept,
+                            'lists_created', lnew, 'lists_merged', lmerged, 'list_items_added', iadd,
+                            'practice_added', padd, 'rewards_added', radd, 'records_added', gadd);
+end;
+$$;
+
+-- the pairs
+do $$
+declare
+  pr record;
+  kf jsonb;
+  k text; tn text; pn text; ik text;
+  extra text;
+  nv int := 0; np int := 0; c int;
+  imp_keys constant text[][] := array[array['vos','vos'], array['usted','el'], array['nosotros','nosotros'], array['ustedes','ellos']];
+begin
+  for pr in
+    select x.id as xid, x.user_id as uid, x.infinitive as xinf, x.notes as xnotes, x.preposicion as xprep,
+           x.reflexive_use as had, x.reflexive_definition as xrdef, x.reflexive_example as xrex,
+           s.id as sid, s.infinitive as sinf, s.definition as sdef, s.example as sex, s.notes as snotes,
+           s.preposicion as sprep, s.known as sknown, coalesce(s.known_forms, '{}') as skf, coalesce(s.forms, '{}') as sforms
+    from public.verbs x
+    join public.verbs s on s.user_id = x.user_id and s.id <> x.id
+      and vosea_norm(s.infinitive) = vosea_norm(x.infinitive) || 'se'
+    where not coalesce(x.reflexive, false)
+      and vosea_norm(x.infinitive) ~ '(ar|er|ir)$'
+  loop
+    -- Sabido: Xse's marks on X's "|r" keys (the participle is shared)
+    kf := '{}';
+    for k in select key from jsonb_each(pr.skf) where value = 'true'::jsonb loop
+      if k <> 'participio' then kf := kf || jsonb_build_object(k || '|r', true); end if;
+    end loop;
+    -- Xse marked Sabido as a whole: every one of its forms
+    if pr.sknown then
+      foreach tn in array array['presente','preterito','imperfecto','futuro','condicional','subjPresente','subjPasado'] loop
+        foreach pn in array array['yo','vos','el','nosotros','ellos'] loop
+          if coalesce(pr.sforms->tn->>pn, '') <> '' then kf := kf || jsonb_build_object(tn || '|' || pn || '|r', true); end if;
+        end loop;
+      end loop;
+      for c in 1..4 loop
+        if coalesce(pr.sforms->'imperativo'->>imp_keys[c][1], '') <> '' then
+          kf := kf || jsonb_build_object('imperativo|' || imp_keys[c][2] || '|r', true);
+        end if;
+      end loop;
+      if coalesce(pr.sforms->>'gerundio', '') <> '' then kf := kf || jsonb_build_object('gerundio|r', true); end if;
+    end if;
+
+    -- Xse's notes and preposition go into X's notes: "irse: …", "acordarse de"
+    extra := '';
+    if coalesce(pr.snotes, '') <> '' or (coalesce(pr.sprep, '') <> '' and pr.sprep is distinct from pr.xprep) then
+      extra := pr.sinf
+        || case when coalesce(pr.sprep, '') <> '' and pr.sprep is distinct from pr.xprep then ' ' || pr.sprep else '' end
+        || case when coalesce(pr.snotes, '') <> '' then ': ' || pr.snotes else '' end;
+      if position(extra in coalesce(pr.xnotes, '')) > 0 then extra := ''; end if;
+    end if;
+
+    update public.verbs set
+      reflexive_use = true,
+      reflexive_definition = case when pr.had and coalesce(pr.xrdef, '') <> '' then pr.xrdef else coalesce(pr.sdef, '') end,
+      reflexive_example = case when pr.had and coalesce(pr.xrex, '') <> '' then pr.xrex else coalesce(pr.sex, '') end,
+      known_forms = coalesce(known_forms, '{}') || kf,
+      notes = case when extra = '' then notes
+                   when coalesce(notes, '') = '' then extra
+                   else notes || ' · ' || extra end
+    where id = pr.xid;
+
+    -- practice history: «irse» presente|yo → «ir» presente|yo|r
+    ik := vosea_norm(pr.xinf);
+    update public.practice_log set
+      item_key = ik,
+      form_key = case when form_key is null or form_key = 'participio' then form_key else form_key || '|r' end
+    where user_id = pr.uid and item_kind = 'verb' and item_key = vosea_norm(pr.sinf);
+    get diagnostics c = row_count;
+    np := np + c;
+
+    delete from public.verbs where id = pr.sid;
+    nv := nv + 1;
+    raise notice 'merged % into %', pr.sinf, pr.xinf;
+  end loop;
+  raise notice 'reflexive merge: % pair(s), % practice row(s) moved', nv, np;
+end $$;
