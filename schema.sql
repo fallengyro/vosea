@@ -4010,3 +4010,225 @@ update public.library_entries e set items = pg_temp.refl_items(e.items),
 where pg_temp.refl_items(e.items) is distinct from e.items;
 
 commit;
+-- ===========================================================================
+-- 2026-11-10 — which use a verb opens on (build 228)
+-- ===========================================================================
+-- mason: "the toggle order should probably be standard/reflexive/dative
+-- since that roughly corresponds to their relative frequency. also, it would
+-- be good if the tab that corresponds to that verbs typical form
+-- standard/reflexive/dative, was that first tab toggled when the card is
+-- opened".
+--   1. verbs.main_use: '' (not set: a dative verb opens on Dativo, any other
+--      on Estándar, as before), 'estandar', 'reflexivo' or 'dativo'. Set in
+--      the verb's form («Uso más común»), by the lookup, or below.
+--   2. the restore function keeps it;
+--   3. the everyday verbs whose most common use isn't the default get it,
+--      in every account and in lists (only where it isn't set yet).
+-- Run after the two other 2026-11-10 files. Safe to run twice.
+-- ===========================================================================
+
+alter table public.verbs add column if not exists main_use text not null default '';
+alter table public.verbs drop constraint if exists verbs_main_use_check;
+alter table public.verbs add constraint verbs_main_use_check check (main_use in ('', 'estandar', 'reflexivo', 'dativo'));
+
+create or replace function public.vosea_restore_content(p_prefer text)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  b record;
+  r jsonb; it jsonb;
+  rv public.verbs; rw public.words; rp public.phrases;
+  ins int := 0; ovw int := 0; kept int := 0;
+  lnew int := 0; lmerged int := 0; iadd int := 0;
+  lid uuid; tok text; ikey text; n int;
+  padd int := 0; radd int := 0; gadd int := 0;
+begin
+  if uid is null then raise exception 'not_signed_in'; end if;
+  if p_prefer is null or p_prefer not in ('backup', 'active') then raise exception 'bad_prefer'; end if;
+  select * into b from public.content_backups where user_id = uid;
+  if not found then raise exception 'no_backup'; end if;
+
+  for r in select * from jsonb_array_elements(b.data->'verbs') loop
+    rv := jsonb_populate_record(null::public.verbs, r);
+    select count(*) into n from public.verbs x where x.user_id = uid and vosea_norm(x.infinitive) = vosea_norm(rv.infinitive);
+    -- (2026-11-10) an «irse» from an older backup is already ir's reflexive use
+    if n = 0 and vosea_norm(rv.infinitive) ~ '(ar|er|ir)se$' and exists (select 1 from public.verbs x where x.user_id = uid
+        and x.reflexive_use and vosea_norm(x.infinitive) || 'se' = vosea_norm(rv.infinitive)) then
+      kept := kept + 1;
+    elsif n = 0 then
+      insert into public.verbs (user_id, infinitive, definition, notes, example, type, irregularity, pattern, reflexive, transitivity,
+                                preposicion, auxiliar, gustar_like, also_personal_use, personal_definition, personal_example, reflexive_use, reflexive_definition, reflexive_example, main_use, known, known_forms, forms_en, forms_en_sig, forms)
+      values (uid, rv.infinitive, coalesce(rv.definition, ''), coalesce(rv.notes, ''), coalesce(rv.example, ''), coalesce(rv.type, '-ar'),
+              coalesce(rv.irregularity, 'regular'), coalesce(rv.pattern, ''), coalesce(rv.reflexive, false),
+              coalesce(rv.transitivity, 'transitivo'), coalesce(rv.preposicion, ''), coalesce(rv.auxiliar, false),
+              coalesce(rv.gustar_like, false), coalesce(rv.also_personal_use, false), coalesce(rv.personal_definition, ''), coalesce(rv.personal_example, ''),
+              coalesce(rv.reflexive_use, false), coalesce(rv.reflexive_definition, ''), coalesce(rv.reflexive_example, ''), coalesce(rv.main_use, ''), coalesce(rv.known, false),
+              coalesce(rv.known_forms, '{}'), coalesce(rv.forms_en, '{}'), coalesce(rv.forms_en_sig, ''), coalesce(rv.forms, '{}'));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.verbs x set definition = coalesce(rv.definition, ''), notes = coalesce(rv.notes, ''),
+        example = coalesce(rv.example, ''), type = coalesce(rv.type, '-ar'),
+        irregularity = coalesce(rv.irregularity, 'regular'),
+        pattern = coalesce(rv.pattern, ''), reflexive = coalesce(rv.reflexive, false),
+        transitivity = coalesce(rv.transitivity, 'transitivo'), preposicion = coalesce(rv.preposicion, ''),
+        auxiliar = coalesce(rv.auxiliar, false), gustar_like = coalesce(rv.gustar_like, false),
+        also_personal_use = coalesce(rv.also_personal_use, false), personal_definition = coalesce(rv.personal_definition, ''),
+        personal_example = coalesce(rv.personal_example, ''),
+        reflexive_use = coalesce(rv.reflexive_use, false), reflexive_definition = coalesce(rv.reflexive_definition, ''),
+        reflexive_example = coalesce(rv.reflexive_example, ''), main_use = coalesce(rv.main_use, ''),
+        known = coalesce(rv.known, false),
+        known_forms = coalesce(rv.known_forms, '{}'), forms_en = coalesce(rv.forms_en, '{}'),
+        forms_en_sig = coalesce(rv.forms_en_sig, ''), forms = coalesce(rv.forms, '{}')
+      where x.user_id = uid and vosea_norm(x.infinitive) = vosea_norm(rv.infinitive);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'words') loop
+    rw := jsonb_populate_record(null::public.words, r);
+    select count(*) into n from public.words x where x.user_id = uid and vosea_norm(x.word) = vosea_norm(rw.word);
+    if n = 0 then
+      insert into public.words (user_id, word, definition, part_of_speech, gender, register, notes, example, known)
+      values (uid, rw.word, coalesce(rw.definition, ''), coalesce(rw.part_of_speech, 'sustantivo'), coalesce(rw.gender, ''),
+              coalesce(rw.register, 'neutro'), coalesce(rw.notes, ''), coalesce(rw.example, ''), coalesce(rw.known, false));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.words x set definition = coalesce(rw.definition, ''), part_of_speech = coalesce(rw.part_of_speech, 'sustantivo'),
+        gender = coalesce(rw.gender, ''), register = coalesce(rw.register, 'neutro'), notes = coalesce(rw.notes, ''),
+        example = coalesce(rw.example, ''), known = coalesce(rw.known, false)
+      where x.user_id = uid and vosea_norm(x.word) = vosea_norm(rw.word);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'phrases') loop
+    rp := jsonb_populate_record(null::public.phrases, r);
+    select count(*) into n from public.phrases x where x.user_id = uid and vosea_norm(x.phrase) = vosea_norm(rp.phrase);
+    if n = 0 then
+      insert into public.phrases (user_id, phrase, definition, function, register, idiomatic, literal, notes, example, known)
+      values (uid, rp.phrase, coalesce(rp.definition, ''), coalesce(rp.function, 'otro'), coalesce(rp.register, 'neutro'),
+              coalesce(rp.idiomatic, false), coalesce(rp.literal, ''), coalesce(rp.notes, ''), coalesce(rp.example, ''), coalesce(rp.known, false));
+      ins := ins + 1;
+    elsif p_prefer = 'backup' then
+      update public.phrases x set definition = coalesce(rp.definition, ''), function = coalesce(rp.function, 'otro'),
+        register = coalesce(rp.register, 'neutro'), idiomatic = coalesce(rp.idiomatic, false), literal = coalesce(rp.literal, ''),
+        notes = coalesce(rp.notes, ''), example = coalesce(rp.example, ''), known = coalesce(rp.known, false)
+      where x.user_id = uid and vosea_norm(x.phrase) = vosea_norm(rp.phrase);
+      ovw := ovw + 1;
+    else
+      kept := kept + 1;
+    end if;
+  end loop;
+
+  for r in select * from jsonb_array_elements(b.data->'lists') loop
+    select x.id into lid from public.lists x where x.user_id = uid and vosea_norm(x.name) = vosea_norm(r->>'name') order by x.created_at limit 1;
+    if lid is null then
+      tok := r->>'share_token';
+      if tok is null or exists (select 1 from public.lists x where x.share_token = tok) then
+        insert into public.lists (user_id, name, owner_label, share_enabled)
+        values (uid, r->>'name', coalesce(r->>'owner_label', ''), coalesce((r->>'share_enabled')::boolean, true)) returning id into lid;
+      else
+        insert into public.lists (user_id, name, owner_label, share_token, share_enabled)
+        values (uid, r->>'name', coalesce(r->>'owner_label', ''), tok, coalesce((r->>'share_enabled')::boolean, true)) returning id into lid;
+      end if;
+      lnew := lnew + 1;
+    else
+      lmerged := lmerged + 1;
+    end if;
+    for it in select * from jsonb_array_elements(coalesce(r->'items', '[]')) loop
+      ikey := vosea_norm(coalesce(it->'data'->>'infinitive', it->'data'->>'word', it->'data'->>'phrase'));
+      if exists (select 1 from public.list_items i where i.list_id = lid and i.item_type = it->>'item_type'
+                 and vosea_norm(coalesce(i.data->>'infinitive', i.data->>'word', i.data->>'phrase')) = ikey) then
+        if p_prefer = 'backup' then
+          delete from public.list_items i where i.list_id = lid and i.item_type = it->>'item_type'
+            and vosea_norm(coalesce(i.data->>'infinitive', i.data->>'word', i.data->>'phrase')) = ikey;
+          insert into public.list_items (list_id, item_type, data) values (lid, it->>'item_type', it->'data');
+        end if;
+      else
+        insert into public.list_items (list_id, item_type, data) values (lid, it->>'item_type', it->'data');
+        iadd := iadd + 1;
+      end if;
+    end loop;
+    lid := null;
+  end loop;
+
+  -- progress (2026-10-10): history only ever grows, so it's merged by id
+  -- whatever p_prefer says: rows the app already has are left alone, the
+  -- rest come back. Older backups (version 1) have none of this.
+  insert into public.practice_log
+    select (jsonb_populate_record(null::public.practice_log, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'practice', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics padd = row_count;
+  insert into public.rewards
+    select (jsonb_populate_record(null::public.rewards, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'rewards', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics radd = row_count;
+  insert into public.game_records
+    select (jsonb_populate_record(null::public.game_records, e.j || jsonb_build_object('user_id', uid))).*
+    from jsonb_array_elements(coalesce(b.data->'records', '[]')) as e(j)
+  on conflict do nothing;
+  get diagnostics gadd = row_count;
+
+  return jsonb_build_object('inserted', ins, 'overwritten', ovw, 'kept', kept,
+                            'lists_created', lnew, 'lists_merged', lmerged, 'list_items_added', iadd,
+                            'practice_added', padd, 'rewards_added', radd, 'records_added', gadd);
+end;
+$$;
+
+begin;
+create temporary table main_uses (inf text primary key, mu text) on commit drop;
+insert into main_uses (inf, mu) values
+  ('llamar', 'reflexivo'),
+  ('sentar', 'reflexivo'),
+  ('acostar', 'reflexivo'),
+  ('levantar', 'reflexivo'),
+  ('despertar', 'reflexivo'),
+  ('afeitar', 'reflexivo'),
+  ('duchar', 'reflexivo'),
+  ('bañar', 'reflexivo'),
+  ('peinar', 'reflexivo'),
+  ('vestir', 'reflexivo'),
+  ('mudar', 'reflexivo'),
+  ('casar', 'reflexivo'),
+  ('enojar', 'reflexivo'),
+  ('enterar', 'reflexivo'),
+  ('equivocar', 'reflexivo'),
+  ('apurar', 'reflexivo'),
+  ('fijar', 'reflexivo'),
+  ('dedicar', 'reflexivo'),
+  ('divertir', 'reflexivo'),
+  ('animar', 'reflexivo'),
+  ('juntar', 'reflexivo'),
+  ('reunir', 'reflexivo'),
+  ('cansar', 'reflexivo'),
+  ('enfermar', 'reflexivo'),
+  ('quedar', 'reflexivo'),
+  ('caer', 'reflexivo'),
+  ('preocupar', 'reflexivo'),
+  ('pasar', 'estandar'),
+  ('tocar', 'estandar'),
+  ('costar', 'estandar');
+
+-- your verbs (only one that has that use, and only when not set)
+update public.verbs v set main_use = m.mu
+from main_uses m
+where vosea_norm(v.infinitive) = vosea_norm(m.inf) and coalesce(v.main_use, '') = ''
+  and (m.mu = 'estandar' or (m.mu = 'reflexivo' and v.reflexive_use) or (m.mu = 'dativo' and v.gustar_like));
+
+-- verbs in lists
+update public.list_items i set data = i.data || jsonb_build_object('main_use', m.mu)
+from main_uses m
+where i.item_type = 'verb' and vosea_norm(i.data->>'infinitive') = vosea_norm(m.inf) and coalesce(i.data->>'main_use', '') = ''
+  and (m.mu = 'estandar' or (m.mu = 'reflexivo' and coalesce((i.data->>'reflexive_use')::boolean, false))
+       or (m.mu = 'dativo' and coalesce((i.data->>'gustar_like')::boolean, false)));
+commit;

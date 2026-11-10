@@ -51,6 +51,7 @@ app's shared starter content — the same as adding an item by hand.
   "reflexive_use": false,
   "reflexive_definition": "",
   "reflexive_example": "",
+  "main_use": "",
   "forms": {
     "presente":     { "yo": "escalo",    "vos": "escalás",   "el": "escala",    "nosotros": "escalamos",    "ellos": "escalan" },
     "preterito":    { "yo": "escalé",    "vos": "escalaste", "el": "escaló",    "nosotros": "escalamos",    "ellos": "escalaron" },
@@ -82,6 +83,7 @@ Field notes:
 - `forms` — every tense object must have all five persons: `yo`, `vos`, `el`, `nosotros`, `ellos`. `imperativo` has only `vos`/`usted`/`nosotros`/`ustedes` (no `yo` — you can't command yourself). `gerundio` and `participio` are plain strings, not person tables.
 - Impersonal weather verbs (`llover`, `nevar`) skip the person tables entirely and use `"forms": { "impersonal": { "presente": "llueve", "subjPasado": "lloviera", ... } }` instead — there's no "yo llueve."
 - `reflexive_use` — `true` when the verb is also used with -se, with its own meaning: ir / irse (`"to leave"`, `"Me voy a las ocho."`), quedar / quedarse, llamar / llamarse, levantar / levantarse. Then `reflexive_definition` and `reflexive_example` are that use, and the verb is written once, without -se (`"infinitive": "ir"`), with its plain `forms`: the app builds "me voy, andate, yéndose" itself. Don't list `irse` as a separate verb. Leave them `false` / `""` otherwise.
+- `main_use` — optional: the use people say most, when the verb has more than one: `"estandar"`, `"reflexivo"` (llamar, because "me llamo") or `"dativo"` (gustar). The verb's card opens on it. Leave `""` to let the app choose (Dativo for a dative verb, otherwise Estándar).
 - A verb that only exists with -se (`quejarse`, `arrepentirse`, `atreverse`) is written with -se and `"reflexive": true` instead, and its `forms` have the pronoun in every single-table cell (`"yo": "me quejo"`, NOT just `"quejo"`) — the app shows exactly what's stored for those. `imperativo` too, wherever it attaches: enclitic on `vos` (`"vos": "quejate"`), proclitic on the other three (`"usted": "se queje"`, `"nosotros": "nos quejemos"`, `"ustedes": "se quejen"`).
 
 ## Word object shape

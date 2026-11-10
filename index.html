@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- must match VOSEA_BUILD in app.js (and sw.js CACHE_NAME): see app.js "out of step" -->
-<meta name="vosea-build" content="227">
+<meta name="vosea-build" content="228">
 <title>voseá</title>
 
 <!-- PWA: manifest + icons -->
@@ -274,9 +274,9 @@
          the gustar-tab handling around selectVerb() in app.js). Reuses the
          settings screen's .lang-toggle segmented-button look. -->
     <div class="lang-toggle gustar-mode-toggle" id="d-gustar-tabs" hidden>
-      <button type="button" class="lang-option" id="d-gustar-tab-dativo" data-i18n="gustar_tab_dativo">Dativo</button>
       <button type="button" class="lang-option" id="d-gustar-tab-personal" data-i18n="gustar_tab_personal">Estándar</button>
       <button type="button" class="lang-option" id="d-gustar-tab-reflexivo" data-i18n="gustar_tab_reflexivo">Reflexivo</button>
+      <button type="button" class="lang-option" id="d-gustar-tab-dativo" data-i18n="gustar_tab_dativo">Dativo</button>
     </div>
 
     <p class="conj-hint" data-i18n="conj_hint">deslizá para ver todos los tiempos &rarr;</p>
@@ -303,9 +303,11 @@
         </table>
       </div>
     </div>
+    <div id="d-legends">
     <p class="conj-legend" id="d-conj-legend"><span class="swatch"></span> <span data-i18n="conj_legend_irregular">se aparta del patrón regular</span></p>
     <p class="conj-legend gustar-legend" id="d-gustar-legend"><span class="swatch gustar"></span> <span data-i18n="conj_legend_gustar">a quién le pasa (no quién actúa) — la forma cambia solo si lo que gusta/afecta es singular o plural</span></p>
     <p class="conj-legend known-legend" id="d-known-legend" hidden><span class="known-legend-mark" aria-hidden="true">&#10003;</span> <span data-i18n="conj_legend_known">formas que marcaste como sabidas en las tarjetas</span></p>
+    </div>
 
     <div class="nonpersonal">
       <div class="tile" data-form-key="gerundio" id="d-gerundio-tile"><span class="label" data-i18n="tile_gerundio">Gerundio</span><span class="val" id="d-gerundio"></span></div>
@@ -415,6 +417,14 @@
         <label for="f-reflexive-example" id="f-reflexive-example-label" style="margin-top:8px;">Ejemplo (con -se)</label>
         <input type="text" id="f-reflexive-example" />
         <small class="field-hint" data-i18n="hint_reflexive_use">Las formas con pronombre (me voy, andate, yéndose) salen solas de la tabla.</small>
+      </div>
+      <div class="field" id="f-main-use-wrap" hidden>
+        <label for="f-main-use" data-i18n="label_main_use">Uso más común</label>
+        <select id="f-main-use">
+          <option value="estandar" data-i18n="gustar_tab_personal">Estándar</option>
+          <option value="reflexivo" data-i18n="gustar_tab_reflexivo">Reflexivo</option>
+          <option value="dativo" data-i18n="gustar_tab_dativo">Dativo</option>
+        </select>
       </div>
     </div>
 

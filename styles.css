@@ -2031,6 +2031,9 @@
      first tab leaves no divider in front of the next one */
   .gustar-mode-toggle .lang-option[hidden] { display: none; }
   .gustar-mode-toggle .lang-option[hidden] + .lang-option { border-left: 0; }
+  /* the legends under the table hold their largest height across a verb's
+     uses (stabilizeVerbUses), margins included */
+  #d-legends { display: flow-root; }
 
   /* the shared-list preview reuses .flash-overlay's full-screen chrome
      (same topbar, same close button) but its own scrollable body, since a

@@ -354,6 +354,7 @@
       placeholder_preposicion: "ej. en, de, a",
       check_reflexivo: "¿Reflexivo?",
       check_reflexive_use: "¿También «{inf}»?",
+      label_main_use: "Uso más común",
       rae_lookup_as_base: "«{typed}» quedó como el uso reflexivo de «{inf}».",
       rae_lookup_as_se: "Se usa con -se: quedó como «{inf}».",
       rae_lookup_pair_have: "Ya tenés «{base}»: al guardar, «{typed}» se suma a «{base}» como su uso reflexivo.",
@@ -1818,6 +1819,7 @@
       placeholder_preposicion: "e.g., en, de, a",
       check_reflexivo: "Reflexive?",
       check_reflexive_use: "Also “{inf}”?",
+      label_main_use: "Most common use",
       rae_lookup_as_base: "“{typed}” is now the reflexive use of “{inf}”.",
       rae_lookup_as_se: "It’s used with -se: saved as “{inf}”.",
       rae_lookup_pair_have: "You already have “{base}”: saving adds “{typed}” to “{base}” as its reflexive use.",
@@ -4049,7 +4051,7 @@
     warmTtsCacheRunning = true;
     try { by.coleccion = collectAllSpeakableTexts().filter(Boolean); } catch (e) { by.coleccion = []; }
     warmTtsCacheRunning = was;
-    if (sel && allVerbs.some(function (v) { return v.id === sel; })) { detailGustarTab = tab; selectVerb(sel); }
+    if (sel && allVerbs.some(function (v) { return v.id === sel; })) { detailGustarTab = tab; selectVerb(sel, true); }
     else { selectedId = null; detailGustarTab = GUSTAR_TAB_DEFAULT; el.detail.hidden = true; }
     // each text once, in the first set that has it
     var taken = {};
@@ -5855,11 +5857,14 @@
     dGustarTabDativo: document.getElementById("d-gustar-tab-dativo"),
     dGustarTabReflexivo: document.getElementById("d-gustar-tab-reflexivo"),
     dGerundioTile: document.getElementById("d-gerundio-tile"),
+    dLegends: document.getElementById("d-legends"),
     fReflexiveWrap: document.getElementById("f-reflexive-wrap"),
     fReflexiveUse: document.getElementById("f-reflexive-use"),
     fReflexiveUseCheck: document.getElementById("f-reflexive-use-check"),
     fReflexiveUseLabel: document.getElementById("f-reflexive-use-label"),
     fReflexiveUseWrap: document.getElementById("f-reflexive-use-wrap"),
+    fMainUseWrap: document.getElementById("f-main-use-wrap"),
+    fMainUse: document.getElementById("f-main-use"),
     fReflexiveDefinition: document.getElementById("f-reflexive-definition"),
     fReflexiveExample: document.getElementById("f-reflexive-example"),
     fReflexiveDefinitionLabel: document.getElementById("f-reflexive-definition-label"),
@@ -6384,7 +6389,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "227";
+  var VOSEA_BUILD = "228";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -6908,9 +6913,89 @@
     el.detail.hidden = true;
   }
 
-  function selectVerb(id) {
-    if (id !== selectedId) detailGustarTab = GUSTAR_TAB_DEFAULT;
+  // ---- a verb's uses on the detail card (2026-11-10, build 228)
+  // mason: "the toggle order should probably be standard/reflexive/dative
+  // since that roughly corresponds to their relative frequency", and "the
+  // tab that corresponds to that verbs typical form … was that first tab
+  // toggled when the card is opened" (verbs.main_use; without one, a
+  // dative verb opens on Dativo, as before, anything else on Estándar).
+  var VERB_USE_ORDER = ["personal", "reflexivo", "dativo"];
+  var MAIN_USE_TAB = { estandar: "personal", reflexivo: "reflexivo", dativo: "dativo" };
+  function verbUseTabs(data) {
+    return VERB_USE_ORDER.filter(function (u) {
+      return u === "personal" || (u === "reflexivo" && hasReflexiveUse(data)) || (u === "dativo" && !!data.gustar_like);
+    });
+  }
+  function verbMainTab(data) {
+    var tabs = verbUseTabs(data), m = MAIN_USE_TAB[data.main_use];
+    if (m && tabs.indexOf(m) !== -1) return m;
+    return data.gustar_like ? "dativo" : "personal";
+  }
+
+  // "when i switch between dative/standard/reflexive the card size changes
+  // and causes them to shift a little bit": with more than one use, every
+  // use is laid out once, and the parts that differ (definition, example,
+  // the pronoun column, each tense column, the legend) keep the largest
+  // size, so switching tabs moves nothing.
+  var verbDetailMeasuring = false;
+  function clearVerbUseSizes() {
+    [el.dDefinition, el.dExample, el.dLegends].forEach(function (n) { if (n) { n.style.minHeight = ""; n.style.visibility = ""; } });
+    var prTable = el.dConjPronounBody.closest("table");
+    if (prTable) prTable.style.minWidth = "";
+    var first = el.dConjBody.querySelector("tr");
+    if (first) Array.prototype.forEach.call(first.children, function (td) { td.style.width = ""; });
+    var tt = el.dConjBody.closest("table");
+    if (tt) { tt.style.width = ""; tt.style.minWidth = ""; }
+  }
+  function measureVerbUse(m) {
+    var h = function (n) { return n && n.offsetParent !== null && getComputedStyle(n).display !== "none" ? n.getBoundingClientRect().height : 0; };
+    m.def = Math.max(m.def, h(el.dDefinition));
+    m.ex = Math.max(m.ex, h(el.dExample));
+    m.leg = Math.max(m.leg, h(el.dLegends));
+    var prTable = el.dConjPronounBody.closest("table");
+    m.pr = Math.max(m.pr, prTable ? prTable.getBoundingClientRect().width : 0);
+    var first = el.dConjBody.querySelector("tr");
+    if (first) Array.prototype.forEach.call(first.children, function (td, j) { m.cols[j] = Math.max(m.cols[j] || 0, td.getBoundingClientRect().width); });
+  }
+  function stabilizeVerbUses(id, data) {
+    if (verbUseTabs(data).length < 2 || el.detail.hidden) return;
+    var cur = detailGustarTab, m = { def: 0, ex: 0, leg: 0, pr: 0, cols: [] };
+    verbDetailMeasuring = true;
+    try {
+      verbUseTabs(data).forEach(function (u) { detailGustarTab = u; renderVerbDetail(id); measureVerbUse(m); });
+    } finally {
+      verbDetailMeasuring = false;
+      detailGustarTab = cur;
+    }
+    renderVerbDetail(id);
+    if (m.def) el.dDefinition.style.minHeight = m.def + "px";
+    if (m.ex) {
+      el.dExample.style.minHeight = m.ex + "px";
+      if (!el.dExample.textContent) { el.dExample.style.display = ""; el.dExample.style.visibility = "hidden"; }
+    }
+    if (m.leg && el.dLegends) el.dLegends.style.minHeight = m.leg + "px";
+    var prTable = el.dConjPronounBody.closest("table");
+    if (prTable && m.pr) prTable.style.minWidth = m.pr + "px";
+    var first = el.dConjBody.querySelector("tr");
+    if (first) Array.prototype.forEach.call(first.children, function (td, j) { if (m.cols[j]) td.style.width = m.cols[j] + "px"; });
+    // the table as wide as those columns (or the space it has), so no
+    // column is squeezed differently from one use to the next
+    var tt = el.dConjBody.closest("table");
+    var sum = m.cols.reduce(function (a, b) { return a + (b || 0); }, 0);
+    if (tt && sum) { tt.style.width = Math.ceil(sum) + "px"; tt.style.minWidth = "100%"; }
+    syncConjRowHeights();
+  }
+
+  function selectVerb(id, keepTab) {
+    var e0 = allVerbs.find(function (v) { return v.id === id; });
+    if (id !== selectedId && !keepTab) detailGustarTab = e0 ? verbMainTab(e0.data) : GUSTAR_TAB_DEFAULT;
+    renderVerbDetail(id);
+    if (e0) stabilizeVerbUses(id, e0.data);
+  }
+
+  function renderVerbDetail(id) {
     selectedId = id;
+    clearVerbUseSizes();
     var entry = allVerbs.find(function (v) { return v.id === id; });
     if (!entry) { el.detail.hidden = true; return; }
     var data = entry.data;
@@ -6926,9 +7011,11 @@
     // only (plus the row/column prefetch once a cell IS tapped — see
     // prefetchAdjacentConjugationCells()), so glancing through many verbs
     // still doesn't download audio for forms nobody asked to hear.
-    prefetchTts(data.infinitive);
-    if (forms.gerundio) prefetchTts(forms.gerundio);
-    if (forms.participio) prefetchTts(forms.participio);
+    if (!verbDetailMeasuring) {
+      prefetchTts(data.infinitive);
+      if (forms.gerundio) prefetchTts(forms.gerundio);
+      if (forms.participio) prefetchTts(forms.participio);
+    }
     // A dative verb has two uses — the stored forms are the same, only the
     // reading (and the definition) differs, so a small tab control picks
     // which one this render uses. (Until 2026-10-10 only verbs flagged
@@ -7128,6 +7215,7 @@
     // just after this first synchronous one — a font swap finishing, or
     // (see the note on syncConjRowHeights) a mobile browser's automatic
     // text-size boost re-evaluating itself for the newly-inserted cells.
+    if (verbDetailMeasuring) return;
     requestAnimationFrame(function () {
       requestAnimationFrame(syncConjRowHeights);
     });
@@ -7277,6 +7365,7 @@
     el.fReflexiveDefinition.value = "";
     el.fReflexiveExample.value = "";
     formHadReflexiveUse = false;
+    formMainUse = "";
     syncReflexiveUseUi();
     el.fGerundio.value = "";
     el.fParticipio.value = "";
@@ -7317,6 +7406,7 @@
     el.fReflexiveDefinition.value = data.reflexive_definition || "";
     el.fReflexiveExample.value = data.reflexive_example || "";
     formHadReflexiveUse = !!data.reflexive_use;
+    formMainUse = data.main_use || "";
     var forms = data.forms || {};
     el.fGerundio.value = forms.gerundio || "";
     el.fParticipio.value = forms.participio || "";
@@ -7434,6 +7524,7 @@
     // the reflexive use (sent only when it's on, or was: a database without
     // the 2026-11-10 columns still saves every other verb)
     var reflOn = el.fReflexiveUse.checked && !el.fReflexive.checked && !infinitiveIsReflexive(out.infinitive);
+    if (!el.fMainUseWrap.hidden || formMainUse) out.main_use = el.fMainUseWrap.hidden ? "" : el.fMainUse.value;
     if (reflOn || formHadReflexiveUse) {
       out.reflexive_use = reflOn;
       out.reflexive_definition = reflOn ? el.fReflexiveDefinition.value.trim() : "";
@@ -7456,6 +7547,18 @@
     el.fReflexiveDefinitionLabel.textContent = t("label_reflexive_definition", { inf: rinf });
     el.fReflexiveExampleLabel.textContent = t("label_reflexive_example", { inf: rinf });
     el.fReflexiveUseWrap.hidden = !(showUse && el.fReflexiveUse.checked);
+    syncMainUseUi();
+  }
+  // «Uso más común» (2026-11-10): which tab the verb opens on; only when it
+  // has more than one use. Unset, a dative verb opens on Dativo.
+  var formMainUse = "";
+  function syncMainUseUi() {
+    var refl = !el.fReflexiveUseWrap.hidden, dat = el.fGustarLike.checked;
+    var opts = { estandar: true, reflexivo: refl, dativo: dat };
+    Array.prototype.forEach.call(el.fMainUse.options, function (o) { o.hidden = o.disabled = !opts[o.value]; });
+    el.fMainUseWrap.hidden = !(refl || dat);
+    var want = formMainUse && opts[formMainUse] ? formMainUse : (dat ? "dativo" : "estandar");
+    el.fMainUse.value = want;
   }
 
   // ================= Supabase-backed data layer =================
@@ -7481,6 +7584,7 @@
         reflexive_use: !!row.reflexive_use,
         reflexive_definition: row.reflexive_definition || "",
         reflexive_example: row.reflexive_example || "",
+        main_use: row.main_use || "",
         known: !!row.known,
         known_forms: row.known_forms || {},
         forms_en: row.forms_en || {},
@@ -10937,6 +11041,7 @@
             fillIfEmpty(el.fReflexiveDefinition, data.reflexiveDefinition);
             fillIfEmpty(el.fReflexiveExample, data.reflexiveExample);
           }
+          if (data.mainUse && !formMainUse) formMainUse = data.mainUse;
           if (data.gustarLike) {
             // (2026-11-10) a verb you had as a plain verb: what you wrote is
             // its standard use, so it moves down and the dative use goes on top
@@ -11165,7 +11270,7 @@
 
     function renderAndCollect(tab) {
       detailGustarTab = tab;
-      selectVerb(id);
+      selectVerb(id, true);
       var cells = el.dConjBody.querySelectorAll("td.speakable");
       cells.forEach(function (td) {
         var real = td.querySelector(".real");
@@ -11251,7 +11356,7 @@
 
     if (originalSelectedId && allVerbs.some(function (v) { return v.id === originalSelectedId; })) {
       detailGustarTab = originalGustarTab;
-      selectVerb(originalSelectedId);
+      selectVerb(originalSelectedId, true);
     } else {
       selectedId = null;
       detailGustarTab = GUSTAR_TAB_DEFAULT;
@@ -21897,7 +22002,7 @@
   // version is different now (its owner or an editor changed it), say so and
   // offer to use it. Your Sabido marks stay as they are.
   var LIST_VERSION_FIELDS = {
-    verb: ["definition", "notes", "example", "preposicion", "transitivity", "reflexive", "gustar_like", "personal_definition", "personal_example", "reflexive_use", "reflexive_definition", "reflexive_example", "forms"],
+    verb: ["definition", "notes", "example", "preposicion", "transitivity", "reflexive", "gustar_like", "personal_definition", "personal_example", "reflexive_use", "reflexive_definition", "reflexive_example", "main_use", "forms"],
     word: ["definition", "partOfSpeech", "gender", "register", "notes", "example"],
     phrase: ["definition", "function", "register", "idiomatic", "literal", "notes", "example"]
   };
@@ -23586,7 +23691,7 @@
   // live reference — if that source document changes, this copy needs to
   // be updated by hand too, since there is no build step tying them
   // together.
-  var IMPORT_FORMAT_SPEC = "# voseá — Custom Content Import Format (v1)\n\nPaste this whole document into your preferred LLM, along with the source\nmaterial you want turned into study content (a webpage, a PDF, your own\nlist of words), and ask it to produce one JSON file matching the shape\nbelow. Then point voseá's import screen at that file.\n\nEverything imported lands in **your own** verbs/words/phrases — never the\napp's shared starter content — the same as adding an item by hand.\n\n## Top-level shape\n\n```json\n{\n  \"version\": 1,\n  \"list_name\": \"Petrofísica y Perfilaje de Pozos\",\n  \"verbs\": [ /* verb objects, see below */ ],\n  \"words\": [ /* word objects, see below */ ],\n  \"phrases\": [ /* phrase objects, see below */ ]\n}\n```\n\n- `version` — always `1` for this format. Lets the app detect and reject a\n  future incompatible format instead of silently importing garbage.\n- `list_name` — optional. If present, every verb/word/phrase below is also\n  added to a list with this exact name (a new list is created if none\n  matches; an existing one with the same name is added to instead of\n  duplicated). Omit this to just add items to your collection without\n  creating a list.\n- `verbs`, `words` and `phrases` are all optional arrays — include\n  whichever you have.\n\n## Verb object shape\n\n```json\n{\n  \"infinitive\": \"escalar\",\n  \"definition\": \"to climb; to scale\",\n  \"notes\": \"en perfilaje: escalar una curva = to set a log curve's scale\",\n  \"example\": \"Escalamos el cerro en tres horas. / Escalá la resistividad en logarítmico.\",\n  \"type\": \"-ar\",\n  \"reflexive\": false,\n  \"irregularity\": \"regular\",\n  \"pattern\": \"\",\n  \"transitivity\": \"transitivo\",\n  \"preposicion\": \"\",\n  \"auxiliar\": false,\n  \"gustar_like\": false,\n  \"personal_definition\": \"\",\n  \"personal_example\": \"\",\n  \"reflexive_use\": false,\n  \"reflexive_definition\": \"\",\n  \"reflexive_example\": \"\",\n  \"forms\": {\n    \"presente\":     { \"yo\": \"escalo\",    \"vos\": \"escalás\",   \"el\": \"escala\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalan\" },\n    \"preterito\":    { \"yo\": \"escalé\",    \"vos\": \"escalaste\", \"el\": \"escaló\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalaron\" },\n    \"imperfecto\":   { \"yo\": \"escalaba\",  \"vos\": \"escalabas\", \"el\": \"escalaba\",  \"nosotros\": \"escalábamos\",  \"ellos\": \"escalaban\" },\n    \"futuro\":       { \"yo\": \"escalaré\",  \"vos\": \"escalarás\", \"el\": \"escalará\",  \"nosotros\": \"escalaremos\",  \"ellos\": \"escalarán\" },\n    \"condicional\":  { \"yo\": \"escalaría\", \"vos\": \"escalarías\",\"el\": \"escalaría\", \"nosotros\": \"escalaríamos\", \"ellos\": \"escalarían\" },\n    \"subjPresente\": { \"yo\": \"escale\",    \"vos\": \"escales\",   \"el\": \"escale\",    \"nosotros\": \"escalemos\",    \"ellos\": \"escalen\" },\n    \"subjPasado\":   { \"yo\": \"escalara\",  \"vos\": \"escalaras\", \"el\": \"escalara\",  \"nosotros\": \"escaláramos\",  \"ellos\": \"escalaran\" },\n    \"imperativo\":   { \"vos\": \"escalá\", \"usted\": \"escale\", \"nosotros\": \"escalemos\", \"ustedes\": \"escalen\" },\n    \"gerundio\": \"escalando\",\n    \"participio\": \"escalado\"\n  }\n}\n```\n\nField notes:\n- `type` — one of `-ar` / `-er` / `-ir`, must match the infinitive's ending.\n- `irregularity` — optional. The app works it out from `forms` itself, and a verb can have several:\n  `cambio de raíz` (él/ellos change the stem vowel), `irregular (yo)` (the present yo breaks the\n  pattern beyond that: tengo, digo, conozco), `pretérito irregular` (tuve, dije, hice), or\n  `irregular (total)` alone (ser, ir, haber, ver). So \"decir\" is `cambio de raíz, irregular (yo),\n  pretérito irregular`. If you include it, write the tags separated by commas; when it disagrees\n  with the table, the preview warns you and the table's tags are saved.\n- `pattern` — a short free-text note on what's irregular (e.g. `\"e→i en formas acentuadas\"`), blank if fully regular.\n- `transitivity` — one of `transitivo` / `intransitivo` / `ambos`.\n- `preposicion` — a fixed preposition the verb idiomatically takes (`\"a\"`, `\"de\"`, `\"en\"`...), or `\"\"`.\n- `gustar_like` — `true` for a dative (\"tipo gustar\") verb: gustar, encantar, doler, faltar, pasar, quedar, tocar, parecer, importar... Then `definition` and `example` are the **dative** use (pasar: `\"to happen (to someone)\"`, `\"¿Qué te pasó en la mano?\"`), and `personal_definition` and `personal_example` are the use with the person as the subject, in the indicative (`\"to pass, to come by; to spend (time)\"`, `\"Paso por tu casa a las ocho.\"`). Put examples only in the example fields, never inside a definition. Every dative verb has both uses, and `forms` is the plain conjugation (yo paso, vos pasás…) — the app builds the \"me pasa / me pasan\" forms itself. Leave `personal_definition` and `personal_example` `\"\"` for any other verb.\n- `notes` and `example` — optional free text, same rules as for words (see \"Definitions, notes and examples\" below).\n- `forms` — every tense object must have all five persons: `yo`, `vos`, `el`, `nosotros`, `ellos`. `imperativo` has only `vos`/`usted`/`nosotros`/`ustedes` (no `yo` — you can't command yourself). `gerundio` and `participio` are plain strings, not person tables.\n- Impersonal weather verbs (`llover`, `nevar`) skip the person tables entirely and use `\"forms\": { \"impersonal\": { \"presente\": \"llueve\", \"subjPasado\": \"lloviera\", ... } }` instead — there's no \"yo llueve.\"\n- `reflexive_use` — `true` when the verb is also used with -se, with its own meaning: ir / irse (`\"to leave\"`, `\"Me voy a las ocho.\"`), quedar / quedarse, llamar / llamarse, levantar / levantarse. Then `reflexive_definition` and `reflexive_example` are that use, and the verb is written once, without -se (`\"infinitive\": \"ir\"`), with its plain `forms`: the app builds \"me voy, andate, yéndose\" itself. Don't list `irse` as a separate verb. Leave them `false` / `\"\"` otherwise.\n- A verb that only exists with -se (`quejarse`, `arrepentirse`, `atreverse`) is written with -se and `\"reflexive\": true` instead, and its `forms` have the pronoun in every single-table cell (`\"yo\": \"me quejo\"`, NOT just `\"quejo\"`) — the app shows exactly what's stored for those. `imperativo` too, wherever it attaches: enclitic on `vos` (`\"vos\": \"quejate\"`), proclitic on the other three (`\"usted\": \"se queje\"`, `\"nosotros\": \"nos quejemos\"`, `\"ustedes\": \"se quejen\"`).\n\n## Word object shape\n\n```json\n{\n  \"word\": \"porosidad\",\n  \"definition\": \"porosity\",\n  \"part_of_speech\": \"sustantivo\",\n  \"gender\": \"femenino\",\n  \"register\": \"neutro\",\n  \"notes\": \"φ; se mide con los perfiles de densidad, neutrón o sónico\",\n  \"example\": \"Esta arenisca tiene buena porosidad.\"\n}\n```\n\n- `part_of_speech` — one of `sustantivo` / `adjetivo` / `adverbio` / `pronombre` / `preposición` / `conjunción` / `interjección`.\n- `gender` — one of `masculino` / `femenino` / `neutro` / `\"\"` (blank for anything ungendered, e.g. most adverbs).\n- `register` — optional, one of `neutro` (standard) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires slang: laburo, guita, bondi). Defaults to `neutro`.\n- `notes` and `example` are both optional free text; `example` is a Spanish sentence using the word, if you want one.\n\n## Phrase object shape\n\nShort common phrases/expressions — kept separate from single-word\nvocabulary because a phrase doesn't have one part of speech or gender.\nInstead it has its own two facets: what it's *for* (`function`) and how\nformal/slangy it is (`register`).\n\n```json\n{\n  \"phrase\": \"Dale\",\n  \"definition\": \"okay / sure / sounds good\",\n  \"function\": \"acuerdo\",\n  \"register\": \"coloquial\",\n  \"idiomatic\": true,\n  \"literal\": \"give it / go\",\n  \"notes\": \"\",\n  \"example\": \"\"\n}\n```\n\n- `function` — the phrase's communicative role, one of `saludo` (greeting) / `despedida` (farewell) / `cortesía` (courtesy — please, thanks, excuse me) / `acuerdo` (agreement) / `desacuerdo` (disagreement) / `sorpresa` (surprise/reaction) / `pregunta` (question) / `muletilla` (filler/discourse marker) / `otro` (other).\n- `register` — one of `neutro` (standard, textbook-safe) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires-specific slang).\n- `idiomatic` — `true` if the meaning isn't guessable word-by-word (e.g. \"ni en pedo\" doesn't mean anything about being drunk), `false` if it's a plain, literal combination of words.\n- `literal` — only meaningful when `idiomatic` is `true`: a short word-by-word gloss, so both the real meaning and the literal words are visible. Leave `\"\"` when `idiomatic` is `false`.\n- `notes` and `example` are both optional free text, same as for words.\n\n## Definitions, notes and examples (verbs, words and phrases)\n\n- Write every English field (`definition`, `literal`, English in `notes`)\n  in **American English**: American spelling (\"practice\", \"color\",\n  \"canceled\") and American words (\"check\" for a restaurant bill, \"store\",\n  \"candy\", \"cookie\", \"soccer\").\n- `definition` starts with the item's **everyday meaning**, never just\n  the list's topic: \"carrito\" is \"cart\" (not \"luggage cart\") even in an\n  airport list. One item can belong to several lists, and it has only one\n  definition.\n- When the list uses a word in a **genuinely different meaning** — not\n  just a narrower case of the everyday one — add that meaning after the\n  everyday one, with a short qualifier in parentheses:\n  `\"revoque\": \"plaster (on a wall); mudcake (in a well)\"`,\n  `\"carrera\": \"race; career; logging run (in a well)\"`. \"Carrito\" gets no\n  second meaning: an airport cart is still a cart. Keep it to one added\n  meaning. The definition is what a flashcard shows as the answer, so it\n  has to contain the meaning being studied.\n- **Verbs are the exception:** keep a verb's definition to its everyday\n  meaning (\"correr\": \"to run\") and put the list's sense in `notes` and\n  `example`. A verb's flashcards show the English of each conjugated form,\n  which is generated from the definition, so a second meaning there would\n  muddle every form.\n- The list's context also goes in `example` and `notes`. `example` gives a\n  typical sentence first; if the list's use is very different from the\n  everyday one, add a second, list-specific sentence after \" / \" (the\n  flashcards show that last sentence under the answer):\n  `\"Agarrá un carrito en la entrada del súper. / Pusimos las valijas en un carrito.\"`\n- `notes` says what the item means in the list's world when that isn't\n  obvious from the definition: `\"en perfilaje: una carrera = one logging run\"`.\n  Don't use notes for bare topic labels (\"petrofísica\", \"aeropuerto\") —\n  the list itself already says that.\n\n## ⚠️ Dialect requirement — this app uses Rioplatense Spanish (voseo)\n\nEvery verb form below MUST use **vos**, never tú. This is the single\nmost common mistake a general-purpose LLM makes here, so check it\ncarefully — a wrong-but-fluent \"tú\" conjugation will look completely\nplausible and still be wrong for this app:\n\n- Present tense **does not diphthongize** for vos, even for stem-changing\n  verbs: **vos podés** (not \"puedés\"), **vos mostrás** (not \"muestrás\"),\n  **vos pedís** (not \"pidís\"), **vos medís** (not \"midís\"). Stress falls\n  on the ending, not the stem — so vos present tense is always the\n  \"regular-looking\" stem plus `-ás`/`-és`/`-ís`.\n- Affirmative vos imperative = the infinitive's stem + its final accented\n  vowel, no `-s`: **hablá, comé, viví, tené, poné, vení, decí** — never\n  the tú-form (habla, ven, di).\n- Preterite, imperfecto, futuro, condicional, and both subjunctives all\n  use the vos-shaped ending shown in the example above (which mirrors\n  \"tú\" minus the final `-s` for most tenses, except present and imperative\n  where the difference is larger).\n- Compounds of irregular verbs keep the irregularity: **obtener → obtengo,\n  obtuve, obtendré** (not a regular pattern), because it's built on\n  \"tener.\" Same logic for any verb built on **poner**, **venir**,\n  **decir**, etc.\n- Phrases should also reflect real rioplatense usage (e.g. \"¿Vos querés\n  algo?\" not \"¿Tú quieres algo?\") — a phrase generated by an LLM defaulting\n  to Spain/Mexico Spanish will read as noticeably foreign here.\n\n## What the app checks before saving anything\n\n- The file must be valid JSON matching this shape, or the whole import is\n  rejected with an error — nothing partial gets written.\n- Every verb's `forms` must have all required tense/person cells filled in.\n- Before you confirm the import, you'll see a preview of every parsed\n  verb/word/phrase. For verbs, any cell that doesn't match the app's own\n  built-in *regular* conjugation pattern is highlighted — same highlight\n  used everywhere else in the app for irregular verbs. If the file's\n  `irregularity` doesn't match what the table gives, the preview says so:\n  usually that's the LLM having made a mistake in a form; fix it before\n  confirming. Spelling-only changes (sacar → saqué, llegar → llegue,\n  empezar → empecé, surgir → surjo) light up in the table but don't make\n  a verb irregular; describe them in `pattern`.\n- Duplicates are matched by infinitive/word/phrase (case- and\n  accent-insensitive), same as the existing \"add to list\" flow — importing\n  the same file twice won't create duplicate rows.\n";
+  var IMPORT_FORMAT_SPEC = "# voseá — Custom Content Import Format (v1)\n\nPaste this whole document into your preferred LLM, along with the source\nmaterial you want turned into study content (a webpage, a PDF, your own\nlist of words), and ask it to produce one JSON file matching the shape\nbelow. Then point voseá's import screen at that file.\n\nEverything imported lands in **your own** verbs/words/phrases — never the\napp's shared starter content — the same as adding an item by hand.\n\n## Top-level shape\n\n```json\n{\n  \"version\": 1,\n  \"list_name\": \"Petrofísica y Perfilaje de Pozos\",\n  \"verbs\": [ /* verb objects, see below */ ],\n  \"words\": [ /* word objects, see below */ ],\n  \"phrases\": [ /* phrase objects, see below */ ]\n}\n```\n\n- `version` — always `1` for this format. Lets the app detect and reject a\n  future incompatible format instead of silently importing garbage.\n- `list_name` — optional. If present, every verb/word/phrase below is also\n  added to a list with this exact name (a new list is created if none\n  matches; an existing one with the same name is added to instead of\n  duplicated). Omit this to just add items to your collection without\n  creating a list.\n- `verbs`, `words` and `phrases` are all optional arrays — include\n  whichever you have.\n\n## Verb object shape\n\n```json\n{\n  \"infinitive\": \"escalar\",\n  \"definition\": \"to climb; to scale\",\n  \"notes\": \"en perfilaje: escalar una curva = to set a log curve's scale\",\n  \"example\": \"Escalamos el cerro en tres horas. / Escalá la resistividad en logarítmico.\",\n  \"type\": \"-ar\",\n  \"reflexive\": false,\n  \"irregularity\": \"regular\",\n  \"pattern\": \"\",\n  \"transitivity\": \"transitivo\",\n  \"preposicion\": \"\",\n  \"auxiliar\": false,\n  \"gustar_like\": false,\n  \"personal_definition\": \"\",\n  \"personal_example\": \"\",\n  \"reflexive_use\": false,\n  \"reflexive_definition\": \"\",\n  \"reflexive_example\": \"\",\n  \"main_use\": \"\",\n  \"forms\": {\n    \"presente\":     { \"yo\": \"escalo\",    \"vos\": \"escalás\",   \"el\": \"escala\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalan\" },\n    \"preterito\":    { \"yo\": \"escalé\",    \"vos\": \"escalaste\", \"el\": \"escaló\",    \"nosotros\": \"escalamos\",    \"ellos\": \"escalaron\" },\n    \"imperfecto\":   { \"yo\": \"escalaba\",  \"vos\": \"escalabas\", \"el\": \"escalaba\",  \"nosotros\": \"escalábamos\",  \"ellos\": \"escalaban\" },\n    \"futuro\":       { \"yo\": \"escalaré\",  \"vos\": \"escalarás\", \"el\": \"escalará\",  \"nosotros\": \"escalaremos\",  \"ellos\": \"escalarán\" },\n    \"condicional\":  { \"yo\": \"escalaría\", \"vos\": \"escalarías\",\"el\": \"escalaría\", \"nosotros\": \"escalaríamos\", \"ellos\": \"escalarían\" },\n    \"subjPresente\": { \"yo\": \"escale\",    \"vos\": \"escales\",   \"el\": \"escale\",    \"nosotros\": \"escalemos\",    \"ellos\": \"escalen\" },\n    \"subjPasado\":   { \"yo\": \"escalara\",  \"vos\": \"escalaras\", \"el\": \"escalara\",  \"nosotros\": \"escaláramos\",  \"ellos\": \"escalaran\" },\n    \"imperativo\":   { \"vos\": \"escalá\", \"usted\": \"escale\", \"nosotros\": \"escalemos\", \"ustedes\": \"escalen\" },\n    \"gerundio\": \"escalando\",\n    \"participio\": \"escalado\"\n  }\n}\n```\n\nField notes:\n- `type` — one of `-ar` / `-er` / `-ir`, must match the infinitive's ending.\n- `irregularity` — optional. The app works it out from `forms` itself, and a verb can have several:\n  `cambio de raíz` (él/ellos change the stem vowel), `irregular (yo)` (the present yo breaks the\n  pattern beyond that: tengo, digo, conozco), `pretérito irregular` (tuve, dije, hice), or\n  `irregular (total)` alone (ser, ir, haber, ver). So \"decir\" is `cambio de raíz, irregular (yo),\n  pretérito irregular`. If you include it, write the tags separated by commas; when it disagrees\n  with the table, the preview warns you and the table's tags are saved.\n- `pattern` — a short free-text note on what's irregular (e.g. `\"e→i en formas acentuadas\"`), blank if fully regular.\n- `transitivity` — one of `transitivo` / `intransitivo` / `ambos`.\n- `preposicion` — a fixed preposition the verb idiomatically takes (`\"a\"`, `\"de\"`, `\"en\"`...), or `\"\"`.\n- `gustar_like` — `true` for a dative (\"tipo gustar\") verb: gustar, encantar, doler, faltar, pasar, quedar, tocar, parecer, importar... Then `definition` and `example` are the **dative** use (pasar: `\"to happen (to someone)\"`, `\"¿Qué te pasó en la mano?\"`), and `personal_definition` and `personal_example` are the use with the person as the subject, in the indicative (`\"to pass, to come by; to spend (time)\"`, `\"Paso por tu casa a las ocho.\"`). Put examples only in the example fields, never inside a definition. Every dative verb has both uses, and `forms` is the plain conjugation (yo paso, vos pasás…) — the app builds the \"me pasa / me pasan\" forms itself. Leave `personal_definition` and `personal_example` `\"\"` for any other verb.\n- `notes` and `example` — optional free text, same rules as for words (see \"Definitions, notes and examples\" below).\n- `forms` — every tense object must have all five persons: `yo`, `vos`, `el`, `nosotros`, `ellos`. `imperativo` has only `vos`/`usted`/`nosotros`/`ustedes` (no `yo` — you can't command yourself). `gerundio` and `participio` are plain strings, not person tables.\n- Impersonal weather verbs (`llover`, `nevar`) skip the person tables entirely and use `\"forms\": { \"impersonal\": { \"presente\": \"llueve\", \"subjPasado\": \"lloviera\", ... } }` instead — there's no \"yo llueve.\"\n- `reflexive_use` — `true` when the verb is also used with -se, with its own meaning: ir / irse (`\"to leave\"`, `\"Me voy a las ocho.\"`), quedar / quedarse, llamar / llamarse, levantar / levantarse. Then `reflexive_definition` and `reflexive_example` are that use, and the verb is written once, without -se (`\"infinitive\": \"ir\"`), with its plain `forms`: the app builds \"me voy, andate, yéndose\" itself. Don't list `irse` as a separate verb. Leave them `false` / `\"\"` otherwise.\n- `main_use` — optional: the use people say most, when the verb has more than one: `\"estandar\"`, `\"reflexivo\"` (llamar, because \"me llamo\") or `\"dativo\"` (gustar). The verb's card opens on it. Leave `\"\"` to let the app choose (Dativo for a dative verb, otherwise Estándar).\n- A verb that only exists with -se (`quejarse`, `arrepentirse`, `atreverse`) is written with -se and `\"reflexive\": true` instead, and its `forms` have the pronoun in every single-table cell (`\"yo\": \"me quejo\"`, NOT just `\"quejo\"`) — the app shows exactly what's stored for those. `imperativo` too, wherever it attaches: enclitic on `vos` (`\"vos\": \"quejate\"`), proclitic on the other three (`\"usted\": \"se queje\"`, `\"nosotros\": \"nos quejemos\"`, `\"ustedes\": \"se quejen\"`).\n\n## Word object shape\n\n```json\n{\n  \"word\": \"porosidad\",\n  \"definition\": \"porosity\",\n  \"part_of_speech\": \"sustantivo\",\n  \"gender\": \"femenino\",\n  \"register\": \"neutro\",\n  \"notes\": \"φ; se mide con los perfiles de densidad, neutrón o sónico\",\n  \"example\": \"Esta arenisca tiene buena porosidad.\"\n}\n```\n\n- `part_of_speech` — one of `sustantivo` / `adjetivo` / `adverbio` / `pronombre` / `preposición` / `conjunción` / `interjección`.\n- `gender` — one of `masculino` / `femenino` / `neutro` / `\"\"` (blank for anything ungendered, e.g. most adverbs).\n- `register` — optional, one of `neutro` (standard) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires slang: laburo, guita, bondi). Defaults to `neutro`.\n- `notes` and `example` are both optional free text; `example` is a Spanish sentence using the word, if you want one.\n\n## Phrase object shape\n\nShort common phrases/expressions — kept separate from single-word\nvocabulary because a phrase doesn't have one part of speech or gender.\nInstead it has its own two facets: what it's *for* (`function`) and how\nformal/slangy it is (`register`).\n\n```json\n{\n  \"phrase\": \"Dale\",\n  \"definition\": \"okay / sure / sounds good\",\n  \"function\": \"acuerdo\",\n  \"register\": \"coloquial\",\n  \"idiomatic\": true,\n  \"literal\": \"give it / go\",\n  \"notes\": \"\",\n  \"example\": \"\"\n}\n```\n\n- `function` — the phrase's communicative role, one of `saludo` (greeting) / `despedida` (farewell) / `cortesía` (courtesy — please, thanks, excuse me) / `acuerdo` (agreement) / `desacuerdo` (disagreement) / `sorpresa` (surprise/reaction) / `pregunta` (question) / `muletilla` (filler/discourse marker) / `otro` (other).\n- `register` — one of `neutro` (standard, textbook-safe) / `coloquial` (everyday informal) / `lunfardo` (Buenos Aires-specific slang).\n- `idiomatic` — `true` if the meaning isn't guessable word-by-word (e.g. \"ni en pedo\" doesn't mean anything about being drunk), `false` if it's a plain, literal combination of words.\n- `literal` — only meaningful when `idiomatic` is `true`: a short word-by-word gloss, so both the real meaning and the literal words are visible. Leave `\"\"` when `idiomatic` is `false`.\n- `notes` and `example` are both optional free text, same as for words.\n\n## Definitions, notes and examples (verbs, words and phrases)\n\n- Write every English field (`definition`, `literal`, English in `notes`)\n  in **American English**: American spelling (\"practice\", \"color\",\n  \"canceled\") and American words (\"check\" for a restaurant bill, \"store\",\n  \"candy\", \"cookie\", \"soccer\").\n- `definition` starts with the item's **everyday meaning**, never just\n  the list's topic: \"carrito\" is \"cart\" (not \"luggage cart\") even in an\n  airport list. One item can belong to several lists, and it has only one\n  definition.\n- When the list uses a word in a **genuinely different meaning** — not\n  just a narrower case of the everyday one — add that meaning after the\n  everyday one, with a short qualifier in parentheses:\n  `\"revoque\": \"plaster (on a wall); mudcake (in a well)\"`,\n  `\"carrera\": \"race; career; logging run (in a well)\"`. \"Carrito\" gets no\n  second meaning: an airport cart is still a cart. Keep it to one added\n  meaning. The definition is what a flashcard shows as the answer, so it\n  has to contain the meaning being studied.\n- **Verbs are the exception:** keep a verb's definition to its everyday\n  meaning (\"correr\": \"to run\") and put the list's sense in `notes` and\n  `example`. A verb's flashcards show the English of each conjugated form,\n  which is generated from the definition, so a second meaning there would\n  muddle every form.\n- The list's context also goes in `example` and `notes`. `example` gives a\n  typical sentence first; if the list's use is very different from the\n  everyday one, add a second, list-specific sentence after \" / \" (the\n  flashcards show that last sentence under the answer):\n  `\"Agarrá un carrito en la entrada del súper. / Pusimos las valijas en un carrito.\"`\n- `notes` says what the item means in the list's world when that isn't\n  obvious from the definition: `\"en perfilaje: una carrera = one logging run\"`.\n  Don't use notes for bare topic labels (\"petrofísica\", \"aeropuerto\") —\n  the list itself already says that.\n\n## ⚠️ Dialect requirement — this app uses Rioplatense Spanish (voseo)\n\nEvery verb form below MUST use **vos**, never tú. This is the single\nmost common mistake a general-purpose LLM makes here, so check it\ncarefully — a wrong-but-fluent \"tú\" conjugation will look completely\nplausible and still be wrong for this app:\n\n- Present tense **does not diphthongize** for vos, even for stem-changing\n  verbs: **vos podés** (not \"puedés\"), **vos mostrás** (not \"muestrás\"),\n  **vos pedís** (not \"pidís\"), **vos medís** (not \"midís\"). Stress falls\n  on the ending, not the stem — so vos present tense is always the\n  \"regular-looking\" stem plus `-ás`/`-és`/`-ís`.\n- Affirmative vos imperative = the infinitive's stem + its final accented\n  vowel, no `-s`: **hablá, comé, viví, tené, poné, vení, decí** — never\n  the tú-form (habla, ven, di).\n- Preterite, imperfecto, futuro, condicional, and both subjunctives all\n  use the vos-shaped ending shown in the example above (which mirrors\n  \"tú\" minus the final `-s` for most tenses, except present and imperative\n  where the difference is larger).\n- Compounds of irregular verbs keep the irregularity: **obtener → obtengo,\n  obtuve, obtendré** (not a regular pattern), because it's built on\n  \"tener.\" Same logic for any verb built on **poner**, **venir**,\n  **decir**, etc.\n- Phrases should also reflect real rioplatense usage (e.g. \"¿Vos querés\n  algo?\" not \"¿Tú quieres algo?\") — a phrase generated by an LLM defaulting\n  to Spain/Mexico Spanish will read as noticeably foreign here.\n\n## What the app checks before saving anything\n\n- The file must be valid JSON matching this shape, or the whole import is\n  rejected with an error — nothing partial gets written.\n- Every verb's `forms` must have all required tense/person cells filled in.\n- Before you confirm the import, you'll see a preview of every parsed\n  verb/word/phrase. For verbs, any cell that doesn't match the app's own\n  built-in *regular* conjugation pattern is highlighted — same highlight\n  used everywhere else in the app for irregular verbs. If the file's\n  `irregularity` doesn't match what the table gives, the preview says so:\n  usually that's the LLM having made a mistake in a form; fix it before\n  confirming. Spelling-only changes (sacar → saqué, llegar → llegue,\n  empezar → empecé, surgir → surjo) light up in the table but don't make\n  a verb irregular; describe them in `pattern`.\n- Duplicates are matched by infinitive/word/phrase (case- and\n  accent-insensitive), same as the existing \"add to list\" flow — importing\n  the same file twice won't create duplicate rows.\n";
 
   var IMPORT_VALID_TYPES = ["-ar", "-er", "-ir"];
   var IMPORT_VALID_IRREGULARITY = ["regular", "cambio de raíz", "irregular (yo)", "pretérito irregular", "irregular (total)"];
@@ -23848,6 +23953,7 @@
       reflexive_use: !!v.reflexive_use && !v.reflexive && !infinitiveIsReflexive(inf),
       reflexive_definition: (v.reflexive_use && typeof v.reflexive_definition === "string") ? v.reflexive_definition.trim() : "",
       reflexive_example: (v.reflexive_use && typeof v.reflexive_example === "string") ? v.reflexive_example.trim() : "",
+      main_use: ["estandar", "reflexivo", "dativo"].indexOf(v.main_use) !== -1 ? v.main_use : "",
       forms: v.forms
     };
   }
@@ -24184,6 +24290,8 @@
       });
       // every row the same columns (see normalizeStarterVerb); the reflexive
       // ones only when some row uses them, so a database without them still imports
+      if (toInsertV.some(function (v) { return v.main_use; })) toInsertV.forEach(function (v) { v.main_use = v.main_use || ""; });
+      else toInsertV.forEach(function (v) { delete v.main_use; });
       if (toInsertV.some(function (v) { return v.reflexive_use; })) {
         toInsertV.forEach(function (v) { v.reflexive_use = !!v.reflexive_use; v.reflexive_definition = v.reflexive_definition || ""; v.reflexive_example = v.reflexive_example || ""; });
       } else {
@@ -24810,8 +24918,10 @@
   el.fRaeLookup.addEventListener("click", function () { lookupInRae("verb"); });
   el.fGustarLike.addEventListener("change", function () {
     el.fPersonalDefinitionWrap.hidden = !el.fGustarLike.checked;
+    syncMainUseUi();
   });
   el.fReflexiveUse.addEventListener("change", syncReflexiveUseUi);
+  el.fMainUse.addEventListener("change", function () { formMainUse = el.fMainUse.value; });
   el.dGustarTabPersonal.addEventListener("click", function () {
     if (detailGustarTab === "personal") return;
     detailGustarTab = "personal";
