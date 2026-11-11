@@ -6403,7 +6403,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "229";
+  var VOSEA_BUILD = "230";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -10127,8 +10127,20 @@
 
   // The English for one form, or "" if there isn't a current one (not
   // generated yet, or generated from forms that have since been edited).
+  // (2026-11-10, mason: «hacíamos» showed "(to do/make)" after hacer got its
+  // reflexive use.) A new use adds forms, which changes the fingerprint, and
+  // until the new English arrived every card of the verb fell back to the
+  // definition. The English already stored is still right for the forms it
+  // has, so it's used meanwhile, unless the dative reading changed (then
+  // the plain cells mean something else: «me gusta» vs «gusto»).
+  function verbGlossStaleOk(data) {
+    var en = data.forms_en || {};
+    var hadPersonal = Object.keys(en).some(isPersonalUseKey);
+    return !!data.gustar_like === hadPersonal;
+  }
   function verbFormGloss(data, formKey) {
-    if (!formKey || !data.forms_en || data.forms_en_sig !== verbGlossSig(data)) return "";
+    if (!formKey || !data.forms_en) return "";
+    if (data.forms_en_sig !== verbGlossSig(data) && !verbGlossStaleOk(data)) return "";
     return data.forms_en[formKey] || "";
   }
 
@@ -10304,7 +10316,22 @@
     var calls = [verbGlossCall(data, mainEntries, "main")];
     if (persEntries.length) calls.push(verbGlossCall(data, persEntries, "personal"));
     if (reflEntries.length) calls.push(verbGlossCall(data, reflEntries, "reflexive"));
-    return Promise.all(calls).then(function (parts) {
+    // Each use is its own call; one that fails (the daily cap, a timeout)
+    // no longer throws away the others. What came back is kept, under the
+    // old fingerprint so the rest is asked for again later.
+    var partFail = null;
+    var settled = calls.map(function (c) { return c.then(function (x) { return x; }, function (err) { partFail = partFail || err; return null; }); });
+    return Promise.all(settled).then(function (parts) {
+      parts = parts.filter(Boolean);
+      if (!parts.length) throw partFail || new Error("empty reply");
+      if (partFail) {
+        var kept = Object.assign({}, data.forms_en || {});
+        parts.forEach(function (x) { Object.assign(kept, x.glosses); });
+        data.forms_en = kept;
+        if (!isBorrowedId(id)) supabaseClient.from("verbs").update({ forms_en: kept }).eq("id", id).then(function () {});
+        refreshOpenFlashCardSub();
+        throw partFail;
+      }
       var glosses = {}, cachedN = 0, genN = 0, counted = false;
       parts.forEach(function (x) {
         Object.assign(glosses, x.glosses);
