@@ -6403,7 +6403,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "230";
+  var VOSEA_BUILD = "231";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -13337,8 +13337,20 @@
       el.flashBackHeard.textContent = sp.rule === "error" ? t("speak_error") + (sp.error ? " (" + String(sp.error).slice(0, 40) + ")" : "") : "—";
     } else {
       var parts = speechAlign(card, sp);
-      el.flashBackSaidPre.textContent = parts.pre;
-      el.flashBackHeard.textContent = parts.core;
+      // (2026-11-13, mason's «mientras» card: «escucho música» hung beside
+      // "Dijiste:" and squeezed the answer to a few letters per line.) Only
+      // a short lead-in ("y la") hangs to the left; a longer one leads the
+      // line itself, faded like the words after.
+      if (parts.pre && parts.pre.length > 8) {
+        var lead = document.createElement("span");
+        lead.className = "said-post";
+        lead.textContent = parts.pre + " ";
+        el.flashBackHeard.appendChild(lead);
+        el.flashBackHeard.appendChild(document.createTextNode(parts.core));
+      } else {
+        el.flashBackSaidPre.textContent = parts.pre;
+        el.flashBackHeard.textContent = parts.core;
+      }
       if (parts.post) {
         var post = document.createElement("span");
         post.className = "said-post";
