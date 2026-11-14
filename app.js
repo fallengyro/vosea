@@ -975,6 +975,11 @@
       speak_limit_reserve: "Hablar está en pausa hasta que se renueve el mes gratis.",
       usage_menu: "Uso",
       usage_title: "Uso del mes",
+      usage_verb_en: "Inglés de los verbos (este dispositivo)",
+      usage_verb_en_ready: "{ready} de {total} verbos con el inglés de cada forma.",
+      usage_verb_en_session: "Desde que abriste la app: {done} verbos completados ({cached} formas del caché compartido, {gen} nuevas) · {failed} fallos · {limit} por el límite diario.",
+      usage_verb_en_paused: "En pausa un minuto después de varios fallos seguidos; sigue sola.",
+      usage_verb_en_error: "Último error ({time}): {err}",
       usage_refresh: "Actualizar",
       usage_loading: "Leyendo los números de cada servicio…",
       usage_updated: "Actualizado: {time}",
@@ -2441,6 +2446,11 @@
       speak_limit_reserve: "Hablar is paused until the free month renews.",
       usage_menu: "Usage",
       usage_title: "This month's usage",
+      usage_verb_en: "Verb English (this device)",
+      usage_verb_en_ready: "{ready} of {total} verbs have the English of every form.",
+      usage_verb_en_session: "Since you opened the app: {done} verbs done ({cached} forms from the shared cache, {gen} new) · {failed} failures · {limit} stopped by the daily limit.",
+      usage_verb_en_paused: "Paused for a minute after several failures in a row; it carries on by itself.",
+      usage_verb_en_error: "Last error ({time}): {err}",
       usage_refresh: "Refresh",
       usage_loading: "Getting the numbers from each service…",
       usage_updated: "Updated {time}",
@@ -3776,8 +3786,25 @@
       body.appendChild(sec5);
     }
 
+    body.appendChild(verbEnUsageSection());
     body.appendChild(uNode("p", "flash-setup-note usage-rules", t("usage_rules", {
       stt: progNum((lim.stt_seconds_day || 600) / 60), tts: progNum(lim.tts_chars_day || 5000), pct: reserve })));
+  }
+  // (2026-11-14) how the verb English is going on this device
+  function verbEnUsageSection() {
+    var sec = usageSection(t("usage_verb_en"));
+    var total = 0, ready = 0;
+    allVerbs.forEach(function (v) {
+      if (!verbFormEntries(v.data).length) return;
+      total++;
+      if (!verbNeedsGloss(v.data) || verbGlossFromMemo(v.data)) ready++;
+    });
+    var st = verbGlossStatus;
+    sec.appendChild(uNode("p", "usage-note", t("usage_verb_en_ready", { ready: progNum(ready), total: progNum(total) })));
+    sec.appendChild(uNode("p", "usage-note", t("usage_verb_en_session", { done: progNum(st.done), cached: progNum(st.cached), gen: progNum(st.generated), failed: progNum(st.failed), limit: progNum(st.limit) })));
+    if (st.pausedUntil > Date.now()) sec.appendChild(uNode("p", "usage-problem", t("usage_verb_en_paused")));
+    if (st.lastError) sec.appendChild(uNode("p", "usage-problem", t("usage_verb_en_error", { err: st.lastError, time: usageTime(new Date(st.lastErrorAt).toISOString()) })));
+    return sec;
   }
 
   // ---- Uso · speech recognition (shared attempts) ----
@@ -6403,7 +6430,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "231";
+  var VOSEA_BUILD = "232";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -10219,8 +10246,47 @@
   var verbGlossExtra = [];
   var verbGlossMemo = {};
 
+  // (2026-11-14, mason: "I'm still seeing that I have mostly unconjugated
+  // definitions on my flash card backs", on «respetás», a verb he has
+  // through a list.) A list's verbs keep their English in memory only, so
+  // every time the app opened it had to fetch all of them again, and a
+  // couple of failed calls (a phone dropping a request, the daily cap)
+  // paused the queue for the whole session. Now:
+  //   · the English of a list's verbs is also kept on this device, by
+  //     fingerprint (`vosea-verb-en`), so it shows at once next time;
+  //   · each call gives up after 45 s instead of holding a worker forever;
+  //   · failures don't stop the queue for the session: it waits a minute
+  //     and carries on, retrying a verb at most 3 times;
+  //   · the Uso page shows how it's going on this device.
+  var VERB_EN_KEY = "vosea-verb-en";
+  var VERB_EN_MAX = 800;
+  var verbEnStore = (function () { try { return JSON.parse(localStorage.getItem(VERB_EN_KEY) || "{}") || {}; } catch (e) { return {}; } })();
+  var verbEnOrder = Object.keys(verbEnStore);
+  function verbEnKeep(sig, glosses) {
+    if (!sig || !glosses) return;
+    if (!verbEnStore[sig]) verbEnOrder.push(sig);
+    verbEnStore[sig] = glosses;
+    while (verbEnOrder.length > VERB_EN_MAX) delete verbEnStore[verbEnOrder.shift()];
+    try { localStorage.setItem(VERB_EN_KEY, JSON.stringify(verbEnStore)); } catch (e) {}
+  }
+  // English already fetched for these exact forms (this session or kept on
+  // the device): use it without asking again.
+  function verbGlossFromMemo(data) {
+    var sig = verbGlossSig(data);
+    var g = verbGlossMemo[sig] || verbEnStore[sig];
+    if (!g) return false;
+    data.forms_en = g; data.forms_en_sig = sig;
+    verbGlossMemo[sig] = g;
+    return true;
+  }
+  var verbGlossTries = {};   // tag -> attempts this session
+  var verbGlossRetryTimer = 0;
+  var VERB_GLOSS_MAX_TRIES = 3;
+  var VERB_GLOSS_TIMEOUT = 45000;
+  var verbGlossStatus = { done: 0, cached: 0, generated: 0, failed: 0, limit: 0, lastError: "", lastErrorAt: 0, pausedUntil: 0 };
+
   function verbGlossNext() {
-    var pending = function (v) { return verbNeedsGloss(v.data) && !verbGlossAttempted.has(v.id + ":" + verbGlossSig(v.data)); };
+    var pending = function (v) { return verbNeedsGloss(v.data) && !verbGlossFromMemo(v.data) && !verbGlossAttempted.has(v.id + ":" + verbGlossSig(v.data)); };
     return allVerbs.find(function (v) { return v.id === verbGlossPriorityId && pending(v); }) ||
       (verbGlossFirst.size ? allVerbs.find(function (v) { return verbGlossFirst.has(v.id) && pending(v); }) : null) ||
       verbGlossExtra.find(pending) ||
@@ -10232,11 +10298,18 @@
       verbGlossActive++;
       (function step() {
         var next = verbGlossDisabled ? null : verbGlossNext();
-        if (!next) { verbGlossActive--; return; }
+        if (!next) {
+          verbGlossActive--;
+          if (!verbGlossActive && verbGlossFailed.size && !verbGlossRetryTimer) {
+            verbGlossRetryTimer = setTimeout(function () { verbGlossRetryTimer = 0; verbGlossResume(); }, 60000);
+          }
+          return;
+        }
         var tag = next.id + ":" + verbGlossSig(next.data);
         verbGlossAttempted.add(tag);
+        verbGlossTries[tag] = (verbGlossTries[tag] || 0) + 1;
         generateVerbGloss(next).then(function (ok) {
-          if (ok === false) verbGlossFailed.add(tag);
+          if (ok === false && verbGlossTries[tag] < VERB_GLOSS_MAX_TRIES) verbGlossFailed.add(tag);
           setTimeout(step, 250);
         });
       })();
@@ -10249,7 +10322,7 @@
     (cards || []).forEach(function (c) {
       if (c.kind !== "verb" || !verbNeedsGloss(c.data)) return;
       var sig = verbGlossSig(c.data);
-      if (verbGlossMemo[sig]) { c.data.forms_en = verbGlossMemo[sig]; c.data.forms_en_sig = sig; return; }
+      if (verbGlossFromMemo(c.data)) return;
       var v = allVerbs.find(function (x) { return x.data === c.data; });
       if (v) { verbGlossFirst.add(v.id); return; }
       // the same verb elsewhere (your own copy, or the list switched on) may already have it
@@ -10260,8 +10333,12 @@
     });
     if (verbGlossFirst.size || extra) queueVerbGlosses();
   }
+  // Back to work after a pause, or a second go at verbs that failed (once
+  // the queue has nothing else to do, or the app comes back to the front).
   function verbGlossResume() {
-    if (!verbGlossDisabled || Date.now() - verbGlossDisabledAt < 5 * 60000) return;
+    if (verbGlossDisabled && Date.now() - verbGlossDisabledAt < 60000) return;
+    if (!verbGlossDisabled && !verbGlossFailed.size) return;
+    verbGlossStatus.pausedUntil = 0;
     verbGlossDisabled = false;
     verbGlossFailures = 0;
     verbGlossFailed.forEach(function (tag) { verbGlossAttempted.delete(tag); });
@@ -10272,11 +10349,17 @@
 
   function noteVerbGlossFailure(infinitive, why) {
     verbGlossFailures++;
+    verbGlossStatus.failed++;
+    verbGlossStatus.lastError = infinitive + ": " + String(why || "").slice(0, 80);
+    verbGlossStatus.lastErrorAt = Date.now();
     console.warn("[verb-gloss] " + infinitive + ": " + why);
-    if (verbGlossFailures >= 2 && !verbGlossDisabled) {
+    if (verbGlossFailures >= 3 && !verbGlossDisabled) {
+      // a minute's rest, then on again with the verbs that failed
       verbGlossDisabled = true;
       verbGlossDisabledAt = Date.now();
-      console.warn("[verb-gloss] paused for this session after repeated failures — is the verb-gloss function deployed and schema.sql run?");
+      verbGlossStatus.pausedUntil = Date.now() + 60000;
+      console.warn("[verb-gloss] 3 failures in a row: waiting a minute");
+      setTimeout(function () { verbGlossDisabledAt = 0; verbGlossResume(); }, 60000);
     }
   }
 
@@ -10288,14 +10371,16 @@
   // definition, plain keys), so it shares the cache with «irse» everywhere.
   function verbGlossCall(data, entries, use) {
     var personal = use === "personal", refl = use === "reflexive";
-    return supabaseClient.functions.invoke("verb-gloss", {
+    var call = supabaseClient.functions.invoke("verb-gloss", {
       body: {
         infinitive: refl ? reflexiveInfinitive(data.infinitive) : (data.infinitive || ""),
         definition: refl ? reflexiveUseDefinition(data) : verbUseDefinition(data, personal),
         reflexive: refl || !!data.reflexive, gustarLike: !!data.gustar_like && !personal && !refl,
         forms: personal || refl ? entries.map(function (e) { return { key: baseFormKey(e.key), es: e.es, slot: e.slot }; }) : entries
       }
-    }).then(function (res) {
+    });
+    var timeout = new Promise(function (_, rej) { setTimeout(function () { rej(new Error("timeout (45 s)")); }, VERB_GLOSS_TIMEOUT); });
+    return Promise.race([call, timeout]).then(function (res) {
       var g = res && res.data && res.data.glosses;
       if (res.error && res.error.context && res.error.context.status === 429) { var le = new Error("daily_limit"); le.limit = true; throw le; }
       if (res.error || !g || !Object.keys(g).length) throw new Error((res.error && res.error.message) || "empty reply");
@@ -10350,6 +10435,9 @@
           if (d && verbGlossSig(d) === sig) { d.forms_en = glosses; d.forms_en_sig = sig; }
         });
         verbGlossMemo[sig] = glosses;
+        if (isBorrowedId(id)) verbEnKeep(sig, glosses); // a list's verb: kept on this device
+        verbGlossStatus.done++;
+        if (res.data && typeof res.data.cached === "number") { verbGlossStatus.cached += res.data.cached; verbGlossStatus.generated += res.data.generated || 0; }
         verbGlossExtra = verbGlossExtra.filter(function (x) { return x.data !== data; });
         refreshOpenFlashCardSub(); // the card on screen shows it right away
         var d = res.data;
@@ -10363,6 +10451,7 @@
       // failure (two failures in a row used to pause the whole queue, which
       // left even cached verbs, like a list's «respetar», on the definition).
       if (err && err.limit) {
+        verbGlossStatus.limit++;
         if (!verbGlossLimitNoted) { verbGlossLimitNoted = true; console.warn("[verb-gloss] daily limit reached: until tomorrow only verbs already in the shared cache get their English"); }
         return "limit";
       }
