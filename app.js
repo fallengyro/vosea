@@ -6430,7 +6430,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "232";
+  var VOSEA_BUILD = "233";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -10282,7 +10282,7 @@
   var verbGlossTries = {};   // tag -> attempts this session
   var verbGlossRetryTimer = 0;
   var VERB_GLOSS_MAX_TRIES = 3;
-  var VERB_GLOSS_TIMEOUT = 45000;
+  var VERB_GLOSS_TIMEOUT = 130000; // the function may try 3 times (40 s each)
   var verbGlossStatus = { done: 0, cached: 0, generated: 0, failed: 0, limit: 0, lastError: "", lastErrorAt: 0, pausedUntil: 0 };
 
   function verbGlossNext() {
@@ -10380,7 +10380,16 @@
       }
     });
     var timeout = new Promise(function (_, rej) { setTimeout(function () { rej(new Error("timeout (45 s)")); }, VERB_GLOSS_TIMEOUT); });
-    return Promise.race([call, timeout]).then(function (res) {
+    // the function's own reason for an error (2026-11-14), for the Uso page
+    var withReason = function (res) {
+      var ctx = res && res.error && res.error.context;
+      if (!ctx || ctx.status === 429 || typeof ctx.json !== "function") return res;
+      return Promise.resolve(ctx.clone ? ctx.clone().json() : ctx.json()).then(function (b) {
+        if (b && b.error) res.error = { message: "HTTP " + ctx.status + " " + b.error + (b.detail ? " — " + b.detail : ""), context: ctx };
+        return res;
+      }, function () { return res; });
+    };
+    return Promise.race([call.then(withReason), timeout]).then(function (res) {
       var g = res && res.data && res.data.glosses;
       if (res.error && res.error.context && res.error.context.status === 429) { var le = new Error("daily_limit"); le.limit = true; throw le; }
       if (res.error || !g || !Object.keys(g).length) throw new Error((res.error && res.error.message) || "empty reply");
