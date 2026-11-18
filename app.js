@@ -1118,6 +1118,9 @@
       el_welcome_en: "Bienvenida · inglés",
       el_welcome_go: "Generar la bienvenida (≈ {k} créditos)",
       el_welcome_confirm: "Esto genera {what} (≈ {k} créditos). Puede usar el 10 % de reserva. ¿Seguir?",
+      el_mine_title: "Mis líneas",
+      el_mine_note: "Tus propias líneas (una escena oculta en escenas.js): sus tarjetas suenan con esta voz cuando están hechas.",
+      el_mine_go: "Generar Mis líneas (≈ {k} créditos)",
       el_oido_title: "Al oído: respuestas de las escenas",
       el_oido_note: "La mejor respuesta de cada paso de las escenas, para Al oído: en castellano con Valeria y Agustín, y la traducción literal en inglés con Adam.",
       el_oido_es: "Respuestas · castellano",
@@ -2589,6 +2592,9 @@
       el_welcome_en: "Welcome · English",
       el_welcome_go: "Generate the welcome (≈ {k} credits)",
       el_welcome_confirm: "This makes {what} (≈ {k} credits). It may use the 10% reserve. Continue?",
+      el_mine_title: "My lines",
+      el_mine_note: "Your own lines (a hidden scene in escenas.js): their cards play in this voice once they're made.",
+      el_mine_go: "Generate My lines (≈ {k} credits)",
       el_oido_title: "Al oído: scene answers",
       el_oido_note: "The best answer of every scene step, for Al oído: in Spanish with Valeria and Agustín, and the literal English with Adam.",
       el_oido_es: "Answers · Spanish",
@@ -4514,7 +4520,7 @@
       });
       sec.appendChild(vt);
     } else sec.appendChild(uNode("p", "usage-note", t("el_voice") + ": " + ELEVEN_VOICES[elState.vk].label));
-    var units = elevenUnits(elState.vk), list = uNode("ul", "el-units"), todo = 0, todoChars = 0;
+    var units = elevenSceneUnits(elState.vk), list = uNode("ul", "el-units"), todo = 0, todoChars = 0;
     units.forEach(function (u) {
       var ready = !!elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] && elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] === u.sig;
       var li = uNode("li", "el-unit" + (ready ? " is-ready" : "") + (run && run.cur === u.sc.id + "|" + u.role ? " is-now" : ""));
@@ -4579,6 +4585,34 @@
       });
       var oa = uNode("div", "form-actions"); oa.appendChild(ogo); sec.appendChild(oa);
     }
+    // «Mis líneas» (2026-11-17): hidden scenes for your own lines, with
+    // their own button, so they don't wait behind the scenes
+    var pu = personalUnits(), pTodo = 0, pChars = 0, pNames = [], pl = uNode("ul", "el-units el-mine");
+    pu.forEach(function (u) {
+      var ready = elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] === u.sig;
+      var li = uNode("li", "el-unit" + (ready ? " is-ready" : "") + (run && run.cur === u.sc.id + "|" + u.role ? " is-now" : ""));
+      li.setAttribute("data-unit", u.vk + "|" + u.sc.id + "|" + u.role);
+      li.appendChild(uNode("span", "el-unit-n", elevenUnitName(u) + " · " + ELEVEN_VOICES[u.vk].label));
+      li.appendChild(uNode("span", "count", ready ? "✓ " + t("el_ready") : t("el_unit_cost", { n: progNum(u.texts.length), c: progNum(u.chars) })));
+      li.title = t("el_unit_credits", { k: progNum(elCredits(u.chars)) });
+      pl.appendChild(li);
+      if (!ready) { pTodo++; pChars += u.chars; pNames.push(elevenUnitName(u)); }
+    });
+    if (pu.length) {
+      sec.appendChild(uNode("h5", "el-sub", t("el_mine_title")));
+      sec.appendChild(uNode("p", "usage-note", t("el_mine_note")));
+      sec.appendChild(pl);
+      if (pTodo) {
+        var pgo = uNode("button", "btn-secondary", t("el_mine_go", { k: progNum(elCredits(pChars)) }));
+        pgo.type = "button"; pgo.id = "el-mine-go";
+        pgo.disabled = busy || !st.limit || !!st.error || !elevenVoicesSql;
+        pgo.addEventListener("click", function () {
+          if (!window.confirm(t("el_oido_confirm", { what: pNames.join(", "), k: progNum(elCredits(pChars)) }))) return;
+          elevenRun(personalUnits());
+        });
+        var pa = uNode("div", "form-actions"); pa.appendChild(pgo); sec.appendChild(pa);
+      }
+    }
     var actions = uNode("div", "form-actions");
     var go = uNode("button", "btn-primary", busy ? t("el_stop") : t("el_go"));
     go.type = "button"; go.id = "el-go";
@@ -4615,7 +4649,7 @@
     if (elState.run && elState.run.running) return;
     opts = opts || {};
     var run = elState.run = { running: true, stop: false, msg: "", bad: false, cur: "", finished: 0, sent: 0, baseUsed: null, low: null, unitN: 0 };
-    var queue = (queueIn || elevenUnits(elState.vk)).filter(function (u) { return elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] !== u.sig; });
+    var queue = (queueIn || elevenSceneUnits(elState.vk)).filter(function (u) { return elevenUnitsReady[u.vk + "|" + u.sc.id + "|" + u.role] !== u.sig; });
     function say(key, vars, bad) { run.msg = t(key, vars); run.bad = !!bad; renderEleven(); }
     function wait(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
     function have(items) {
@@ -6430,7 +6464,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "233";
+  var VOSEA_BUILD = "234";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -15053,7 +15087,9 @@
   // to find it buried late in the scenes"). They stay in ESCENAS for the
   // voices, the warm-up and records, but the Escenas list, the Camino and
   // Hoy's scene card show only the scenes.
-  function escIsScene(sc) { return !sc.charla; }
+  // (2026-11-17) a hidden scene (oculta: «Mis líneas») is neither: it's
+  // there only for its voice units
+  function escIsScene(sc) { return !sc.charla && !sc.oculta; }
   function escCharlas() { return ESCENAS.filter(function (sc) { return !!sc.charla; }); }
   function escScenesOrder() { return escPathOrder().filter(escIsScene); }
   function escPathOrder() {
@@ -17103,9 +17139,12 @@
   function elevenTakeOf(vk, tag, text) { return elevenTakes[vk + "\u0000" + (tag || "") + "\u0000" + String(text || "").trim()] || 0; }
   // every unit of one voice, in Camino order
   function elevenUnits(vk) {
-    var out = [];
-    escPathOrder().forEach(function (sc) { sc.roles.forEach(function (r) { out.push(elevenUnit(sc, r.key, vk)); }); });
-    return out;
+    var out = [], later = [];
+    escPathOrder().forEach(function (sc) {
+      if (sc.premium && sc.premium.indexOf(vk) === -1) return; // only the voices it asks for
+      sc.roles.forEach(function (r) { (sc.oculta ? later : out).push(elevenUnit(sc, r.key, vk)); });
+    });
+    return out.concat(later); // personal lines after the scenes
   }
   function elevenUnitName(u) {
     if (u.name) return u.name;
@@ -17116,6 +17155,20 @@
   }
   window.voseaOpenEscena = function (id) { setMainTab("play"); openEscenas(true, id); }; // tests
   window.voseaEscVoices = function (id) { var sc = escById(id); return sc ? escVoices(sc) : null; }; // tests
+  // the scenes' units (the main list and «Generar en orden») and the
+  // personal ones («Mis líneas», every premium voice they ask for)
+  function elevenSceneUnits(vk) { return elevenUnits(vk).filter(function (u) { return !u.sc.oculta; }); }
+  function personalUnits() {
+    var out = [];
+    Object.keys(ELEVEN_VOICES).forEach(function (vk) {
+      if (ELEVEN_VOICES[vk].lang === "en") return;
+      elevenUnits(vk).forEach(function (u) { if (u.sc.oculta) out.push(u); });
+    });
+    return out;
+  }
+  window.voseaPersonalUnits = function () { return personalUnits().map(function (u) { return u.vk + "|" + u.sc.id + "|" + u.role + "|" + u.chars; }); }; // tests
+  window.voseaElevenUnitIds = function (vk) { return elevenUnits(vk).map(function (u) { return u.sc.id + "|" + u.role; }); }; // tests
+  window.voseaEscLists = function () { return { scenes: escScenesOrder().map(function (s) { return s.id; }), charlas: escCharlas().map(function (s) { return s.id; }), hoy: (hoyScenePick() || {}).sc ? hoyScenePick().sc.id : null }; }; // tests
   window.voseaElevenUnit = function (id, role, vk) { var sc = escById(id); return sc ? elevenUnit(sc, role, vk || "valeria") : null; }; // tests
 
   var elevenVoicesSql = true;
