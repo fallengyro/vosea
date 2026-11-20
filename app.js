@@ -356,6 +356,8 @@
       check_reflexive_use: "¿También «{inf}»?",
       label_main_use: "Uso más común",
       rae_lookup_as_base: "«{typed}» quedó como el uso reflexivo de «{inf}».",
+      rae_lookup_respelled: "Se escribe «{inf}» (escribiste «{typed}»).",
+      rae_lookup_regular_forms: "La RAE no trae su conjugación: completé la regular, revisala.",
       rae_lookup_as_se: "Se usa con -se: quedó como «{inf}».",
       rae_lookup_pair_have: "Ya tenés «{base}»: al guardar, «{typed}» se suma a «{base}» como su uso reflexivo.",
       label_reflexive_definition: "Definición («{inf}»)",
@@ -1235,6 +1237,8 @@
       list_onoff_aria: "Usar esta lista en tu colección",
       list_onoff_hint_on: "Activa: sus ítems están en tu colección.",
       list_onoff_hint_off: "Apagada: sus ítems no están en tu colección.",
+      ld_keep_all: "Agregar todo a mi colección ({n})",
+      ld_keep_all_confirm: "¿Agregar a tu colección los {n} ítems de «{name}» que todavía no tenés?",
       btn_list_select: "Elegir ítems",
       btn_list_select_cancel: "Cancelar",
       ld_select_count: "{n} elegidos",
@@ -1830,6 +1834,8 @@
       check_reflexive_use: "Also “{inf}”?",
       label_main_use: "Most common use",
       rae_lookup_as_base: "“{typed}” is now the reflexive use of “{inf}”.",
+      rae_lookup_respelled: "It’s spelled “{inf}” (you typed “{typed}”).",
+      rae_lookup_regular_forms: "RAE has no conjugation for it: I filled in the regular one, please check it.",
       rae_lookup_as_se: "It’s used with -se: saved as “{inf}”.",
       rae_lookup_pair_have: "You already have “{base}”: saving adds “{typed}” to “{base}” as its reflexive use.",
       label_reflexive_definition: "Definition (“{inf}”)",
@@ -2709,6 +2715,8 @@
       list_onoff_aria: "Use this list in your collection",
       list_onoff_hint_on: "On: its items are in your collection.",
       list_onoff_hint_off: "Off: its items aren't in your collection.",
+      ld_keep_all: "Add everything to my collection ({n})",
+      ld_keep_all_confirm: "Add the {n} items from “{name}” you don't have yet to your collection?",
       btn_list_select: "Choose items",
       btn_list_select_cancel: "Cancel",
       ld_select_count: "{n} chosen",
@@ -5189,6 +5197,46 @@
     return null;
   }
 
+  // (2026-11-19) The whole regular conjugation, for a verb RAE doesn't
+  // conjugate («Buscar en RAE» fills it and says to check it): regularForm
+  // plus the spelling changes a regular verb still has (saque, pague, empiece,
+  // averigüe, cojo, distingo, venzo, conozco, leyendo, leído) and the
+  // imperativo, gerundio and participio. Stem changes (puedo, pido) can't be
+  // guessed: that's what the check is for.
+  function regularFormsFor(inf) {
+    var klass = verbClass(String(inf || "").toLowerCase());
+    if (!klass) return null;
+    var base = plainInfinitive(String(inf).toLowerCase()), stem = base.slice(0, -2);
+    function fix(form) {
+      if (!form || form.indexOf(stem) !== 0) return form;
+      var end = form.slice(stem.length), st = stem, e0 = end.charAt(0);
+      if (klass === "ar" && /^[eé]/.test(end)) {
+        if (/gu$/.test(st)) st = st.slice(0, -2) + "gü";
+        else if (/c$/.test(st)) st = st.slice(0, -1) + "qu";
+        else if (/g$/.test(st)) st = st + "u";
+        else if (/z$/.test(st)) st = st.slice(0, -1) + "c";
+      } else if (klass !== "ar" && /^[aoá]/.test(e0)) {
+        if (/gu$/.test(st)) st = st.slice(0, -1);
+        else if (/g$/.test(st)) st = st.slice(0, -1) + "j";
+        else if (/[aeiou]c$/.test(st)) st = st.slice(0, -1) + "zc";
+        else if (/c$/.test(st)) st = st.slice(0, -1) + "z";
+      }
+      return st + end;
+    }
+    var forms = {};
+    TENSES.concat(SUBJ_TENSES).forEach(function (tn) {
+      forms[tn.key] = {};
+      PERSONS.forEach(function (p) { forms[tn.key][p.key] = fix(regularForm(base, tn.key, p.key)) || ""; });
+    });
+    var sp = forms[SUBJ_KEY];
+    forms.imperativo = { vos: stem + (klass === "ar" ? "á" : klass === "er" ? "é" : "í"), usted: sp.el, nosotros: sp.nosotros, ustedes: sp.ellos };
+    var vowelStem = /[aeiou]$/.test(stem) && !/[gq]u$/.test(stem); // leyendo, construyendo; not distinguiendo
+    forms.gerundio = stem + (klass === "ar" ? "ando" : vowelStem ? "yendo" : "iendo");
+    forms.participio = stem + (klass === "ar" ? "ado" : /[aeo]$/.test(stem) ? "ído" : "ido"); // leído, oído; construido
+    return forms;
+  }
+  window.voseaRegularForms = function (inf) { return regularFormsFor(inf); }; // tests
+
   function stripReflexivePronoun(form, personKey, reflexive) {
     if (!reflexive || !form) return form;
     var pron = REFLEXIVE_PRONOUNS[personKey];
@@ -6341,6 +6389,7 @@
     ldRename: document.getElementById("ld-rename"),
     ldLeave: document.getElementById("ld-leave"),
     ldSelectBtn: document.getElementById("ld-select-btn"),
+    ldKeepAll: document.getElementById("ld-keep-all"),
     ldSelectBar: document.getElementById("ld-select-bar"),
     ldSelectCount: document.getElementById("ld-select-count"),
     ldKeepSelected: document.getElementById("ld-keep-selected"),
@@ -6464,7 +6513,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "234";
+  var VOSEA_BUILD = "236";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -11239,7 +11288,7 @@
           }
           if (gotInf && norm(gotInf) !== norm(term)) {
             el.fInfinitive.value = gotInf;
-            msg += " " + t(infinitiveIsReflexive(gotInf) ? "rae_lookup_as_se" : "rae_lookup_as_base", { typed: term, inf: gotInf });
+            msg += " " + t(data.respelled ? "rae_lookup_respelled" : infinitiveIsReflexive(gotInf) ? "rae_lookup_as_se" : "rae_lookup_as_base", { typed: data.respelled || term, inf: gotInf });
             term = gotInf;
             if (!infinitiveIsReflexive(gotInf)) setReflexive(false);
           }
@@ -11282,6 +11331,18 @@
           if (tyR) el.fType.value = tyR;
 
           var reflexiveNow = el.fReflexive.checked;
+          // (2026-11-19) RAE has no conjugation for it (a word it doesn't
+          // list): the regular one, flagged for a check
+          var hasForms = data.forms && Object.keys(data.forms).some(function (k) { var f = data.forms[k]; return f && typeof f === "object" && Object.keys(f).some(function (p) { return f[p]; }); });
+          if (!hasForms) {
+            var reg = regularFormsFor(term.replace(/se$/i, ""));
+            if (reg) {
+              fillConjugationCellsFromRae(reg, reflexiveNow);
+              fillIfEmpty(el.fGerundio, reg.gerundio);
+              fillIfEmpty(el.fParticipio, reg.participio);
+              msg += " " + t("rae_lookup_regular_forms");
+            }
+          }
           if (data.forms) fillConjugationCellsFromRae(data.forms, reflexiveNow);
           renderFormIrregularity(); // the cells were filled without input events
           if (data.forms && raeFormsLookIrregular(data.forms, term, reflexiveNow)) {
@@ -11297,6 +11358,10 @@
           el.pfLiteralWrap.hidden = !el.pfIdiomatic.checked;
           if (el.pfIdiomatic.checked) fillIfEmpty(el.pfLiteral, data.literal);
         } else {
+          if (data.respelled && data.word) {
+            el.wfWord.value = data.word;
+            msg += " " + t("rae_lookup_respelled", { typed: data.respelled, inf: data.word });
+          }
           fillIfEmpty(el.wfDefinition, data.definition);
           fillIfEmpty(el.wfNotes, data.notes);
           fillIfEmpty(el.wfExample, data.example);
@@ -21992,7 +22057,7 @@
   function uuidOrNull(id) { return id && !isBorrowedId(id) ? id : null; }
   function ownCollection(kind) { return kind === "verb" ? ownVerbs : kind === "word" ? ownWords : ownPhrases; }
   function ownHas(kind, d) {
-    var k = norm(kindText(kind, d));
+    var k = kind === "verb" ? verbCoverKey(kindText(kind, d)) : norm(kindText(kind, d));
     return !!k && ownCollection(kind).some(function (e) { return norm(kindText(kind, e.data)) === k; });
   }
   function progressKey(kind, d) { return kind + "|" + practiceNorm(kindText(kind, d)); }
@@ -23404,6 +23469,37 @@
     el.ldDelete.textContent = t(owner && libraryOk && level !== "none" ? "btn_remove_my_list" : "btn_delete_list");
     el.ldRename.hidden = !owner;
     el.ldLeave.hidden = owner || !liveListsOk;
+    // (2026-11-19) mason: "I can't add the content of a list to my content
+    // if I didn't add it when importing. It would be nice if I didn't have
+    // to hand select each item" → ⋯ «Agregar todo a mi colección (N)»
+    var n = listItemsNotMine(l).length;
+    el.ldKeepAll.hidden = !n;
+    el.ldKeepAll.textContent = t("ld_keep_all", { n: n });
+  }
+  function listItemsNotMine(l) {
+    return ((l && l.data.rawItems) || []).filter(function (row) {
+      return row && (row.item_type === "verb" || row.item_type === "word" || row.item_type === "phrase") && !ownHas(row.item_type, row.data);
+    });
+  }
+  function keepAllListItems() {
+    var l = allLists.find(function (x) { return x.id === selectedListId; });
+    var rows = listItemsNotMine(l);
+    if (!rows.length) return;
+    if (!window.confirm(t("ld_keep_all_confirm", { n: rows.length, name: l.data.name }))) return;
+    el.ldKeepAll.disabled = true;
+    var items = rows.map(function (row) {
+      var d = snapshotToData(row.item_type, row.data);
+      applyProgress(row.item_type, d); // its Sabido marks come along
+      return { kind: row.item_type, data: d };
+    });
+    keepItems(items).then(function (r) {
+      el.ldKeepAll.disabled = false;
+      showBanner(keptMessage(r));
+      if (selectedListId) selectListRow(selectedListId);
+    }).catch(function (err) {
+      el.ldKeepAll.disabled = false;
+      el.ldShareMsg.textContent = t("msg_error_guardar", { msg: (err && err.message) || err });
+    });
   }
 
   // ---- the list page, simpler (2026-10-25, commit 143) ----
@@ -26309,6 +26405,7 @@
   el.ldDelete.addEventListener("click", handleListDelete);
   el.ldRename.addEventListener("click", handleListRename);
   el.ldLeave.addEventListener("click", handleListLeave);
+  el.ldKeepAll.addEventListener("click", function () { ldMenuClose(); keepAllListItems(); });
   el.ldSelectBtn.addEventListener("click", toggleListSelectMode);
   el.ldKeepSelected.addEventListener("click", keepSelectedListItems);
   el.ldInviteBtn.addEventListener("click", handleListInvite);
