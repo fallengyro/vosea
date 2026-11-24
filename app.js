@@ -6513,7 +6513,7 @@
   // the page, the console says which ones, and the page fetches a fresh copy
   // of itself once (VOSEA_BUILD has to match index.html's vosea-build meta;
   // both go up with sw.js's CACHE_NAME).
-  var VOSEA_BUILD = "236";
+  var VOSEA_BUILD = "237";
   var elMissing = [];
   Object.keys(el).forEach(function (k) {
     if (el[k]) return;
@@ -21647,9 +21647,9 @@
     f.include.delete("known");
     f.exclude.delete("known");
     try {
-      var q = norm(el.search.value);
+      var searchOk = searchPredicate("verb", el.search.value); // same search as the list (chips, forms)
       return allVerbs.filter(function (v) {
-        return (!q || norm(v.data.infinitive || v.id).indexOf(q) !== -1) && verbPassesFacets(v, false);
+        return searchOk(v) && verbPassesFacets(v, false);
       });
     } finally {
       if (inc) f.include.add("known");
@@ -25990,14 +25990,30 @@
     if (kind === "verb" && v.data && verbFormSet(v.data)[t]) return "form";
     return "";
   }
+  // Live typing finds a verb by any of its forms too (2026-11-24, mason:
+  // "when i used to enter for example «tengo» it would filter to tener"):
+  // the whole form at any length, the start of a form from 3 letters
+  // («teng», «pued») so it keeps matching while you type.
+  function verbFormStarts(d, q) {
+    var set = verbFormSet(d);
+    if (set[q]) return true;
+    if (q.length < 3) return false;
+    for (var f in set) if (f.indexOf(q) === 0) return true;
+    return false;
+  }
+  function liveMatch(kind, v, q) {
+    if (norm(searchItemText(kind, v)).indexOf(q) !== -1) return true;
+    var alt = searchAltText(kind, v);
+    if (alt && alt.indexOf(q) !== -1) return true;
+    return kind === "verb" && !!v.data && verbFormStarts(v.data, q);
+  }
   function searchPredicate(kind, live) {
     var q = norm(live || "");
     var terms = searchTerms || [];
-    if (!terms.length) return function (v) { return !q || norm(searchItemText(kind, v)).indexOf(q) !== -1 || searchAltText(kind, v).indexOf(q) !== -1 && !!searchAltText(kind, v); };
+    if (!terms.length) return function (v) { return !q || liveMatch(kind, v, q); };
     return function (v) {
       var txt = norm(searchItemText(kind, v));
-      if (q && txt.indexOf(q) !== -1) return true;
-      if (q && searchAltText(kind, v) && searchAltText(kind, v).indexOf(q) !== -1) return true;
+      if (q && liveMatch(kind, v, q)) return true;
       for (var i = 0; i < terms.length; i++) if (termMatchKind(kind, v, txt, terms[i])) return true;
       return false;
     };
